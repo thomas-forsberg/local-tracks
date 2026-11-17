@@ -1,6 +1,6 @@
 # Local Tracks
 
-A privacy-first activity tracker for cycling, running, hiking and ski touring. Norwegian name: *Sporløst på tur*.
+A privacy-first activity tracker for cycling, running, hiking and ski touring.
 
 - **Everything stays on the phone.** No account, no server, no analytics or crash-reporting SDKs.
 - Data leaves the device only when you export it yourself.
