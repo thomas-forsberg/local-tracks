@@ -33,6 +33,9 @@ class ActivityRepository(
     private val database: LocalTracksDatabase,
     private val queryContext: CoroutineContext = Dispatchers.Default,
 ) {
+    // For Swift, where Kotlin default arguments aren't available.
+    constructor(database: LocalTracksDatabase) : this(database, Dispatchers.Default)
+
     private val activities get() = database.activityQueries
     private val trackPoints get() = database.trackPointQueries
 

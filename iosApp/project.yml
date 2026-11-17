@@ -16,6 +16,12 @@ settings:
     SWIFT_VERSION: "6.0"
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
+    TARGETED_DEVICE_FAMILY: "1"
+    # Kotlin builds only the arm64 simulator slice; Intel simulators aren't supported.
+    EXCLUDED_ARCHS[sdk=iphonesimulator*]: x86_64
+    # Lets every target `import Shared`. Only the app links it (see OTHER_LDFLAGS below);
+    # the tests run inside the app and use its copy, so there is one Kotlin runtime.
+    FRAMEWORK_SEARCH_PATHS: $(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)
 
 targets:
   LocalTracks:
@@ -33,16 +39,20 @@ targets:
         ITSAppUsesNonExemptEncryption: false
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        # Keeps recording with the screen locked; iOS shows the blue location indicator.
+        UIBackgroundModes: [location]
+        NSLocationWhenInUseUsageDescription: >-
+          Local Tracks records your route while you record an activity.
+          Your location never leaves your phone.
+        NSMotionUsageDescription: >-
+          Local Tracks uses the barometer to measure elevation.
+          The data never leaves your phone.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: no.thomasforsberg.localtracks
-        TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Automatic
         # The Kotlin build phase runs Gradle, which reads files outside the sandbox.
         ENABLE_USER_SCRIPT_SANDBOXING: NO
-        # Kotlin builds only the arm64 simulator slice; Intel simulators aren't supported.
-        EXCLUDED_ARCHS[sdk=iphonesimulator*]: x86_64
-        FRAMEWORK_SEARCH_PATHS: $(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)
         # Shared is a static framework, so the app links SQLite for it.
         OTHER_LDFLAGS: [$(inherited), -framework, Shared, -lsqlite3]
     preBuildScripts:
@@ -52,11 +62,24 @@ targets:
           cd "$SRCROOT/.."
           ./gradlew :shared:embedAndSignAppleFrameworkForXcode
 
+  LocalTracksTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: LocalTracksTests
+    dependencies:
+      - target: LocalTracks
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: no.thomasforsberg.localtracks.tests
+        GENERATE_INFOPLIST_FILE: YES
+
 schemes:
   LocalTracks:
     build:
       targets:
         LocalTracks: all
+        LocalTracksTests: [test]
     run:
       config: Debug
       simulateLocation:
@@ -64,5 +87,7 @@ schemes:
         defaultLocation: ../fixtures/gpx/synthetic-sognsvann-loop.gpx
     test:
       config: Debug
+      targets:
+        - LocalTracksTests
     archive:
       config: Release

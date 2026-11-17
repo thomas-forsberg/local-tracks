@@ -26,7 +26,7 @@ jobs:
       - run: ./gradlew :shared:jvmTest :shared:verifySqlDelightMigration
 
   ios:
-    name: iOS (simulator tests + app build)
+    name: iOS (Kotlin + Swift tests on simulator)
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
@@ -43,8 +43,11 @@ jobs:
         run: |
           brew install xcodegen
           cd iosApp && xcodegen
-      - name: Build app
+      - name: Build app and run Swift tests
         run: |
+          # Simulator names change with each Xcode version, so take the first available iPhone.
+          DEVICE=$(xcrun simctl list devices available -j \
+            | jq -r '[.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone"))][0].udid')
           xcodebuild -project iosApp/LocalTracks.xcodeproj -scheme LocalTracks \
-            -configuration Debug -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO build
+            -configuration Debug -destination "id=$DEVICE" \
+            CODE_SIGNING_ALLOWED=NO test
