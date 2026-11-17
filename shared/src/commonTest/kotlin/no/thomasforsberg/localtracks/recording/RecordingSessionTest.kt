@@ -174,6 +174,23 @@ class RecordingSessionTest {
     }
 
     @Test
+    fun restoreOnlyFromIdleOrFinishedAndAlwaysAsPaused() {
+        val saved = ActivityProgress.startingAt(Sport.HIKING, start).copy(distanceMeters = 500.0, pointCount = 40, segmentIndex = 2)
+
+        session.start(Sport.CYCLING)
+        assertFalse(session.restore(saved))
+
+        session.stop()
+        assertTrue(session.restore(saved))
+        val paused = assertIs<Paused>(session.state.value)
+        assertEquals(saved, paused.progress)
+
+        session.resume()
+        assertEquals(3, assertNotNull(session.onLocation(fix(1))).segmentIndex)
+        assertEquals(41, progress().pointCount)
+    }
+
+    @Test
     fun stoppedSessionIgnoresFixesAndCanStartAgainFresh() {
         session.start(Sport.CYCLING)
         session.onLocation(fix(1))
