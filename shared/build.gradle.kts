@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.skie)
+    alias(libs.plugins.sqldelight)
 }
 
 kotlin {
@@ -23,11 +24,29 @@ kotlin {
         }
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.sqldelight.coroutines)
+        }
+        iosMain.dependencies {
+            implementation(libs.sqldelight.native.driver)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.kotlinx.io.core)
+        }
+        jvmTest.dependencies {
+            implementation(libs.sqldelight.sqlite.driver)
+        }
+    }
+}
+
+sqldelight {
+    databases {
+        create("LocalTracksDatabase") {
+            packageName = "no.thomasforsberg.localtracks.db"
+            // Snapshots of each released schema version; migrations are verified against them at build time.
+            schemaOutputDirectory = file("src/commonMain/sqldelight/databases")
+            verifyMigrations = true
         }
     }
 }

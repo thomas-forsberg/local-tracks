@@ -63,6 +63,15 @@ class RecordingSession(
         }
     }
 
+    // Brings back an activity interrupted by a crash or the app being killed. It starts as Paused,
+    // so resume() opens a new segment and the gap is never counted as distance.
+    fun restore(progress: ActivityProgress): Boolean = transition { current ->
+        when (current) {
+            Idle, is Finished -> Paused(progress.copy(currentSpeedMetersPerSecond = null), pausedAt = clock.now())
+            is Recording, is Paused -> null
+        }
+    }
+
     fun onBarometer(reading: BarometerReading) {
         latestBarometer.value = reading
     }

@@ -23,7 +23,7 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v6
-      - run: ./gradlew :shared:jvmTest
+      - run: ./gradlew :shared:jvmTest :shared:verifySqlDelightMigration
 
   ios:
     name: iOS (simulator tests + app build)

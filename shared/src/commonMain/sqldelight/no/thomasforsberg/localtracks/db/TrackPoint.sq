@@ -1,0 +1,32 @@
+import kotlin.time.Instant;
+
+CREATE TABLE track_point (
+    activity_id INTEGER NOT NULL,
+    -- Position within the activity, starting at 0.
+    seq INTEGER NOT NULL,
+    -- Increases on every resume; distance is never computed across segments.
+    segment INTEGER NOT NULL,
+    time INTEGER AS Instant NOT NULL,
+    latitude REAL NOT NULL,
+    longitude REAL NOT NULL,
+    elevation_meters REAL,
+    horizontal_accuracy_meters REAL,
+    speed_mps REAL,
+    -- Raw barometer reading attached to this point, if one was fresh.
+    baro_time INTEGER AS Instant,
+    baro_relative_altitude_meters REAL,
+    baro_pressure_kpa REAL,
+    PRIMARY KEY (activity_id, seq)
+) WITHOUT ROWID;
+
+insert:
+INSERT INTO track_point VALUES ?;
+
+forActivity:
+SELECT * FROM track_point WHERE activity_id = ? ORDER BY seq;
+
+lastForActivity:
+SELECT * FROM track_point WHERE activity_id = ? ORDER BY seq DESC LIMIT 1;
+
+deleteForActivity:
+DELETE FROM track_point WHERE activity_id = ?;

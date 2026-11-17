@@ -43,7 +43,8 @@ targets:
         # Kotlin builds only the arm64 simulator slice; Intel simulators aren't supported.
         EXCLUDED_ARCHS[sdk=iphonesimulator*]: x86_64
         FRAMEWORK_SEARCH_PATHS: $(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)
-        OTHER_LDFLAGS: [$(inherited), -framework, Shared]
+        # Shared is a static framework, so the app links SQLite for it.
+        OTHER_LDFLAGS: [$(inherited), -framework, Shared, -lsqlite3]
     preBuildScripts:
       - name: Compile Kotlin framework
         basedOnDependencyAnalysis: false
