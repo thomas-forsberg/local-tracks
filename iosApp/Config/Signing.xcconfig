@@ -1,0 +1,3 @@
+// Put DEVELOPMENT_TEAM = <your team ID> in Local.xcconfig (git-ignored).
+// Without it the app still builds for the simulator; a device build needs a team.
+#include? "Local.xcconfig"

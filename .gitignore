@@ -1,0 +1,25 @@
+# Private planning notes
+docs/
+
+# Gradle / Kotlin
+.gradle/
+.kotlin/
+build/
+local.properties
+
+# IntelliJ
+.idea/
+*.iml
+out/
+
+# Xcode (project is generated from iosApp/project.yml by XcodeGen)
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+DerivedData/
+*.xcresult
+iosApp/LocalTracks/Info.plist
+iosApp/Config/Local.xcconfig
+
+# macOS
+.DS_Store
