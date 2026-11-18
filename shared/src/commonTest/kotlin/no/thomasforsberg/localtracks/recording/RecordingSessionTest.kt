@@ -113,6 +113,8 @@ class RecordingSessionTest {
         val state = session.state.value
         assertEquals(30.minutes, state.activeTime(clock.now))
         assertEquals(35.minutes, state.elapsed(clock.now))
+        assertEquals(1800.0, state.activeTimeSeconds(clock.now))
+        assertEquals(2100.0, state.elapsedSeconds(clock.now))
 
         session.stop()
         clock.advanceBy(1.minutes)
