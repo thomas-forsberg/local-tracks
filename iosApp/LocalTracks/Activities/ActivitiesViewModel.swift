@@ -22,6 +22,10 @@ final class ActivitiesViewModel {
         }
     }
 
+    func detail(for activity: ActivitySummary) -> ActivityDetailViewModel {
+        ActivityDetailViewModel(activity: activity, repository: repository)
+    }
+
     func delete(_ activity: ActivitySummary) {
         repository.delete(activityId: activity.id)
     }

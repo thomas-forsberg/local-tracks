@@ -1,0 +1,12 @@
+{
+  "version": 8,
+  "name": "Route only",
+  "sources": {},
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": { "background-color": "#efece6" }
+    }
+  ]
+}

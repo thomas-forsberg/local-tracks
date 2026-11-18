@@ -9,6 +9,9 @@ struct ActivitiesView: View {
         NavigationStack {
             content
                 .navigationTitle("Activities")
+                .navigationDestination(for: ActivitySummary.self) { activity in
+                    ActivityDetailView(viewModel: viewModel.detail(for: activity))
+                }
                 .confirmationDialog(
                     deletionTitle,
                     isPresented: Binding(get: { pendingDeletion != nil }, set: { if !$0 { pendingDeletion = nil } }),
@@ -31,7 +34,9 @@ struct ActivitiesView: View {
             ContentUnavailableView("No activities yet", systemImage: "figure.walk", description: Text("Recorded activities show up here."))
         case let activities?:
             List(activities, id: \.id) { activity in
-                ActivityRow(activity: activity)
+                NavigationLink(value: activity) {
+                    ActivityRow(activity: activity)
+                }
                     .swipeActions {
                         Button("Delete", systemImage: "trash", role: .destructive) { pendingDeletion = activity }
                     }
