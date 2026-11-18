@@ -11,6 +11,12 @@ configFiles:
   Debug: Config/Signing.xcconfig
   Release: Config/Signing.xcconfig
 
+packages:
+  # Exact pin: the generated project (and its Package.resolved) isn't committed.
+  MapLibre:
+    url: https://github.com/maplibre/maplibre-gl-native-distribution
+    exactVersion: 7.0.0
+
 settings:
   base:
     SWIFT_VERSION: "6.0"
@@ -27,6 +33,8 @@ targets:
   LocalTracks:
     type: application
     platform: iOS
+    dependencies:
+      - package: MapLibre
     sources:
       - path: LocalTracks
       # Referenced by the scheme for Xcode location simulation; not bundled into the app.

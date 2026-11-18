@@ -19,11 +19,18 @@ final class ScreenshotTour: XCTestCase {
         XCTAssert(firstRow.waitForExistence(timeout: 10))
         snapshot("02-activities")
 
+        firstRow.tap()
+        XCTAssert(app.staticTexts["Active time"].waitForExistence(timeout: 10))
+        sleep(2) // let the map draw its first frame
+        snapshot("03-activity-detail")
+        app.navigationBars.buttons.firstMatch.tap()
+        XCTAssert(firstRow.waitForExistence(timeout: 5))
+
         firstRow.swipeLeft()
         app.buttons["Delete"].firstMatch.tap()
         // Shown as a popover with only "Delete"; tapping outside cancels.
         XCTAssert(app.sheets.firstMatch.waitForExistence(timeout: 5))
-        snapshot("03-delete-confirmation")
+        snapshot("04-delete-confirmation")
     }
 
     @MainActor
@@ -31,7 +38,7 @@ final class ScreenshotTour: XCTestCase {
         let app = launch("-demoDataEmpty")
         app.tabBars.buttons["Activities"].tap()
         XCTAssert(app.staticTexts["No activities yet"].waitForExistence(timeout: 10))
-        snapshot("04-activities-empty")
+        snapshot("05-activities-empty")
     }
 
     @MainActor
