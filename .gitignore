@@ -1,6 +1,9 @@
 # Private planning notes
 docs/
 
+# Private device screenshots (personal data)
+ios-screenshots/
+
 # Gradle / Kotlin
 .gradle/
 .kotlin/
