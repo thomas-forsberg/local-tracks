@@ -81,6 +81,7 @@ class ActivityRecorder(
             activeTimeBeforeResume = unfinished.totals.activeTime,
             distanceMeters = unfinished.totals.distanceMeters,
             pointCount = unfinished.totals.pointCount,
+            elevationGain = ElevationGain(unfinished.totals.elevationGainMeters, referenceMeters = null),
             segmentIndex = lastPoint?.segmentIndex ?: 0,
             lastPoint = lastPoint?.point,
             currentSpeedMetersPerSecond = null,
@@ -107,7 +108,7 @@ class ActivityRecorder(
 
     private fun totalsOf(state: RecordingState): ActivityTotals {
         val progress = checkNotNull(state.progressOrNull())
-        return ActivityTotals(state.activeTime(clock.now()), progress.distanceMeters, progress.pointCount)
+        return ActivityTotals(state.activeTime(clock.now()), progress.distanceMeters, progress.pointCount, progress.elevationGain.meters)
     }
 
     companion object {

@@ -29,6 +29,7 @@ data class ActivityTotals(
     @property:HiddenFromObjC val activeTime: Duration,
     val distanceMeters: Double,
     val pointCount: Int,
+    val elevationGainMeters: Double = 0.0,
 ) {
     // Kotlin's Duration reaches Swift as its raw internal encoding, so Swift gets plain seconds instead.
     val activeTimeSeconds: Double get() = activeTime.toDouble(DurationUnit.SECONDS)
@@ -53,12 +54,25 @@ class ActivityRepository(
     fun appendPoints(activityId: Long, firstSeq: Int, points: List<RecordedPoint>, totals: ActivityTotals) {
         database.transaction {
             points.forEachIndexed { index, recorded -> trackPoints.insert(recorded.toRow(activityId, firstSeq + index)) }
-            activities.updateTotals(totals.activeTime.inWholeMilliseconds, totals.distanceMeters, totals.pointCount.toLong(), activityId)
+            activities.updateTotals(
+                totals.activeTime.inWholeMilliseconds,
+                totals.distanceMeters,
+                totals.pointCount.toLong(),
+                totals.elevationGainMeters,
+                activityId,
+            )
         }
     }
 
     fun finishActivity(activityId: Long, finishedAt: Instant, totals: ActivityTotals) {
-        activities.finish(finishedAt, totals.activeTime.inWholeMilliseconds, totals.distanceMeters, totals.pointCount.toLong(), activityId)
+        activities.finish(
+            finishedAt,
+            totals.activeTime.inWholeMilliseconds,
+            totals.distanceMeters,
+            totals.pointCount.toLong(),
+            totals.elevationGainMeters,
+            activityId,
+        )
     }
 
     fun activity(id: Long): ActivitySummary? = activities.byId(id, ::activitySummary).executeAsOneOrNull()
@@ -92,7 +106,14 @@ private fun activitySummary(
     activeTimeMs: Long,
     distanceMeters: Double,
     pointCount: Long,
-) = ActivitySummary(id, sport, startedAt, finishedAt, ActivityTotals(activeTimeMs.milliseconds, distanceMeters, pointCount.toInt()))
+    elevationGainMeters: Double,
+) = ActivitySummary(
+    id,
+    sport,
+    startedAt,
+    finishedAt,
+    ActivityTotals(activeTimeMs.milliseconds, distanceMeters, pointCount.toInt(), elevationGainMeters),
+)
 
 private fun RecordedPoint.toRow(activityId: Long, seq: Int) = Track_point(
     activity_id = activityId,

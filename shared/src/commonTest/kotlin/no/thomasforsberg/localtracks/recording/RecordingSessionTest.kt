@@ -160,6 +160,29 @@ class RecordingSessionTest {
     }
 
     @Test
+    fun accumulatesElevationGainFromBarometerAndNotAcrossPauses() {
+        fun recordAt(second: Int, relativeAltitude: Double) {
+            clock.now = start + second.seconds
+            session.onBarometer(BarometerReading(clock.now, relativeAltitude, pressureKilopascals = 99.0))
+            session.onLocation(fix(second))
+        }
+        session.start(Sport.HIKING)
+        recordAt(1, 0.0)
+        recordAt(2, 4.0)
+        recordAt(3, 8.0)
+        assertEquals(8.0, progress().elevationGain.meters)
+
+        session.pause()
+        clock.now = start + 60.seconds
+        session.resume()
+        // Higher after the pause (e.g. driven up a hill): measured from the new segment's first altitude.
+        recordAt(61, 50.0)
+        recordAt(62, 55.0)
+
+        assertEquals(13.0, progress().elevationGain.meters)
+    }
+
+    @Test
     fun ignoresInvalidTransitions() {
         assertFalse(session.pause())
         assertFalse(session.resume())
