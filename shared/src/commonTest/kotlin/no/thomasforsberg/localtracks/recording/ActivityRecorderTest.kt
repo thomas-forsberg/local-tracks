@@ -105,12 +105,11 @@ class ActivityRecorderTest {
         assertEquals(id, restarted.unfinishedActivity()?.id)
 
         assertTrue(restarted.resumeUnfinished())
-        val paused = assertIs<RecordingState.Paused>(restarted.state.value)
-        assertEquals(5, paused.progress.pointCount)
-        assertEquals(44.48, paused.progress.distanceMeters, absoluteTolerance = 0.01)
-        assertEquals(5.seconds, paused.activeTime(clock.now))
+        val recording = assertIs<RecordingState.Recording>(restarted.state.value)
+        assertEquals(5, recording.progress.pointCount)
+        assertEquals(44.48, recording.progress.distanceMeters, absoluteTolerance = 0.01)
+        assertEquals(5.seconds, recording.activeTime(clock.now), "the time the app was dead isn't counted")
 
-        restarted.resume()
         restarted.recordAt(61)
         restarted.recordAt(62)
         clock.now = start + 70.seconds
@@ -136,7 +135,7 @@ class ActivityRecorderTest {
         val restarted = newRecorder()
         restarted.resumeUnfinished()
 
-        assertEquals(20.0, assertIs<RecordingState.Paused>(restarted.state.value).progress.elevationGain.meters)
+        assertEquals(20.0, assertIs<RecordingState.Recording>(restarted.state.value).progress.elevationGain.meters)
     }
 
     @Test
