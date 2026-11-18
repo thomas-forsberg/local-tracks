@@ -10,7 +10,7 @@ struct ActivitiesViewModelTests {
     init() throws {
         let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        environment = AppEnvironment(databaseDirectory: directory, locationSource: FakeLocationSource(), barometerSource: FakeBarometerSource())
+        environment = AppEnvironment(databaseDirectory: directory, stateStore: InMemoryRecordingStateStore(), locationSource: FakeLocationSource(), barometerSource: FakeBarometerSource())
     }
 
     private func record(_ sport: Sport) {

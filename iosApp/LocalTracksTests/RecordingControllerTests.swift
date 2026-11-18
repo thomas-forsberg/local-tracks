@@ -54,13 +54,15 @@ struct RecordingControllerTests {
     private let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
     private let location = FakeLocationSource()
     private let barometer = FakeBarometerSource()
+    // Shared by every environment in a test, like UserDefaults across app launches.
+    private let stateStore = InMemoryRecordingStateStore()
 
     init() throws {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     }
 
     private func makeEnvironment() -> AppEnvironment {
-        AppEnvironment(databaseDirectory: directory, locationSource: location, barometerSource: barometer)
+        AppEnvironment(databaseDirectory: directory, stateStore: stateStore, locationSource: location, barometerSource: barometer)
     }
 
     private func fix(secondsFromNow seconds: Double, latitude: Double = 59.9) -> LocationEvent {
@@ -145,5 +147,42 @@ struct RecordingControllerTests {
         #expect(controller.unfinishedActivity == nil)
         #expect(controller.state is RecordingStateRecording, "one tap on Resume continues recording")
         #expect(location.requestedSports == [.hiking, .hiking])
+    }
+
+    @Test func continuesRecordingAfterABackgroundRelaunch() async {
+        let first = makeEnvironment().recording
+        first.start(.cycling)
+        location.send(fix(secondsFromNow: 1))
+        #expect(await eventually { pointCount(first) == 1 })
+        first.flush() // the app is then killed by iOS
+
+        let relaunched = makeEnvironment().recording
+        relaunched.continueAfterRelaunch()
+
+        #expect(relaunched.state is RecordingStateRecording)
+        #expect(relaunched.unfinishedActivity == nil)
+        #expect(location.requestedSports == [.cycling, .cycling])
+        location.send(fix(secondsFromNow: 5, latitude: 59.91))
+        #expect(await eventually { pointCount(relaunched) == 2 })
+    }
+
+    @Test func staysPausedAfterABackgroundRelaunchIfItWasPaused() async {
+        let first = makeEnvironment().recording
+        first.start(.hiking)
+        first.pause() // then iOS kills the app
+
+        let relaunched = makeEnvironment().recording
+        relaunched.continueAfterRelaunch()
+
+        #expect(relaunched.state is RecordingStatePaused)
+        #expect(location.requestedSports == [.hiking, .hiking], "sensors run while paused, as before the kill")
+    }
+
+    @Test func backgroundRelaunchDetection() {
+        #expect(AppDelegate.isBackgroundRelaunch(hasLocationLaunchKey: true, applicationState: .background))
+        #expect(AppDelegate.isBackgroundRelaunch(hasLocationLaunchKey: false, applicationState: .background))
+        #expect(AppDelegate.isBackgroundRelaunch(hasLocationLaunchKey: true, applicationState: .inactive))
+        #expect(!AppDelegate.isBackgroundRelaunch(hasLocationLaunchKey: false, applicationState: .inactive))
+        #expect(!AppDelegate.isBackgroundRelaunch(hasLocationLaunchKey: false, applicationState: .active))
     }
 }

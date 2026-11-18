@@ -57,6 +57,14 @@ final class RecordingController {
         refreshState()
     }
 
+    // Called when iOS relaunched the app in the background mid-recording: carries on without user action.
+    func continueAfterRelaunch() {
+        guard recorder.continueAfterRelaunch(), let sport = recorder.state.value.progressOrNull()?.sport else { return }
+        unfinishedActivity = nil
+        startSensors(for: sport)
+        refreshState()
+    }
+
     func finishUnfinished() {
         recorder.finishUnfinished()
         unfinishedActivity = nil
