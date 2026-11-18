@@ -29,25 +29,45 @@ jobs:
     name: iOS (Kotlin + Swift tests on simulator)
     runs-on: macos-latest
     steps:
+      # A fresh VM's first full simulator boot takes minutes. Start it first and do all
+      # compiling while it boots; wait for it only right before the tests.
+      - name: Start booting a simulator
+        run: |
+          # Simulator names change with each Xcode version, so take the first available iPhone.
+          UDID=$(xcrun simctl list devices available -j \
+            | jq -r '[.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone"))][0].udid')
+          echo "SIMULATOR_UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID"
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v6
+      - name: Cache Kotlin/Native toolchain
+        uses: actions/cache@v6
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
       - name: Xcode version
         run: xcodebuild -version
-      - name: Shared core on iOS simulator
-        run: ./gradlew :shared:iosSimulatorArm64Test
+      - name: Compile Kotlin tests for the simulator
+        run: ./gradlew :shared:linkDebugTestIosSimulatorArm64
       - name: Generate Xcode project
         run: |
           brew install xcodegen
           cd iosApp && xcodegen
-      - name: Build app and run Swift tests
+      - name: Build app and Swift tests
         run: |
-          # Simulator names change with each Xcode version, so take the first available iPhone.
-          DEVICE=$(xcrun simctl list devices available -j \
-            | jq -r '[.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone"))][0].udid')
           xcodebuild -project iosApp/LocalTracks.xcodeproj -scheme LocalTracks \
-            -configuration Debug -destination "id=$DEVICE" \
-            CODE_SIGNING_ALLOWED=NO test
+            -configuration Debug -destination "id=$SIMULATOR_UDID" \
+            -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build-for-testing
+      - name: Wait for the simulator
+        run: time xcrun simctl bootstatus "$SIMULATOR_UDID" -b
+      - name: Shared core on iOS simulator
+        run: ./gradlew :shared:iosSimulatorArm64Test
+      - name: Swift tests
+        run: |
+          xcodebuild -project iosApp/LocalTracks.xcodeproj -scheme LocalTracks \
+            -configuration Debug -destination "id=$SIMULATOR_UDID" \
+            -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO test-without-building

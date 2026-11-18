@@ -64,3 +64,11 @@ tasks.withType<org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
     // simctl forwards SIMCTL_CHILD_* variables into the simulator process.
     environment("SIMCTL_CHILD_GPX_FIXTURES_DIR", gpxFixturesDir)
 }
+
+// CI boots a simulator early so its slow first boot overlaps with compiling; reuse it instead of booting another.
+providers.environmentVariable("SIMULATOR_UDID").orNull?.let { udid ->
+    tasks.withType<org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest>().configureEach {
+        device = udid
+        standalone = false
+    }
+}
