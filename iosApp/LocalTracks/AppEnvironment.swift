@@ -25,6 +25,11 @@ final class AppEnvironment {
     }
 
     static func live() throws -> AppEnvironment {
-        AppEnvironment(databaseDirectory: try DatabaseDirectory.prepare(in: DatabaseDirectory.applicationSupport()))
+        #if DEBUG
+        if let demo = DemoMode.fromLaunchArguments() {
+            return try demo.makeEnvironment()
+        }
+        #endif
+        return AppEnvironment(databaseDirectory: try DatabaseDirectory.prepare(in: DatabaseDirectory.applicationSupport()))
     }
 }

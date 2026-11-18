@@ -61,6 +61,11 @@ class ActivityRepositoryTest {
     }
 
     @Test
+    fun totalsCanBeCreatedFromSeconds() {
+        assertEquals(ActivityTotals(90.seconds, 1.5, 3, 4.5), ActivityTotals.ofSeconds(90.0, 1.5, 3, 4.5))
+    }
+
+    @Test
     fun listsOnlyFinishedActivitiesNewestFirst() = runTest {
         val older = repository.startActivity(Sport.RUNNING, start)
         val newer = repository.startActivity(Sport.CYCLING, start + 1.minutes)

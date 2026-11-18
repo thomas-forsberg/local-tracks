@@ -74,7 +74,30 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: no.thomasforsberg.localtracks.tests
         GENERATE_INFOPLIST_FILE: YES
 
+  LocalTracksUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: LocalTracksUITests
+    dependencies:
+      - target: LocalTracks
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: no.thomasforsberg.localtracks.uitests
+        GENERATE_INFOPLIST_FILE: YES
+
 schemes:
+  # Kept out of the LocalTracks scheme so CI and everyday test runs stay fast.
+  ScreenshotTour:
+    build:
+      targets:
+        LocalTracks: all
+        LocalTracksUITests: [test]
+    test:
+      config: Debug
+      targets:
+        - LocalTracksUITests
+
   LocalTracks:
     build:
       targets:

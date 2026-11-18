@@ -15,6 +15,7 @@ import kotlin.native.HiddenFromObjC
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 data class ActivitySummary(
@@ -33,6 +34,12 @@ data class ActivityTotals(
 ) {
     // Kotlin's Duration reaches Swift as its raw internal encoding, so Swift gets plain seconds instead.
     val activeTimeSeconds: Double get() = activeTime.toDouble(DurationUnit.SECONDS)
+
+    companion object {
+        // For Swift: the primary constructor takes a Duration, which Swift can't pass correctly.
+        fun ofSeconds(activeTimeSeconds: Double, distanceMeters: Double, pointCount: Int, elevationGainMeters: Double) =
+            ActivityTotals(activeTimeSeconds.seconds, distanceMeters, pointCount, elevationGainMeters)
+    }
 }
 
 class ActivityRepository(
