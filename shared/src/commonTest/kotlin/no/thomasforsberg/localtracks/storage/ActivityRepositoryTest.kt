@@ -53,11 +53,11 @@ class ActivityRepositoryTest {
         val unfinished = assertNotNull(repository.latestUnfinishedActivity())
         assertEquals(ActivitySummary(id, Sport.CYCLING, start, null, ActivityTotals(90.seconds, 123.4, 1)), unfinished)
 
-        repository.finishActivity(id, start + 2.minutes, ActivityTotals(100.seconds, 150.0, 1))
+        repository.finishActivity(id, start + 2.minutes, ActivityTotals(100.seconds, 150.0, 1, elevationGainMeters = 42.5))
 
         assertNull(repository.latestUnfinishedActivity())
         assertEquals(start + 2.minutes, repository.activity(id)?.finishedAt)
-        assertEquals(ActivityTotals(100.seconds, 150.0, 1), repository.activity(id)?.totals)
+        assertEquals(ActivityTotals(100.seconds, 150.0, 1, elevationGainMeters = 42.5), repository.activity(id)?.totals)
     }
 
     @Test

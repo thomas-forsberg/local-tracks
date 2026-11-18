@@ -123,6 +123,23 @@ class ActivityRecorderTest {
     }
 
     @Test
+    fun savesElevationGainAndRestoresItAfterACrash() {
+        recorder.start(Sport.HIKING)
+        listOf(0.0, 5.0, 10.0, 15.0, 20.0).forEachIndexed { index, altitude ->
+            val second = index + 1
+            clock.now = start + second.seconds
+            recorder.onBarometer(BarometerReading(clock.now, relativeAltitudeMeters = altitude, pressureKilopascals = 99.0))
+            recorder.recordAt(second) // flushed at 5 s
+        }
+        assertEquals(20.0, repository.latestUnfinishedActivity()?.totals?.elevationGainMeters)
+
+        val restarted = newRecorder()
+        restarted.resumeUnfinished()
+
+        assertEquals(20.0, assertIs<RecordingState.Paused>(restarted.state.value).progress.elevationGain.meters)
+    }
+
+    @Test
     fun finishUnfinishedEndsAtTheLastStoredPoint() {
         recorder.start(Sport.RUNNING)
         val id = storedActivityId()

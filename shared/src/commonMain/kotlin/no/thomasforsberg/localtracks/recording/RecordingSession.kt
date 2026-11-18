@@ -48,7 +48,12 @@ class RecordingSession(
     fun resume(): Boolean = transition { current ->
         (current as? Paused)?.let {
             Recording(
-                it.progress.copy(segmentIndex = it.progress.segmentIndex + 1, lastPoint = null, currentSpeedMetersPerSecond = null),
+                it.progress.copy(
+                    segmentIndex = it.progress.segmentIndex + 1,
+                    lastPoint = null,
+                    currentSpeedMetersPerSecond = null,
+                    elevationGain = it.progress.elevationGain.startingNewSegment(),
+                ),
                 resumedAt = clock.now(),
             )
         }
@@ -110,6 +115,7 @@ class RecordingSession(
     private fun ActivityProgress.advancedTo(point: TrackPoint) = copy(
         distanceMeters = distanceMeters + (lastPoint?.let { distanceBetween(it, point) } ?: 0.0),
         pointCount = pointCount + 1,
+        elevationGain = point.barometer?.let { elevationGain.adding(it.relativeAltitudeMeters) } ?: elevationGain,
         lastPoint = point,
         currentSpeedMetersPerSecond = point.speedMetersPerSecond ?: lastPoint?.let { speedBetween(it, point) },
     )

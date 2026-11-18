@@ -58,6 +58,7 @@ data class ActivityProgress(
     @property:HiddenFromObjC val activeTimeBeforeResume: Duration,
     val distanceMeters: Double,
     val pointCount: Int,
+    val elevationGain: ElevationGain,
     // Increases on every resume, so distance is never counted across a pause.
     val segmentIndex: Int,
     // Last accepted point of the current segment.
@@ -71,6 +72,7 @@ data class ActivityProgress(
             activeTimeBeforeResume = Duration.ZERO,
             distanceMeters = 0.0,
             pointCount = 0,
+            elevationGain = ElevationGain.NONE,
             segmentIndex = 0,
             lastPoint = null,
             currentSpeedMetersPerSecond = null,

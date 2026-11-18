@@ -71,6 +71,7 @@ private struct LiveStatsView: View {
             GridRow { Text("Distance").foregroundStyle(.secondary); Text(Formatters.distance(meters: progress?.distanceMeters ?? 0)) }
             GridRow { Text("Time").foregroundStyle(.secondary); Text(Formatters.duration(seconds: state.activeTimeSeconds(now: instant))) }
             GridRow { Text("Avg speed").foregroundStyle(.secondary); Text(Formatters.speed(metersPerSecond: state.averageSpeedMetersPerSecond(now: instant)?.doubleValue)) }
+            GridRow { Text("Climb").foregroundStyle(.secondary); Text(Formatters.elevation(meters: progress?.elevationGain.meters ?? 0)) }
             GridRow { Text("Points").foregroundStyle(.secondary); Text("\(progress?.pointCount ?? 0)") }
         }
         .font(.title3.monospacedDigit())
@@ -103,6 +104,11 @@ enum Formatters {
     static func distance(meters: Double) -> String {
         Measurement(value: meters / 1000, unit: UnitLength.kilometers)
             .formatted(.measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .number.precision(.fractionLength(2))))
+    }
+
+    static func elevation(meters: Double) -> String {
+        Measurement(value: meters, unit: UnitLength.meters)
+            .formatted(.measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .number.precision(.fractionLength(0))))
     }
 
     static func duration(seconds: Double) -> String {
