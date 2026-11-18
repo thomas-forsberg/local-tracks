@@ -19,10 +19,11 @@ class ActivityRecorderTest {
     private val start = Instant.parse("2026-09-12T07:00:00Z")
     private val clock = TestClock(start)
     private val repository = ActivityRepository(createTestDatabase())
+    private val stateStore = InMemoryRecordingStateStore()
     private val recorder = newRecorder()
 
-    // A fresh recorder on the same database, as after an app restart.
-    private fun newRecorder() = ActivityRecorder(RecordingSession(clock), repository, clock)
+    // A fresh recorder on the same database and state store, as after the app was killed and relaunched.
+    private fun newRecorder() = ActivityRecorder(RecordingSession(clock), repository, clock, stateStore)
 
     private fun fixAt(second: Int) = LocationFix(
         time = start + second.seconds,
@@ -136,6 +137,70 @@ class ActivityRecorderTest {
         restarted.resumeUnfinished()
 
         assertEquals(20.0, assertIs<RecordingState.Recording>(restarted.state.value).progress.elevationGain.meters)
+    }
+
+    @Test
+    fun continueAfterRelaunchKeepsRecordingAnActivityThatWasRecording() {
+        recorder.start(Sport.CYCLING)
+        (1..5).forEach { recorder.recordAt(it) }
+
+        val relaunched = newRecorder()
+        clock.now = start + 60.seconds
+
+        assertTrue(relaunched.continueAfterRelaunch())
+        assertIs<RecordingState.Recording>(relaunched.state.value)
+        assertTrue(relaunched.recordAt(61))
+        assertEquals(1, relaunched.state.value.progressOrNull()?.segmentIndex)
+    }
+
+    @Test
+    fun continueAfterRelaunchStaysPausedWhenTheActivityWasPaused() {
+        recorder.start(Sport.HIKING)
+        (1..3).forEach { recorder.recordAt(it) }
+        clock.now = start + 4.seconds
+        recorder.pause()
+
+        val relaunched = newRecorder()
+        clock.now = start + 60.seconds
+
+        assertTrue(relaunched.continueAfterRelaunch())
+        val paused = assertIs<RecordingState.Paused>(relaunched.state.value)
+        assertEquals(3, paused.progress.pointCount)
+        assertEquals(4.seconds, paused.activeTime(clock.now))
+        assertFalse(relaunched.recordAt(61), "paused: fixes are ignored")
+    }
+
+    @Test
+    fun aPausedFlagForAnotherActivityIsIgnored() {
+        stateStore.markPaused(activityId = 999)
+        recorder.start(Sport.RUNNING) // starting clears the flag; set a stale one again below
+        stateStore.markPaused(activityId = 999)
+        (1..5).forEach { recorder.recordAt(it) }
+
+        val relaunched = newRecorder()
+
+        assertTrue(relaunched.continueAfterRelaunch())
+        assertIs<RecordingState.Recording>(relaunched.state.value)
+        assertNull(stateStore.pausedActivityId())
+    }
+
+    @Test
+    fun pausedFlagFollowsPauseResumeAndStop() {
+        recorder.start(Sport.HIKING)
+        val id = storedActivityId()
+
+        recorder.pause()
+        assertEquals(id, stateStore.pausedActivityId())
+        recorder.resume()
+        assertNull(stateStore.pausedActivityId())
+        recorder.pause()
+        recorder.stop()
+        assertNull(stateStore.pausedActivityId())
+    }
+
+    @Test
+    fun continueAfterRelaunchDoesNothingWithoutAnUnfinishedActivity() {
+        assertFalse(newRecorder().continueAfterRelaunch())
     }
 
     @Test

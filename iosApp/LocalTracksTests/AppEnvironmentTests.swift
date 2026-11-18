@@ -13,12 +13,12 @@ struct AppEnvironmentTests {
     }
 
     @Test func recordedActivitySurvivesReopeningTheDatabase() throws {
-        let first = AppEnvironment(databaseDirectory: directory)
+        let first = AppEnvironment(databaseDirectory: directory, stateStore: InMemoryRecordingStateStore())
         #expect(first.recorder.start(sport: .cycling))
         let id = try #require(first.repository.latestUnfinishedActivity()).id
         #expect(first.recorder.stop())
 
-        let reopened = AppEnvironment(databaseDirectory: directory)
+        let reopened = AppEnvironment(databaseDirectory: directory, stateStore: InMemoryRecordingStateStore())
 
         let activity = try #require(reopened.repository.activity(id: id))
         #expect(activity.sport == .cycling)
@@ -27,10 +27,10 @@ struct AppEnvironmentTests {
     }
 
     @Test func unfinishedActivityIsFoundAfterRestart() throws {
-        let crashed = AppEnvironment(databaseDirectory: directory)
+        let crashed = AppEnvironment(databaseDirectory: directory, stateStore: InMemoryRecordingStateStore())
         #expect(crashed.recorder.start(sport: .hiking))
 
-        let restarted = AppEnvironment(databaseDirectory: directory)
+        let restarted = AppEnvironment(databaseDirectory: directory, stateStore: InMemoryRecordingStateStore())
 
         #expect(restarted.recorder.unfinishedActivity()?.sport == .hiking)
     }

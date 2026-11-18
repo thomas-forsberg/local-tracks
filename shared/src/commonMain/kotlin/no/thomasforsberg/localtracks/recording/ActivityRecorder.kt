@@ -17,9 +17,12 @@ class ActivityRecorder(
     private val session: RecordingSession,
     private val repository: ActivityRepository,
     private val clock: Clock,
+    private val stateStore: RecordingStateStore = InMemoryRecordingStateStore(),
     private val flushInterval: Duration = DEFAULT_FLUSH_INTERVAL,
 ) {
-    constructor(repository: ActivityRepository) : this(RecordingSession(), repository, Clock.System)
+    // For Swift, where Kotlin default arguments aren't available.
+    constructor(repository: ActivityRepository, stateStore: RecordingStateStore) :
+        this(RecordingSession(), repository, Clock.System, stateStore)
 
     val state: StateFlow<RecordingState> get() = session.state
 
@@ -32,12 +35,18 @@ class ActivityRecorder(
         if (!session.start(sport)) return false
         val progress = checkNotNull(state.value.progressOrNull())
         attach(repository.startActivity(sport, progress.startedAt), storedPointCount = 0)
+        stateStore.clear()
         return true
     }
 
-    fun pause(): Boolean = session.pause().also { paused -> if (paused) flush() }
+    fun pause(): Boolean {
+        if (!session.pause()) return false
+        flush()
+        activityId?.let(stateStore::markPaused)
+        return true
+    }
 
-    fun resume(): Boolean = session.resume()
+    fun resume(): Boolean = session.resume().also { resumed -> if (resumed) stateStore.clear() }
 
     fun stop(): Boolean {
         if (!session.stop()) return false
@@ -45,6 +54,7 @@ class ActivityRecorder(
         flush()
         activityId?.let { repository.finishActivity(it, finished.finishedAt, totalsOf(finished)) }
         activityId = null
+        stateStore.clear()
         return true
     }
 
@@ -71,10 +81,26 @@ class ActivityRecorder(
     fun unfinishedActivity(): ActivitySummary? =
         if (activityId == null) repository.latestUnfinishedActivity() else null
 
-    // Continues the unfinished activity: it is restored (as Paused, so the gap is never counted)
-    // and resumed straight away in a new segment, so one tap on "Resume" is enough.
+    // After the user reopens the app: continues the unfinished activity straight away, in a new
+    // segment, so one tap on "Resume" is enough. The time the app wasn't running isn't counted.
     fun resumeUnfinished(): Boolean {
-        val unfinished = unfinishedActivity() ?: return false
+        restoreUnfinished() ?: return false
+        stateStore.clear()
+        return session.resume()
+    }
+
+    // After iOS relaunches the app in the background (e.g. it was killed for memory during a ride):
+    // continues without any user action, staying paused if the activity was paused when the app died.
+    fun continueAfterRelaunch(): Boolean {
+        val unfinished = restoreUnfinished() ?: return false
+        if (stateStore.pausedActivityId() == unfinished.id) return true
+        stateStore.clear() // a stale flag for another activity
+        return session.resume()
+    }
+
+    // Restores the unfinished activity as Paused, so the gap is never counted as distance or time.
+    private fun restoreUnfinished(): ActivitySummary? {
+        val unfinished = unfinishedActivity() ?: return null
         val lastPoint = repository.lastTrackPoint(unfinished.id)
         val progress = ActivityProgress(
             sport = unfinished.sport,
@@ -87,9 +113,9 @@ class ActivityRecorder(
             lastPoint = lastPoint?.point,
             currentSpeedMetersPerSecond = null,
         )
-        if (!session.restore(progress)) return false
+        if (!session.restore(progress)) return null
         attach(unfinished.id, storedPointCount = unfinished.totals.pointCount)
-        return session.resume()
+        return unfinished
     }
 
     // Saves the unfinished activity as it was at its last stored point.
@@ -97,6 +123,7 @@ class ActivityRecorder(
         val unfinished = unfinishedActivity() ?: return false
         val finishedAt = repository.lastTrackPoint(unfinished.id)?.point?.time ?: unfinished.startedAt
         repository.finishActivity(unfinished.id, finishedAt, unfinished.totals)
+        stateStore.clear()
         return true
     }
 

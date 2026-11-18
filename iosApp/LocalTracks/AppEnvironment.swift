@@ -11,6 +11,7 @@ final class AppEnvironment {
 
     init(
         databaseDirectory: URL,
+        stateStore: RecordingStateStore,
         locationSource: LocationSource = CoreLocationSource(),
         barometerSource: BarometerSource = CoreMotionBarometerSource()
     ) {
@@ -19,7 +20,7 @@ final class AppEnvironment {
             fileName: "local-tracks.db"
         )
         repository = ActivityRepository(database: database)
-        recorder = ActivityRecorder(repository: repository)
+        recorder = ActivityRecorder(repository: repository, stateStore: stateStore)
         recording = RecordingController(recorder: recorder, locationSource: locationSource, barometerSource: barometerSource)
         activities = ActivitiesViewModel(repository: repository)
     }
@@ -30,6 +31,9 @@ final class AppEnvironment {
             return try demo.makeEnvironment()
         }
         #endif
-        return AppEnvironment(databaseDirectory: try DatabaseDirectory.prepare(in: DatabaseDirectory.applicationSupport()))
+        return AppEnvironment(
+            databaseDirectory: try DatabaseDirectory.prepare(in: DatabaseDirectory.applicationSupport()),
+            stateStore: UserDefaultsRecordingStateStore()
+        )
     }
 }

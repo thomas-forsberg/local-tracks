@@ -20,7 +20,7 @@ enum DemoMode {
     func makeEnvironment() throws -> AppEnvironment {
         let directory = FileManager.default.temporaryDirectory.appending(path: "demo-\(UUID().uuidString)", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let environment = AppEnvironment(databaseDirectory: directory)
+        let environment = AppEnvironment(databaseDirectory: directory, stateStore: InMemoryRecordingStateStore())
         if self == .sampleActivities {
             DemoData.seed(environment.repository)
         }

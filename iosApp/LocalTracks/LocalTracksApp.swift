@@ -2,12 +2,13 @@ import SwiftUI
 
 @main
 struct LocalTracksApp: App {
+    // The delegate owns the environment, so a background relaunch can continue recording before any UI exists.
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.scenePhase) private var scenePhase
-    private let environment: Result<AppEnvironment, Error> = Result { try AppEnvironment.live() }
 
     var body: some Scene {
         WindowGroup {
-            switch environment {
+            switch appDelegate.environment {
             case .success(let environment):
                 RootView(environment: environment)
             case .failure(let error):
@@ -17,7 +18,7 @@ struct LocalTracksApp: App {
         }
         .onChange(of: scenePhase) { _, phase in
             // The app may be killed at any time once in the background, so write pending points now.
-            if phase == .background, case .success(let environment) = environment {
+            if phase == .background, case .success(let environment) = appDelegate.environment {
                 environment.recording.flush()
             }
         }
