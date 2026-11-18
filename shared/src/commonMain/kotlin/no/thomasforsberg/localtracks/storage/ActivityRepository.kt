@@ -11,7 +11,9 @@ import no.thomasforsberg.localtracks.recording.RecordedPoint
 import no.thomasforsberg.localtracks.recording.Sport
 import no.thomasforsberg.localtracks.track.TrackPoint
 import kotlin.coroutines.CoroutineContext
+import kotlin.native.HiddenFromObjC
 import kotlin.time.Duration
+import kotlin.time.DurationUnit
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 
@@ -24,10 +26,13 @@ data class ActivitySummary(
 )
 
 data class ActivityTotals(
-    val activeTime: Duration,
+    @property:HiddenFromObjC val activeTime: Duration,
     val distanceMeters: Double,
     val pointCount: Int,
-)
+) {
+    // Kotlin's Duration reaches Swift as its raw internal encoding, so Swift gets plain seconds instead.
+    val activeTimeSeconds: Double get() = activeTime.toDouble(DurationUnit.SECONDS)
+}
 
 class ActivityRepository(
     private val database: LocalTracksDatabase,

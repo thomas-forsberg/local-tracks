@@ -21,6 +21,7 @@ kotlin {
     sourceSets {
         all {
             languageSettings.optIn("kotlin.time.ExperimentalTime")
+            languageSettings.optIn("kotlin.experimental.ExperimentalObjCRefinement")
         }
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)

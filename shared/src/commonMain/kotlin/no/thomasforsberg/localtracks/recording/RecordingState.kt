@@ -1,6 +1,7 @@
 package no.thomasforsberg.localtracks.recording
 
 import no.thomasforsberg.localtracks.track.TrackPoint
+import kotlin.native.HiddenFromObjC
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.Instant
@@ -15,6 +16,7 @@ sealed interface RecordingState {
     data class Finished(val progress: ActivityProgress, val finishedAt: Instant) : RecordingState
 
     // Time spent recording, excluding pauses.
+    @HiddenFromObjC
     fun activeTime(now: Instant): Duration = when (this) {
         Idle -> Duration.ZERO
         is Recording -> progress.activeTimeBeforeResume + (now - resumedAt).coerceAtLeast(Duration.ZERO)
@@ -23,12 +25,18 @@ sealed interface RecordingState {
     }
 
     // Wall-clock time since start, including pauses.
+    @HiddenFromObjC
     fun elapsed(now: Instant): Duration = when (this) {
         Idle -> Duration.ZERO
         is Recording -> now - progress.startedAt
         is Paused -> now - progress.startedAt
         is Finished -> finishedAt - progress.startedAt
     }
+
+    // Kotlin's Duration reaches Swift as its raw internal encoding, so Swift gets plain seconds instead.
+    fun activeTimeSeconds(now: Instant): Double = activeTime(now).toDouble(DurationUnit.SECONDS)
+
+    fun elapsedSeconds(now: Instant): Double = elapsed(now).toDouble(DurationUnit.SECONDS)
 
     fun averageSpeedMetersPerSecond(now: Instant): Double? {
         val seconds = activeTime(now).toDouble(DurationUnit.SECONDS)
@@ -47,7 +55,7 @@ sealed interface RecordingState {
 data class ActivityProgress(
     val sport: Sport,
     val startedAt: Instant,
-    val activeTimeBeforeResume: Duration,
+    @property:HiddenFromObjC val activeTimeBeforeResume: Duration,
     val distanceMeters: Double,
     val pointCount: Int,
     // Increases on every resume, so distance is never counted across a pause.

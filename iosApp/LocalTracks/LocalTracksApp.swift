@@ -8,8 +8,8 @@ struct LocalTracksApp: App {
     var body: some Scene {
         WindowGroup {
             switch environment {
-            case .success:
-                ContentView()
+            case .success(let environment):
+                RecordView(controller: environment.recording)
             case .failure(let error):
                 // Only happens if the app can't create its own folder, e.g. when the disk is full.
                 ContentUnavailableView("Can't open storage", systemImage: "externaldrive.badge.xmark", description: Text(error.localizedDescription))
@@ -18,7 +18,7 @@ struct LocalTracksApp: App {
         .onChange(of: scenePhase) { _, phase in
             // The app may be killed at any time once in the background, so write pending points now.
             if phase == .background, case .success(let environment) = environment {
-                environment.recorder.flush()
+                environment.recording.flush()
             }
         }
     }
