@@ -7,6 +7,7 @@ final class AppEnvironment {
     let repository: ActivityRepository
     let recorder: ActivityRecorder
     let recording: RecordingController
+    let activities: ActivitiesViewModel
 
     init(
         databaseDirectory: URL,
@@ -20,6 +21,7 @@ final class AppEnvironment {
         repository = ActivityRepository(database: database)
         recorder = ActivityRecorder(repository: repository)
         recording = RecordingController(recorder: recorder, locationSource: locationSource, barometerSource: barometerSource)
+        activities = ActivitiesViewModel(repository: repository)
     }
 
     static func live() throws -> AppEnvironment {

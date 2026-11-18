@@ -9,7 +9,7 @@ struct LocalTracksApp: App {
         WindowGroup {
             switch environment {
             case .success(let environment):
-                RecordView(controller: environment.recording)
+                RootView(environment: environment)
             case .failure(let error):
                 // Only happens if the app can't create its own folder, e.g. when the disk is full.
                 ContentUnavailableView("Can't open storage", systemImage: "externaldrive.badge.xmark", description: Text(error.localizedDescription))
