@@ -71,7 +71,8 @@ class ActivityRecorder(
     fun unfinishedActivity(): ActivitySummary? =
         if (activityId == null) repository.latestUnfinishedActivity() else null
 
-    // Restores the unfinished activity as Paused; resume() continues it in a new segment.
+    // Continues the unfinished activity: it is restored (as Paused, so the gap is never counted)
+    // and resumed straight away in a new segment, so one tap on "Resume" is enough.
     fun resumeUnfinished(): Boolean {
         val unfinished = unfinishedActivity() ?: return false
         val lastPoint = repository.lastTrackPoint(unfinished.id)
@@ -88,7 +89,7 @@ class ActivityRecorder(
         )
         if (!session.restore(progress)) return false
         attach(unfinished.id, storedPointCount = unfinished.totals.pointCount)
-        return true
+        return session.resume()
     }
 
     // Saves the unfinished activity as it was at its last stored point.

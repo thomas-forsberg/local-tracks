@@ -143,7 +143,7 @@ struct RecordingControllerTests {
         controller.resumeUnfinished()
 
         #expect(controller.unfinishedActivity == nil)
-        #expect(controller.state is RecordingStatePaused)
+        #expect(controller.state is RecordingStateRecording, "one tap on Resume continues recording")
         #expect(location.requestedSports == [.hiking, .hiking])
     }
 }
