@@ -30,6 +30,7 @@ class RecordingSession(
     val state: StateFlow<RecordingState> = mutableState.asStateFlow()
 
     private val latestBarometer = MutableStateFlow<BarometerReading?>(null)
+    private val latestMotionStationary = MutableStateFlow<Boolean?>(null)
 
     fun start(sport: Sport): Boolean = transition { current ->
         when (current) {
@@ -78,6 +79,11 @@ class RecordingSession(
         }
     }
 
+    // Motion activity changes rarely and is only reported on change, so the latest state applies until the next.
+    fun onMotion(stationary: Boolean?) {
+        latestMotionStationary.value = stationary
+    }
+
     fun onBarometer(reading: BarometerReading) {
         latestBarometer.value = reading
     }
@@ -110,6 +116,7 @@ class RecordingSession(
             horizontalAccuracyMeters = fix.horizontalAccuracyMeters,
             speedMetersPerSecond = fix.speedMetersPerSecond?.takeIf { it >= 0 },
             barometer = latestBarometer.value?.takeIf { (fix.time - it.time).absoluteValue <= BAROMETER_MAX_AGE },
+            stationaryByMotion = latestMotionStationary.value,
         )
     }
 

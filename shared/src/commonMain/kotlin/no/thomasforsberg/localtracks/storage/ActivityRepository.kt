@@ -140,6 +140,7 @@ private fun RecordedPoint.toRow(activityId: Long, seq: Int) = Track_point(
     baro_time = point.barometer?.time,
     baro_relative_altitude_meters = point.barometer?.relativeAltitudeMeters,
     baro_pressure_kpa = point.barometer?.pressureKilopascals,
+    stationary_by_motion = point.stationaryByMotion,
 )
 
 private fun Track_point.toRecordedPoint() = RecordedPoint(
@@ -158,5 +159,6 @@ private fun Track_point.toRecordedPoint() = RecordedPoint(
                 pressureKilopascals = requireNotNull(baro_pressure_kpa),
             )
         },
+        stationaryByMotion = stationary_by_motion,
     ),
 )

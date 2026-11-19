@@ -9,18 +9,22 @@ final class RecordingController {
     private(set) var locationProblem: LocationProblem?
     // Nil until the first reading; stays nil on devices without a barometer, such as the simulator.
     private(set) var latestBarometerReading: BarometerReading?
+    // From the motion sensors: true standing still, false moving, nil unknown.
+    private(set) var stationaryByMotion: Bool?
     // Left over from a crash or the app being killed; offered for resuming or saving on launch.
     private(set) var unfinishedActivity: ActivitySummary?
 
     @ObservationIgnored private let recorder: ActivityRecorder
     @ObservationIgnored private let locationSource: LocationSource
     @ObservationIgnored private let barometerSource: BarometerSource
+    @ObservationIgnored private let motionSource: MotionSource
     @ObservationIgnored private var sensorTasks: [Task<Void, Never>] = []
 
-    init(recorder: ActivityRecorder, locationSource: LocationSource, barometerSource: BarometerSource) {
+    init(recorder: ActivityRecorder, locationSource: LocationSource, barometerSource: BarometerSource, motionSource: MotionSource) {
         self.recorder = recorder
         self.locationSource = locationSource
         self.barometerSource = barometerSource
+        self.motionSource = motionSource
         state = recorder.state.value
         unfinishedActivity = recorder.unfinishedActivity()
     }
@@ -78,6 +82,7 @@ final class RecordingController {
         stopSensors()
         let locationEvents = locationSource.events(for: sport)
         let barometerReadings = barometerSource.readings()
+        let motionStates = motionSource.stationaryStates()
         sensorTasks = [
             Task { [weak self] in
                 for await event in locationEvents {
@@ -87,6 +92,11 @@ final class RecordingController {
             Task { [weak self] in
                 for await reading in barometerReadings {
                     self?.handle(reading)
+                }
+            },
+            Task { [weak self] in
+                for await stationary in motionStates {
+                    self?.handleMotion(stationary)
                 }
             },
         ]
@@ -107,6 +117,11 @@ final class RecordingController {
         case .problem(let problem):
             locationProblem = problem
         }
+    }
+
+    private func handleMotion(_ stationary: Bool?) {
+        recorder.onMotion(stationary: stationary.map(KotlinBoolean.init(value:)))
+        stationaryByMotion = stationary
     }
 
     private func handle(_ reading: BarometerReading) {
