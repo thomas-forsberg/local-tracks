@@ -59,13 +59,20 @@ struct RouteMapView: UIViewRepresentable {
             }
 
             let all = segments.flatMap { $0 }
-            setMarker(at: all.first, id: "start", color: .systemGreen, in: style)
-            setMarker(at: all.last, id: "end", color: .systemRed, in: style)
-
             if !hasFittedCamera, !all.isEmpty {
                 fitCamera(to: all, on: mapView)
                 hasFittedCamera = true
             }
+
+            // When start and end would overlap on screen (typically a round trip), draw a green ring
+            // around a smaller red dot instead of two dots covering each other.
+            let overlap = if let first = all.first, let last = all.last {
+                Self.markersOverlap(mapView.convert(first, toPointTo: mapView), mapView.convert(last, toPointTo: mapView))
+            } else {
+                false
+            }
+            setMarker(at: all.first, id: "start", color: .systemGreen, radius: overlap ? 11 : 7, in: style)
+            setMarker(at: all.last, id: "end", color: .systemRed, radius: overlap ? 5 : 7, in: style)
         }
 
         private func setShape(_ shape: MLNShape, sourceId: String, in style: MLNStyle, layers: (MLNSource) -> [MLNStyleLayer]) {
@@ -78,13 +85,18 @@ struct RouteMapView: UIViewRepresentable {
             }
         }
 
-        private func setMarker(at coordinate: CLLocationCoordinate2D?, id: String, color: UIColor, in style: MLNStyle) {
+        // A marker is 19 pt across (radius 7 plus a 2.5 pt outline).
+        nonisolated static func markersOverlap(_ a: CGPoint, _ b: CGPoint, markerDiameter: CGFloat = 19) -> Bool {
+            hypot(a.x - b.x, a.y - b.y) < markerDiameter
+        }
+
+        private func setMarker(at coordinate: CLLocationCoordinate2D?, id: String, color: UIColor, radius: Double, in style: MLNStyle) {
             let point = MLNPointFeature()
             if let coordinate { point.coordinate = coordinate }
             setShape(coordinate == nil ? MLNShapeCollectionFeature(shapes: []) : point, sourceId: id, in: style) { source in
                 let circle = MLNCircleStyleLayer(identifier: "\(id)-marker", source: source)
                 circle.circleColor = NSExpression(forConstantValue: color)
-                circle.circleRadius = NSExpression(forConstantValue: 7)
+                circle.circleRadius = NSExpression(forConstantValue: radius)
                 circle.circleStrokeColor = NSExpression(forConstantValue: UIColor.white)
                 circle.circleStrokeWidth = NSExpression(forConstantValue: 2.5)
                 return [circle]

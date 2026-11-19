@@ -67,7 +67,7 @@ private struct ActivityRow: View {
                     .foregroundStyle(.secondary)
                 Text([
                     Formatters.distance(meters: activity.totals.distanceMeters),
-                    Formatters.duration(seconds: activity.totals.activeTimeSeconds),
+                    Formatters.shortDuration(seconds: activity.totals.activeTimeSeconds),
                     "↑ " + Formatters.elevation(meters: activity.totals.elevationGainMeters),
                 ].joined(separator: " · "))
                     .font(.subheadline.monospacedDigit())

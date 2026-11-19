@@ -20,7 +20,12 @@ enum DemoMode {
     func makeEnvironment() throws -> AppEnvironment {
         let directory = FileManager.default.temporaryDirectory.appending(path: "demo-\(UUID().uuidString)", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let environment = AppEnvironment(databaseDirectory: directory, stateStore: InMemoryRecordingStateStore())
+        let environment = AppEnvironment(
+            databaseDirectory: directory,
+            stateStore: InMemoryRecordingStateStore(),
+            locationSource: DemoLocationSource(),
+            barometerSource: DemoBarometerSource()
+        )
         if self == .sampleActivities {
             DemoData.seed(environment.repository)
         }
@@ -82,6 +87,58 @@ enum DemoData {
                     barometer: nil
                 )
             )
+        }
+    }
+}
+// Pretend GPS for demo mode: a loop around Sognsvann at a speed that suits the sport, one fix per second.
+@MainActor
+final class DemoLocationSource: LocationSource {
+    func events(for sport: Sport) -> AsyncStream<LocationEvent> {
+        let speed = switch sport {
+        case .cycling: 6.0
+        case .running: 3.2
+        case .hiking: 1.4
+        }
+        let lapSeconds = 600.0
+        let radiusMeters = speed * lapSeconds / (2 * .pi)
+        return AsyncStream { continuation in
+            let task = Task { @MainActor in
+                var second = 0.0
+                while !Task.isCancelled {
+                    let angle = 2 * Double.pi * second / lapSeconds
+                    continuation.yield(.fix(LocationFix(
+                        time: .from(.now),
+                        latitude: 59.9765 + radiusMeters * sin(angle) / 111_195,
+                        longitude: 10.7290 + radiusMeters * cos(angle) / (111_195 * cos(59.9765 * .pi / 180)),
+                        horizontalAccuracyMeters: 5,
+                        altitudeMeters: nil,
+                        speedMetersPerSecond: KotlinDouble(value: speed)
+                    )))
+                    second += 1
+                    try? await Task.sleep(for: .seconds(1))
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+}
+
+// Pretend barometer for demo mode: a steady climb of 0.4 m per second.
+@MainActor
+final class DemoBarometerSource: BarometerSource {
+    func readings() -> AsyncStream<BarometerReading> {
+        AsyncStream { continuation in
+            let task = Task { @MainActor in
+                var altitude = 0.0
+                while !Task.isCancelled {
+                    continuation.yield(BarometerReading(time: .from(.now), relativeAltitudeMeters: altitude, pressureKilopascals: 100))
+                    altitude += 0.4
+                    try? await Task.sleep(for: .seconds(1))
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in task.cancel() }
         }
     }
 }
