@@ -11,6 +11,9 @@ struct RootView: View {
             Tab("Activities", systemImage: "list.bullet") {
                 ActivitiesView(viewModel: environment.activities)
             }
+            Tab("Stats", systemImage: "chart.bar") {
+                StatsView(viewModel: environment.stats)
+            }
         }
     }
 }
