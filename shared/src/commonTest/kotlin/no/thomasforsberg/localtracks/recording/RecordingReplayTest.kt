@@ -38,7 +38,7 @@ class RecordingReplayTest {
 
         val finished = assertIs<RecordingState.Finished>(session.state.value)
         assertEquals(loop.size, finished.progress.pointCount)
-        assertEquals(loop.summary().distanceMeters, finished.progress.distanceMeters, absoluteTolerance = 1e-6)
+        assertEquals(loop.summary(Sport.CYCLING).distanceMeters, finished.progress.distanceMeters, absoluteTolerance = 1e-6)
         assertEquals(726.seconds, finished.activeTime(clock.now))
     }
 }

@@ -60,7 +60,8 @@ enum DemoData {
                 activeTimeSeconds: sample.minutes * 60,
                 distanceMeters: sample.kilometers * 1000,
                 pointCount: Int32(points.count),
-                elevationGainMeters: sample.climb
+                elevationGainMeters: sample.climb,
+                movingTimeSeconds: sample.minutes * 60
             )
             repository.appendPoints(activityId: id, firstSeq: 0, points: points, totals: totals)
             repository.finishActivity(activityId: id, finishedAt: .from(startedAt.addingTimeInterval(sample.minutes * 60)), totals: totals)

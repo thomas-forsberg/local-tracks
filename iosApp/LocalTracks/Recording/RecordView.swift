@@ -91,7 +91,7 @@ private struct LiveStatsView: View {
 
             Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 20) {
                 GridRow {
-                    Stat(title: "Time", value: Formatters.clock(seconds: state.activeTimeSeconds(now: instant)))
+                    Stat(title: "Moving time", value: Formatters.clock(seconds: progress?.movingTimeSeconds ?? 0))
                     Stat(title: "Elapsed", value: Formatters.clock(seconds: state.elapsedSeconds(now: instant)))
                 }
                 GridRow {
@@ -154,6 +154,9 @@ private struct StatusPill: View {
 
     var body: some View {
         switch onEnum(of: state) {
+        case .recording(let recording) where recording.progress.pointCount > 0 && !recording.progress.isMoving:
+            // Standing still: distance and moving time stop counting until you move again.
+            Label("Auto-paused", systemImage: "pause.circle").pill(tint: .orange)
         case .recording:
             Label("Recording", systemImage: "circle.fill").pill(tint: .red)
         case .paused:

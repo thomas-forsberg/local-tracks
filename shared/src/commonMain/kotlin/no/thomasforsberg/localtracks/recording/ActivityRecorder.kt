@@ -5,6 +5,7 @@ import no.thomasforsberg.localtracks.recording.RecordingState.Finished
 import no.thomasforsberg.localtracks.storage.ActivityRepository
 import no.thomasforsberg.localtracks.storage.ActivitySummary
 import no.thomasforsberg.localtracks.storage.ActivityTotals
+import no.thomasforsberg.localtracks.track.TrackMeasurement
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -106,7 +107,7 @@ class ActivityRecorder(
             sport = unfinished.sport,
             startedAt = unfinished.startedAt,
             activeTimeBeforeResume = unfinished.totals.activeTime,
-            distanceMeters = unfinished.totals.distanceMeters,
+            measurement = TrackMeasurement.continuing(unfinished.totals.distanceMeters, unfinished.totals.movingTime),
             pointCount = unfinished.totals.pointCount,
             elevationGain = ElevationGain(unfinished.totals.elevationGainMeters, referenceMeters = null),
             segmentIndex = lastPoint?.segmentIndex ?: 0,
@@ -136,7 +137,13 @@ class ActivityRecorder(
 
     private fun totalsOf(state: RecordingState): ActivityTotals {
         val progress = checkNotNull(state.progressOrNull())
-        return ActivityTotals(state.activeTime(clock.now()), progress.distanceMeters, progress.pointCount, progress.elevationGain.meters)
+        return ActivityTotals(
+            activeTime = state.activeTime(clock.now()),
+            distanceMeters = progress.distanceMeters,
+            pointCount = progress.pointCount,
+            elevationGainMeters = progress.elevationGain.meters,
+            movingTime = progress.measurement.movingTime,
+        )
     }
 
     companion object {

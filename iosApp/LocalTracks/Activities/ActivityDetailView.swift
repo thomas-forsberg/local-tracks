@@ -19,7 +19,7 @@ struct ActivityDetailView: View {
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 20) {
                     Stat(title: "Distance", value: Formatters.distance(meters: activity.totals.distanceMeters))
-                    Stat(title: "Active time", value: Formatters.clock(seconds: activity.totals.activeTimeSeconds))
+                    Stat(title: "Moving time", value: Formatters.clock(seconds: activity.totals.movingTimeSeconds))
                     Stat(title: activity.sport.averageSpeedTitle, value: Formatters.speedOrPace(metersPerSecond: viewModel.averageSpeedMetersPerSecond, for: activity.sport))
                     Stat(title: "Climb", value: Formatters.elevation(meters: activity.totals.elevationGainMeters))
                     Stat(title: "Elapsed time", value: viewModel.elapsedSeconds.map(Formatters.clock(seconds:)) ?? "–")

@@ -1,5 +1,6 @@
 package no.thomasforsberg.localtracks.recording
 
+import no.thomasforsberg.localtracks.track.TrackMeasurement
 import no.thomasforsberg.localtracks.track.TrackPoint
 import kotlin.native.HiddenFromObjC
 import kotlin.time.Duration
@@ -38,10 +39,11 @@ sealed interface RecordingState {
 
     fun elapsedSeconds(now: Instant): Double = elapsed(now).toDouble(DurationUnit.SECONDS)
 
+    // Over moving time, as Strava does: standing at a red light doesn't lower it.
     fun averageSpeedMetersPerSecond(now: Instant): Double? {
-        val seconds = activeTime(now).toDouble(DurationUnit.SECONDS)
-        val distance = progressOrNull()?.distanceMeters ?: return null
-        return if (seconds > 0) distance / seconds else null
+        val progress = progressOrNull() ?: return null
+        val seconds = progress.movingTimeSeconds
+        return if (seconds > 0) progress.distanceMeters / seconds else null
     }
 
     fun progressOrNull(): ActivityProgress? = when (this) {
@@ -56,7 +58,7 @@ data class ActivityProgress(
     val sport: Sport,
     val startedAt: Instant,
     @property:HiddenFromObjC val activeTimeBeforeResume: Duration,
-    val distanceMeters: Double,
+    val measurement: TrackMeasurement,
     val pointCount: Int,
     val elevationGain: ElevationGain,
     // Increases on every resume, so distance is never counted across a pause.
@@ -65,12 +67,18 @@ data class ActivityProgress(
     val lastPoint: TrackPoint?,
     val currentSpeedMetersPerSecond: Double?,
 ) {
+    val distanceMeters: Double get() = measurement.distanceMeters
+    val movingTimeSeconds: Double get() = measurement.movingTimeSeconds
+
+    // False while standing still, which the UI shows as auto-paused.
+    val isMoving: Boolean get() = measurement.isMoving
+
     companion object {
         fun startingAt(sport: Sport, time: Instant) = ActivityProgress(
             sport = sport,
             startedAt = time,
             activeTimeBeforeResume = Duration.ZERO,
-            distanceMeters = 0.0,
+            measurement = TrackMeasurement.EMPTY,
             pointCount = 0,
             elevationGain = ElevationGain.NONE,
             segmentIndex = 0,

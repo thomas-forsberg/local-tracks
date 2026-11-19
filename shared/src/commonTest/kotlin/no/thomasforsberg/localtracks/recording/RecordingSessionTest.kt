@@ -4,6 +4,7 @@ import no.thomasforsberg.localtracks.recording.RecordingState.Finished
 import no.thomasforsberg.localtracks.recording.RecordingState.Idle
 import no.thomasforsberg.localtracks.recording.RecordingState.Paused
 import no.thomasforsberg.localtracks.recording.RecordingState.Recording
+import no.thomasforsberg.localtracks.track.TrackMeasurement
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -200,7 +201,7 @@ class RecordingSessionTest {
 
     @Test
     fun restoreOnlyFromIdleOrFinishedAndAlwaysAsPaused() {
-        val saved = ActivityProgress.startingAt(Sport.HIKING, start).copy(distanceMeters = 500.0, pointCount = 40, segmentIndex = 2)
+        val saved = ActivityProgress.startingAt(Sport.HIKING, start).copy(measurement = TrackMeasurement.continuing(500.0, Duration.ZERO), pointCount = 40, segmentIndex = 2)
 
         session.start(Sport.CYCLING)
         assertFalse(session.restore(saved))

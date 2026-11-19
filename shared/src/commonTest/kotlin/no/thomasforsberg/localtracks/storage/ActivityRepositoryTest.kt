@@ -62,7 +62,7 @@ class ActivityRepositoryTest {
 
     @Test
     fun totalsCanBeCreatedFromSeconds() {
-        assertEquals(ActivityTotals(90.seconds, 1.5, 3, 4.5), ActivityTotals.ofSeconds(90.0, 1.5, 3, 4.5))
+        assertEquals(ActivityTotals(90.seconds, 1.5, 3, 4.5, 80.seconds), ActivityTotals.ofSeconds(90.0, 1.5, 3, 4.5, 80.0))
     }
 
     @Test
