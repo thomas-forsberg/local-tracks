@@ -1,3 +1,4 @@
+import kotlin.Boolean;
 import kotlin.time.Instant;
 
 CREATE TABLE track_point (
@@ -16,6 +17,8 @@ CREATE TABLE track_point (
     baro_time INTEGER AS Instant,
     baro_relative_altitude_meters REAL,
     baro_pressure_kpa REAL,
+    -- Motion sensors: 1 standing still, 0 moving, NULL unknown.
+    stationary_by_motion INTEGER AS Boolean,
     PRIMARY KEY (activity_id, seq)
 ) WITHOUT ROWID;
 

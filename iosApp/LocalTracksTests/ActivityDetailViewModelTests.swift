@@ -11,7 +11,7 @@ struct ActivityDetailViewModelTests {
     private func point(_ segment: Int32, _ latitude: Double) -> RecordedPoint {
         RecordedPoint(
             segmentIndex: segment,
-            point: TrackPoint(latitude: latitude, longitude: 10.7, elevationMeters: nil, time: .from(start), horizontalAccuracyMeters: nil, speedMetersPerSecond: nil, barometer: nil)
+            point: TrackPoint(latitude: latitude, longitude: 10.7, elevationMeters: nil, time: .from(start), horizontalAccuracyMeters: nil, speedMetersPerSecond: nil, barometer: nil, stationaryByMotion: nil)
         )
     }
 

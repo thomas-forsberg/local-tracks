@@ -12,4 +12,6 @@ data class TrackPoint(
     val horizontalAccuracyMeters: Double? = null,
     val speedMetersPerSecond: Double? = null,
     val barometer: BarometerReading? = null,
+    // The phone's motion sensors said the user was standing still (true) or moving (false); null if unknown.
+    val stationaryByMotion: Boolean? = null,
 )

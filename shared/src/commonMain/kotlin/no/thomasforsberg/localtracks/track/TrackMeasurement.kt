@@ -33,7 +33,8 @@ data class TrackMeasurement(
         val seconds = lastPoint?.let { secondsBetween(it, point) }
         val computedSpeed = lastPoint?.let { previous -> seconds?.takeIf { it > 0 }?.let { distanceBetween(previous, point) / it } }
         val speed = point.speedMetersPerSecond ?: computedSpeed
-        val moving = speed?.let { it >= sport.movingThresholdMetersPerSecond } ?: true
+        // Motion sensors (accelerometer, independent of GPS) can veto movement; otherwise GPS speed decides.
+        val moving = point.stationaryByMotion != true && (speed?.let { it >= sport.movingThresholdMetersPerSecond } ?: true)
         return copy(
             segment = segment.adding(point, moving),
             movingTime = movingTime + if (moving && seconds != null) seconds.seconds else Duration.ZERO,

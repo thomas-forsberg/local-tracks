@@ -2,7 +2,6 @@ package no.thomasforsberg.localtracks.storage
 
 import app.cash.sqldelight.ColumnAdapter
 import app.cash.sqldelight.EnumColumnAdapter
-import app.cash.sqldelight.db.AfterVersion
 import app.cash.sqldelight.db.SqlDriver
 import no.thomasforsberg.localtracks.db.Activity
 import no.thomasforsberg.localtracks.db.LocalTracksDatabase
@@ -23,11 +22,13 @@ fun createDatabase(driver: SqlDriver): LocalTracksDatabase = LocalTracksDatabase
     ),
 )
 
-// Run after the matching schema migration. Version 2 added moving time and smoothed distance, so
-// existing activities are re-measured from their raw points, the same way new recordings are.
-val migrationCallbacks: Array<AfterVersion> = arrayOf(
-    AfterVersion(1) { driver -> remeasureAllActivities(createDatabase(driver)) },
-)
+// Schema steps first, then data fixes. Data fixes use today's queries, so they can only run once the
+// schema is fully up to date (an AfterVersion callback would run against an intermediate schema).
+fun migrateDatabase(driver: SqlDriver, oldVersion: Long, newVersion: Long) {
+    LocalTracksDatabase.Schema.migrate(driver, oldVersion, newVersion)
+    // Version 2 added moving time and smoothed distance: re-measure older activities from their raw points.
+    if (oldVersion < 2) remeasureAllActivities(createDatabase(driver))
+}
 
 fun remeasureAllActivities(database: LocalTracksDatabase) {
     val repository = ActivityRepository(database)

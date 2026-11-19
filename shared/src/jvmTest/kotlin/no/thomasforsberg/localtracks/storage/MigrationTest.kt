@@ -38,7 +38,7 @@ class MigrationTest {
             )
         }
 
-        LocalTracksDatabase.Schema.migrate(driver, oldVersion = 1, newVersion = 2, *migrationCallbacks)
+        migrateDatabase(driver, oldVersion = 1, newVersion = LocalTracksDatabase.Schema.version)
 
         val activity = ActivityRepository(createDatabase(driver)).activity(1)!!
         // 20 m walked; the last moving point is averaged with the stop, which costs a third of a 5 m step.
