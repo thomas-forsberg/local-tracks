@@ -11,6 +11,8 @@ final class RecordingController {
     private(set) var latestBarometerReading: BarometerReading?
     // From the motion sensors: true standing still, false moving, nil unknown.
     private(set) var stationaryByMotion: Bool?
+    // A database write failed (e.g. the phone is full). Recording continues; points are kept until a write succeeds.
+    private(set) var isStorageFailing = false
     // Left over from a crash or the app being killed; offered for resuming or saving on launch.
     private(set) var unfinishedActivity: ActivitySummary?
 
@@ -76,6 +78,7 @@ final class RecordingController {
 
     func flush() {
         recorder.flush()
+        refreshState()
     }
 
     private func startSensors(for sport: Sport) {
@@ -132,5 +135,6 @@ final class RecordingController {
     // The Kotlin state is a StateFlow; reading its value after every change keeps this synchronous and testable.
     private func refreshState() {
         state = recorder.state.value
+        isStorageFailing = recorder.isStorageFailing
     }
 }

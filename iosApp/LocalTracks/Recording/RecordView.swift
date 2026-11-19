@@ -14,6 +14,12 @@ struct RecordView: View {
                 if let unfinished = controller.unfinishedActivity {
                     UnfinishedActivityBanner(activity: unfinished, onResume: controller.resumeUnfinished, onSave: controller.finishUnfinished)
                 }
+                if controller.isStorageFailing {
+                    Banner(systemImage: "externaldrive.badge.exclamationmark", tint: .red) {
+                        Text("Can't save to the phone's storage. It may be full. Recording continues, and points are saved once there's space.")
+                            .font(.callout)
+                    }
+                }
                 if let problem = controller.locationProblem {
                     Banner(systemImage: "location.slash", tint: .orange) {
                         Text(problem.message).font(.callout)
