@@ -46,6 +46,14 @@ final class ScreenshotTour: XCTestCase {
         // Shown as a popover with only "Delete"; tapping outside cancels.
         XCTAssert(app.sheets.firstMatch.waitForExistence(timeout: 5))
         snapshot("07-delete-confirmation")
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85)).tap() // dismiss the dialog
+
+        app.tabBars.buttons["Stats"].tap()
+        XCTAssert(app.staticTexts["Stats"].waitForExistence(timeout: 5))
+        snapshot("09-stats")
+        app.buttons["All time"].tap()
+        sleep(1)
+        snapshot("10-stats-all-time")
     }
 
     @MainActor
