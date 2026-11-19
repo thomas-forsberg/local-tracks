@@ -32,7 +32,7 @@ final class ScreenshotTour: XCTestCase {
 
         // The second row is a demo activity (the first is the few seconds just recorded above).
         app.cells.element(boundBy: 1).tap()
-        XCTAssert(app.staticTexts["Active time"].waitForExistence(timeout: 10))
+        XCTAssert(app.staticTexts["Moving time"].waitForExistence(timeout: 10))
         sleep(2) // let the map draw its first frame
         snapshot("05-activity-detail")
         app.navigationBars.buttons.firstMatch.tap()

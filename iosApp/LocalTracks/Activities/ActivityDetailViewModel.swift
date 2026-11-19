@@ -27,7 +27,7 @@ final class ActivityDetailViewModel {
     }
 
     var averageSpeedMetersPerSecond: Double? {
-        let seconds = activity.totals.activeTimeSeconds
+        let seconds = activity.totals.movingTimeSeconds
         return seconds > 0 ? activity.totals.distanceMeters / seconds : nil
     }
 

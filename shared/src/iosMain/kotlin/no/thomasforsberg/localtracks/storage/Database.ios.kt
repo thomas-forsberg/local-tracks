@@ -14,7 +14,7 @@ fun createIosDatabase(directoryPath: String, fileName: String = "local-tracks.db
             version = schema.version.toInt(),
             create = { connection -> wrapConnection(connection) { schema.create(it) } },
             upgrade = { connection, oldVersion, newVersion ->
-                wrapConnection(connection) { schema.migrate(it, oldVersion.toLong(), newVersion.toLong()) }
+                wrapConnection(connection) { schema.migrate(it, oldVersion.toLong(), newVersion.toLong(), *migrationCallbacks) }
             },
             extendedConfig = DatabaseConfiguration.Extended(basePath = directoryPath),
         ),

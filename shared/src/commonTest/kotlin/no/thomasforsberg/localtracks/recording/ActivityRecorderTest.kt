@@ -231,6 +231,6 @@ class ActivityRecorderTest {
         recorder.stop()
 
         assertEquals(loop.size, repository.trackPoints(id).size)
-        assertEquals(loop.summary().distanceMeters, assertNotNull(repository.activity(id)).totals.distanceMeters, absoluteTolerance = 1e-6)
+        assertEquals(loop.summary(Sport.CYCLING).distanceMeters, assertNotNull(repository.activity(id)).totals.distanceMeters, absoluteTolerance = 1e-6)
     }
 }

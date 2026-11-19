@@ -53,6 +53,7 @@ class RecordingSession(
                     lastPoint = null,
                     currentSpeedMetersPerSecond = null,
                     elevationGain = it.progress.elevationGain.startingNewSegment(),
+                    measurement = it.progress.measurement.startingNewSegment(),
                 ),
                 resumedAt = clock.now(),
             )
@@ -113,7 +114,7 @@ class RecordingSession(
     }
 
     private fun ActivityProgress.advancedTo(point: TrackPoint) = copy(
-        distanceMeters = distanceMeters + (lastPoint?.let { distanceBetween(it, point) } ?: 0.0),
+        measurement = measurement.adding(point, sport),
         pointCount = pointCount + 1,
         elevationGain = point.barometer?.let { elevationGain.adding(it.relativeAltitudeMeters) } ?: elevationGain,
         lastPoint = point,

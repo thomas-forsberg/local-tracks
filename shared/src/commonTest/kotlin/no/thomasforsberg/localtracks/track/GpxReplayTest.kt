@@ -4,6 +4,9 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import no.thomasforsberg.localtracks.GpxFixtures
 import no.thomasforsberg.localtracks.gpx.GpxParser
+import no.thomasforsberg.localtracks.geo.distanceMeters
+import no.thomasforsberg.localtracks.recording.Sport
+import kotlin.math.PI
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -17,11 +20,22 @@ class GpxReplayTest {
 
     @Test
     fun summarisesRecordedTrack() {
-        val summary = loop.summary()
+        val summary = loop.summary(Sport.CYCLING)
 
         assertEquals(727, summary.pointCount)
-        assertEquals(3682.131, summary.distanceMeters, absoluteTolerance = 0.01)
         assertEquals(726.seconds, summary.elapsed)
+    }
+
+    @Test
+    fun smoothingRemovesMostOfTheGpsJitter() {
+        // The fixture is a 520 m radius circle with ~1.5 m of jitter per point.
+        val trueLength = 2 * PI * 520
+        val raw = loop.zipWithNext(::distanceMeters).sum()
+        val smoothed = loop.summary(Sport.CYCLING).distanceMeters
+
+        assertEquals(3682.131, raw, absoluteTolerance = 0.01) // +12.7 %
+        assertEquals(trueLength, smoothed, absoluteTolerance = trueLength * 0.01)
+        assertEquals(3279.460, smoothed, absoluteTolerance = 0.01) // regression guard: +0.4 %
     }
 
     @Test

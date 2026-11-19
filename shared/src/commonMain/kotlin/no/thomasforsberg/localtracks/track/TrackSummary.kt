@@ -1,6 +1,6 @@
 package no.thomasforsberg.localtracks.track
 
-import no.thomasforsberg.localtracks.geo.distanceMeters
+import no.thomasforsberg.localtracks.recording.Sport
 import kotlin.time.Duration
 
 data class TrackSummary(
@@ -9,11 +9,12 @@ data class TrackSummary(
     val elapsed: Duration,
 )
 
-fun List<TrackPoint>.summary(): TrackSummary {
+// Distance as recording measures it (smoothed, standing still excluded), for one segment of points.
+fun List<TrackPoint>.summary(sport: Sport = Sport.HIKING): TrackSummary {
     val times = mapNotNull { it.time }
     return TrackSummary(
         pointCount = size,
-        distanceMeters = zipWithNext(::distanceMeters).sum(),
+        distanceMeters = fold(TrackMeasurement.EMPTY) { measurement, point -> measurement.adding(point, sport) }.distanceMeters,
         elapsed = if (times.size < 2) Duration.ZERO else times.last() - times.first(),
     )
 }
