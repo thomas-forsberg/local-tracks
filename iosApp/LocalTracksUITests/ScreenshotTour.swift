@@ -14,15 +14,27 @@ final class ScreenshotTour: XCTestCase {
         XCTAssert(app.buttons["Start"].waitForExistence(timeout: 30))
         snapshot("01-record")
 
+        // Demo mode feeds pretend GPS and barometer data, so this records without real location.
+        app.buttons["Start"].tap()
+        XCTAssert(app.buttons["Pause"].waitForExistence(timeout: 5))
+        sleep(8)
+        snapshot("02-recording")
+        app.buttons["Pause"].tap()
+        XCTAssert(app.buttons["Resume"].waitForExistence(timeout: 5))
+        snapshot("03-paused")
+        app.buttons["Stop"].tap()
+        XCTAssert(app.buttons["Start"].waitForExistence(timeout: 5))
+
         app.tabBars.buttons["Activities"].tap()
         let firstRow = app.cells.firstMatch
         XCTAssert(firstRow.waitForExistence(timeout: 10))
-        snapshot("02-activities")
+        snapshot("04-activities")
 
-        firstRow.tap()
+        // The second row is a demo activity (the first is the few seconds just recorded above).
+        app.cells.element(boundBy: 1).tap()
         XCTAssert(app.staticTexts["Active time"].waitForExistence(timeout: 10))
         sleep(2) // let the map draw its first frame
-        snapshot("03-activity-detail")
+        snapshot("05-activity-detail")
         app.navigationBars.buttons.firstMatch.tap()
         XCTAssert(firstRow.waitForExistence(timeout: 5))
 
@@ -30,7 +42,7 @@ final class ScreenshotTour: XCTestCase {
         app.buttons["Delete"].firstMatch.tap()
         // Shown as a popover with only "Delete"; tapping outside cancels.
         XCTAssert(app.sheets.firstMatch.waitForExistence(timeout: 5))
-        snapshot("04-delete-confirmation")
+        snapshot("06-delete-confirmation")
     }
 
     @MainActor
@@ -38,7 +50,7 @@ final class ScreenshotTour: XCTestCase {
         let app = launch("-demoDataEmpty")
         app.tabBars.buttons["Activities"].tap()
         XCTAssert(app.staticTexts["No activities yet"].waitForExistence(timeout: 10))
-        snapshot("05-activities-empty")
+        snapshot("07-activities-empty")
     }
 
     @MainActor

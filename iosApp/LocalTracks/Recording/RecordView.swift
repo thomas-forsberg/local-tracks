@@ -1,80 +1,193 @@
 import Shared
 import SwiftUI
 
-// Basic record screen to try recording end to end; step 4 turns it into the real one.
 struct RecordView: View {
     let controller: RecordingController
-    @State private var sport: Sport = .cycling
+    @State private var chosenSport: Sport = .cycling
+
+    // While an activity is in progress its own sport wins over the picker.
+    private var sport: Sport { controller.state.progressOrNull()?.sport ?? chosenSport }
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
+            VStack(spacing: 20) {
                 if let unfinished = controller.unfinishedActivity {
-                    UnfinishedActivityBanner(
-                        activity: unfinished,
-                        onResume: controller.resumeUnfinished,
-                        onSave: controller.finishUnfinished
-                    )
+                    UnfinishedActivityBanner(activity: unfinished, onResume: controller.resumeUnfinished, onSave: controller.finishUnfinished)
+                }
+                if let problem = controller.locationProblem {
+                    Banner(systemImage: "location.slash", tint: .orange) {
+                        Text(problem.message).font(.callout)
+                    }
                 }
 
                 TimelineView(.periodic(from: .now, by: 1)) { context in
-                    LiveStatsView(state: controller.state, now: context.date)
+                    LiveStatsView(state: controller.state, sport: sport, now: context.date)
                 }
+                .padding(.top, 8)
 
-                if let problem = controller.locationProblem {
-                    Label(problem.message, systemImage: "location.slash")
-                        .foregroundStyle(.orange)
-                        .font(.callout)
-                }
-
-                Spacer()
+                Spacer(minLength: 0)
                 controls
             }
             .padding()
             .navigationTitle("Record")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) { StatusPill(state: controller.state) }
+            }
         }
     }
 
     @ViewBuilder private var controls: some View {
         switch onEnum(of: controller.state) {
         case .idle, .finished:
-            Picker("Sport", selection: $sport) {
-                ForEach(Sport.allCases, id: \.self) { Text($0.title).tag($0) }
-            }
-            .pickerStyle(.segmented)
-            Button("Start") { controller.start(sport) }
+            VStack(spacing: 16) {
+                SportPicker(selection: $chosenSport)
+                Button { controller.start(chosenSport) } label: {
+                    Label("Start", systemImage: "play.fill").frame(maxWidth: .infinity)
+                }
                 .buttonStyle(.borderedProminent)
+                .controlSize(.extraLarge)
                 .disabled(controller.unfinishedActivity != nil)
+            }
         case .recording:
-            HStack {
-                Button("Pause", action: controller.pause).buttonStyle(.bordered)
-                Button("Stop", role: .destructive, action: controller.stop).buttonStyle(.borderedProminent)
+            HStack(spacing: 12) {
+                Button(action: controller.pause) { Label("Pause", systemImage: "pause.fill").frame(maxWidth: .infinity) }
+                    .buttonStyle(.bordered)
+                Button(role: .destructive, action: controller.stop) { Label("Stop", systemImage: "stop.fill").frame(maxWidth: .infinity) }
+                    .buttonStyle(.borderedProminent)
             }
+            .controlSize(.extraLarge)
         case .paused:
-            HStack {
-                Button("Resume", action: controller.resume).buttonStyle(.borderedProminent)
-                Button("Stop", role: .destructive, action: controller.stop).buttonStyle(.bordered)
+            HStack(spacing: 12) {
+                Button(action: controller.resume) { Label("Resume", systemImage: "play.fill").frame(maxWidth: .infinity) }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
+                Button(role: .destructive, action: controller.stop) { Label("Stop", systemImage: "stop.fill").frame(maxWidth: .infinity) }
+                    .buttonStyle(.bordered)
             }
+            .controlSize(.extraLarge)
         }
     }
 }
 
 private struct LiveStatsView: View {
     let state: RecordingState
+    let sport: Sport
     let now: Date
 
     var body: some View {
         let progress = state.progressOrNull()
         let instant = KotlinInstant.from(now)
-        Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 8) {
-            GridRow { Text("Status").foregroundStyle(.secondary); Text(state.title) }
-            GridRow { Text("Distance").foregroundStyle(.secondary); Text(Formatters.distance(meters: progress?.distanceMeters ?? 0)) }
-            GridRow { Text("Time").foregroundStyle(.secondary); Text(Formatters.duration(seconds: state.activeTimeSeconds(now: instant))) }
-            GridRow { Text("Avg speed").foregroundStyle(.secondary); Text(Formatters.speed(metersPerSecond: state.averageSpeedMetersPerSecond(now: instant)?.doubleValue)) }
-            GridRow { Text("Climb").foregroundStyle(.secondary); Text(Formatters.elevation(meters: progress?.elevationGain.meters ?? 0)) }
-            GridRow { Text("Points").foregroundStyle(.secondary); Text("\(progress?.pointCount ?? 0)") }
+        let isRecording = state is RecordingStateRecording
+        VStack(spacing: 28) {
+            VStack(spacing: 0) {
+                Text(((progress?.distanceMeters ?? 0) / 1000).formatted(.number.precision(.fractionLength(2))))
+                    .font(.system(size: 80, weight: .bold, design: .rounded).monospacedDigit())
+                    .contentTransition(.numericText())
+                Text("km")
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+            }
+            .accessibilityElement(children: .combine)
+
+            Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 20) {
+                GridRow {
+                    Stat(title: "Time", value: Formatters.clock(seconds: state.activeTimeSeconds(now: instant)))
+                    Stat(title: "Elapsed", value: Formatters.clock(seconds: state.elapsedSeconds(now: instant)))
+                }
+                GridRow {
+                    Stat(
+                        title: sport.currentSpeedTitle,
+                        value: Formatters.speedOrPace(metersPerSecond: isRecording ? progress?.currentSpeedMetersPerSecond?.doubleValue : nil, for: sport)
+                    )
+                    Stat(title: sport.averageSpeedTitle, value: Formatters.speedOrPace(metersPerSecond: state.averageSpeedMetersPerSecond(now: instant)?.doubleValue, for: sport))
+                }
+                GridRow {
+                    Stat(title: "Climb", value: Formatters.elevation(meters: progress?.elevationGain.meters ?? 0))
+                    Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
+                }
+            }
         }
-        .font(.title3.monospacedDigit())
+        .frame(maxWidth: .infinity)
+    }
+}
+
+private struct Stat: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title).font(.subheadline).foregroundStyle(.secondary)
+            Text(value).font(.title.weight(.semibold).monospacedDigit())
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct SportPicker: View {
+    @Binding var selection: Sport
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(Sport.allCases, id: \.self) { sport in
+                let isSelected = sport == selection
+                Button { selection = sport } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: sport.systemImage).font(.title2)
+                        Text(sport.title).font(.footnote.weight(.medium))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .foregroundStyle(isSelected ? Color.white : Color.primary)
+                    .background(isSelected ? Color.accentColor : Color.secondary.opacity(0.12), in: .rect(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
+            }
+        }
+    }
+}
+
+private struct StatusPill: View {
+    let state: RecordingState
+
+    var body: some View {
+        switch onEnum(of: state) {
+        case .recording:
+            Label("Recording", systemImage: "circle.fill").pill(tint: .red)
+        case .paused:
+            Label("Paused", systemImage: "pause.circle.fill").pill(tint: .orange)
+        case .idle, .finished:
+            EmptyView()
+        }
+    }
+}
+
+private extension Label where Title == Text, Icon == Image {
+    func pill(tint: Color) -> some View {
+        font(.footnote.weight(.semibold))
+            .labelStyle(.titleAndIcon)
+            .foregroundStyle(tint)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(tint.opacity(0.15), in: .capsule)
+    }
+}
+
+private struct Banner<Content: View>: View {
+    let systemImage: String
+    let tint: Color
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: systemImage).font(.title3).foregroundStyle(tint)
+            VStack(alignment: .leading, spacing: 8) { content }
+            Spacer(minLength: 0)
+        }
+        .padding()
+        .background(tint.opacity(0.12), in: .rect(cornerRadius: 14))
     }
 }
 
@@ -84,29 +197,14 @@ private struct UnfinishedActivityBanner: View {
     let onSave: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Unfinished \(activity.sport.title.lowercased()) activity")
-                .font(.headline)
+        Banner(systemImage: "exclamationmark.arrow.circlepath", tint: .yellow) {
+            Text("Unfinished \(activity.sport.title.lowercased()) activity").font(.headline)
             Text("Started \(activity.startedAt.date.formatted(date: .abbreviated, time: .shortened)), \(Formatters.distance(meters: activity.totals.distanceMeters)) recorded.")
                 .font(.callout)
             HStack {
                 Button("Resume", action: onResume).buttonStyle(.borderedProminent)
                 Button("Save as is", action: onSave).buttonStyle(.bordered)
             }
-        }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.yellow.opacity(0.15), in: .rect(cornerRadius: 12))
-    }
-}
-
-extension RecordingState {
-    var title: String {
-        switch onEnum(of: self) {
-        case .idle: "Ready"
-        case .recording: "Recording"
-        case .paused: "Paused"
-        case .finished: "Saved"
         }
     }
 }
