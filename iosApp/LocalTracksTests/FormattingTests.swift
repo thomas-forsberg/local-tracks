@@ -39,4 +39,14 @@ struct FormattingTests {
         #expect(RouteMapView.Coordinator.markersOverlap(CGPoint(x: 100, y: 100), CGPoint(x: 110, y: 105)))
         #expect(!RouteMapView.Coordinator.markersOverlap(CGPoint(x: 100, y: 100), CGPoint(x: 100, y: 130)))
     }
+
+    @Test func chartDomainHasAMinimumSpanSoSteadySpeedsLookSteady() {
+        #expect(SpeedChart.domain(for: [20.0, 20.4], minimumSpan: 10, floor: 0) == 15.2...25.2)
+        #expect(SpeedChart.domain(for: [2.0, 3.0], minimumSpan: 10, floor: 0) == 0...7.5)
+        #expect(SpeedChart.domain(for: [5.0, 30.0], minimumSpan: 10, floor: 0) == 5...30)
+    }
+
+    @Test func paceAxisLabelsAreMinutesAndSeconds() {
+        #expect(SpeedChart.minutesAndSeconds(5.45) == "5:27")
+    }
 }

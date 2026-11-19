@@ -39,6 +39,7 @@ struct ActivityDetailViewModelTests {
         viewModel.load()
 
         #expect(viewModel.segments?.map(\.count) == [2, 1])
+        #expect(viewModel.analysis?.profile.count == 3)
         #expect(viewModel.elapsedSeconds == 900)
         #expect(viewModel.averageSpeedMetersPerSecond == 3.0, "over moving time")
     }

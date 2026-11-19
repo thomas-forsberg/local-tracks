@@ -23,7 +23,21 @@ struct ActivityDetailView: View {
                     Stat(title: activity.sport.averageSpeedTitle, value: Formatters.speedOrPace(metersPerSecond: viewModel.averageSpeedMetersPerSecond, for: activity.sport))
                     Stat(title: "Climb", value: Formatters.elevation(meters: activity.totals.elevationGainMeters))
                     Stat(title: "Elapsed time", value: viewModel.elapsedSeconds.map(Formatters.clock(seconds:)) ?? "–")
-                    Stat(title: "Points", value: "\(activity.totals.pointCount)")
+                    Stat(title: "Max speed", value: Formatters.speed(metersPerSecond: viewModel.analysis?.maxSpeedMetersPerSecond?.doubleValue))
+                }
+
+                if let analysis = viewModel.analysis {
+                    if analysis.profile.contains(where: { $0.elevationMeters != nil }) {
+                        Section(title: "Elevation") { ElevationChart(profile: analysis.profile).frame(height: 160) }
+                    }
+                    if analysis.profile.contains(where: { $0.speedMetersPerSecond != nil }) {
+                        Section(title: activity.sport.showsPace ? "Pace" : "Speed") {
+                            SpeedChart(profile: analysis.profile, sport: activity.sport).frame(height: 160)
+                        }
+                    }
+                    if !analysis.splits.isEmpty {
+                        Section(title: "Splits") { SplitsTable(splits: analysis.splits, sport: activity.sport) }
+                    }
                 }
             }
             .padding()
@@ -42,6 +56,19 @@ struct ActivityDetailView: View {
         case let segments?:
             RouteMapView(segments: segments)
         }
+    }
+}
+
+private struct Section<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title).font(.headline)
+            content
+        }
+        .padding(.top, 8)
     }
 }
 

@@ -8,6 +8,8 @@ final class ActivityDetailViewModel {
     let activity: ActivitySummary
     // One coordinate list per segment. Nil until loaded.
     private(set) var segments: [[CLLocationCoordinate2D]]?
+    // Charts, splits and max speed, computed in Kotlin from the same points. Nil until loaded.
+    private(set) var analysis: ActivityAnalysis?
 
     @ObservationIgnored private let repository: ActivityRepository
 
@@ -19,7 +21,9 @@ final class ActivityDetailViewModel {
     // Reads on the main actor, which is fine for walks (~700 points). A 4-hour ride is ~15k points:
     // measure that, and move the read off the main actor if opening the screen hitches.
     func load() {
-        segments = Self.segments(from: repository.trackPoints(activityId: activity.id))
+        let points = repository.trackPoints(activityId: activity.id)
+        segments = Self.segments(from: points)
+        analysis = ActivityAnalysisKt.analyze(points: points, sport: activity.sport, maxSamples: 300)
     }
 
     var elapsedSeconds: Double? {
