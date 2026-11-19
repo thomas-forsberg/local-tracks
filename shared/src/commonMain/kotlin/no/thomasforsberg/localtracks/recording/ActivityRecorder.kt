@@ -13,7 +13,8 @@ import kotlin.time.Instant
 
 // Records a session to storage. Accepted points are buffered and written in batches every
 // flushInterval, and on pause, stop and flush(), so a crash loses at most the last few seconds.
-// Not thread-safe: call it from one thread (the main actor on iOS).
+// A failed write (e.g. a full disk) never stops the recording: the points stay buffered and are
+// written on the next successful flush. Not thread-safe: call it from one thread (the main actor on iOS).
 class ActivityRecorder(
     private val session: RecordingSession,
     private val repository: ActivityRepository,
@@ -27,16 +28,22 @@ class ActivityRecorder(
 
     val state: StateFlow<RecordingState> get() = session.state
 
+    // Null while recording if creating the database row failed; it's retried on every flush.
     private var activityId: Long? = null
+    private var inProgress = false
     private var storedPointCount = 0
     private val pendingPoints = mutableListOf<RecordedPoint>()
     private var lastFlushAt: Instant = clock.now()
 
+    // True after a failed database write, until the next one succeeds.
+    var isStorageFailing: Boolean = false
+        private set
+
     fun start(sport: Sport): Boolean {
         if (!session.start(sport)) return false
-        val progress = checkNotNull(state.value.progressOrNull())
-        attach(repository.startActivity(sport, progress.startedAt), storedPointCount = 0)
+        attach(null, storedPointCount = 0)
         stateStore.clear()
+        write { ensureActivityId() }
         return true
     }
 
@@ -53,8 +60,10 @@ class ActivityRecorder(
         if (!session.stop()) return false
         val finished = state.value as Finished
         flush()
-        activityId?.let { repository.finishActivity(it, finished.finishedAt, totalsOf(finished)) }
+        // If this fails the activity stays unfinished in the database and is offered for recovery later.
+        activityId?.let { id -> write { repository.finishActivity(id, finished.finishedAt, totalsOf(finished)) } }
         activityId = null
+        inProgress = false
         stateStore.clear()
         return true
     }
@@ -73,16 +82,28 @@ class ActivityRecorder(
 
     // Also call this when the app moves to the background.
     fun flush() {
-        val id = activityId ?: return
-        repository.appendPoints(id, firstSeq = storedPointCount, points = pendingPoints.toList(), totals = totalsOf(state.value))
-        storedPointCount += pendingPoints.size
-        pendingPoints.clear()
+        if (!inProgress) return
         lastFlushAt = clock.now()
+        write {
+            val id = ensureActivityId()
+            repository.appendPoints(id, firstSeq = storedPointCount, points = pendingPoints.toList(), totals = totalsOf(state.value))
+            storedPointCount += pendingPoints.size
+            pendingPoints.clear()
+        }
+    }
+
+    private fun ensureActivityId(): Long = activityId ?: run {
+        val progress = checkNotNull(state.value.progressOrNull())
+        repository.startActivity(progress.sport, progress.startedAt).also { activityId = it }
+    }
+
+    private fun write(block: () -> Unit) {
+        isStorageFailing = runCatching(block).isFailure
     }
 
     // An activity that was still recording when the app crashed or was killed.
     fun unfinishedActivity(): ActivitySummary? =
-        if (activityId == null) repository.latestUnfinishedActivity() else null
+        if (inProgress) null else repository.latestUnfinishedActivity()
 
     // After the user reopens the app: continues the unfinished activity straight away, in a new
     // segment, so one tap on "Resume" is enough. The time the app wasn't running isn't counted.
@@ -125,13 +146,14 @@ class ActivityRecorder(
     fun finishUnfinished(): Boolean {
         val unfinished = unfinishedActivity() ?: return false
         val finishedAt = repository.lastTrackPoint(unfinished.id)?.point?.time ?: unfinished.startedAt
-        repository.finishActivity(unfinished.id, finishedAt, unfinished.totals)
+        write { repository.finishActivity(unfinished.id, finishedAt, unfinished.totals) }
         stateStore.clear()
-        return true
+        return !isStorageFailing
     }
 
-    private fun attach(id: Long, storedPointCount: Int) {
+    private fun attach(id: Long?, storedPointCount: Int) {
         activityId = id
+        inProgress = true
         this.storedPointCount = storedPointCount
         pendingPoints.clear()
         lastFlushAt = clock.now()
