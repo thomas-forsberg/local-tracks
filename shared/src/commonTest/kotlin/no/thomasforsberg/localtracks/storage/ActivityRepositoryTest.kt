@@ -28,6 +28,7 @@ class ActivityRepositoryTest {
             horizontalAccuracyMeters = 4.5,
             speedMetersPerSecond = 5.25,
             barometer = BarometerReading(start + 1.seconds, relativeAltitudeMeters = -1.75, pressureKilopascals = 99.123),
+            stationaryByMotion = true,
         ),
     )
     private val minimalPoint = RecordedPoint(

@@ -184,6 +184,19 @@ class RecordingSessionTest {
     }
 
     @Test
+    fun attachesTheLatestMotionStateToEachPointUntilItChanges() {
+        session.start(Sport.HIKING)
+        assertNull(assertNotNull(session.onLocation(fix(1))).point.stationaryByMotion)
+
+        session.onMotion(stationary = true)
+        assertEquals(true, assertNotNull(session.onLocation(fix(2))).point.stationaryByMotion)
+        assertEquals(true, assertNotNull(session.onLocation(fix(30))).point.stationaryByMotion, "no expiry: only sent on change")
+
+        session.onMotion(stationary = false)
+        assertEquals(false, assertNotNull(session.onLocation(fix(31))).point.stationaryByMotion)
+    }
+
+    @Test
     fun ignoresInvalidTransitions() {
         assertFalse(session.pause())
         assertFalse(session.resume())

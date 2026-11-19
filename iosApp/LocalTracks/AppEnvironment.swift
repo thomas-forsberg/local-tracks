@@ -14,7 +14,8 @@ final class AppEnvironment {
         databaseDirectory: URL,
         stateStore: RecordingStateStore,
         locationSource: LocationSource = CoreLocationSource(),
-        barometerSource: BarometerSource = CoreMotionBarometerSource()
+        barometerSource: BarometerSource = CoreMotionBarometerSource(),
+        motionSource: MotionSource = CoreMotionActivitySource()
     ) {
         let database = Database_iosKt.createIosDatabase(
             directoryPath: databaseDirectory.path(percentEncoded: false),
@@ -22,7 +23,7 @@ final class AppEnvironment {
         )
         repository = ActivityRepository(database: database)
         recorder = ActivityRecorder(repository: repository, stateStore: stateStore)
-        recording = RecordingController(recorder: recorder, locationSource: locationSource, barometerSource: barometerSource)
+        recording = RecordingController(recorder: recorder, locationSource: locationSource, barometerSource: barometerSource, motionSource: motionSource)
         activities = ActivitiesViewModel(repository: repository)
         stats = StatsViewModel(repository: repository)
     }

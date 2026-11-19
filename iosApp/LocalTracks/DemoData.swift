@@ -85,7 +85,8 @@ enum DemoData {
                     time: .from(start.addingTimeInterval(Double(index) * 30)),
                     horizontalAccuracyMeters: KotlinDouble(value: 5),
                     speedMetersPerSecond: nil,
-                    barometer: nil
+                    barometer: nil,
+                    stationaryByMotion: nil
                 )
             )
         }

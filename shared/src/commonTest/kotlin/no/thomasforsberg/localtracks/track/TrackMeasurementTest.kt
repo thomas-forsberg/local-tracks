@@ -86,4 +86,22 @@ class TrackMeasurementTest {
         assertEquals(40.0, measurement.distanceMeters, absoluteTolerance = 0.01)
         assertEquals(8.seconds, measurement.movingTime)
     }
+
+    @Test
+    fun motionSensorsSayingStationaryVetoGpsSpeed() {
+        // GPS drift reports 2 m/s while the phone lies still; the accelerometer knows better.
+        val drifting = (0..10).map { point(it, north = if (it % 2 == 0) 0.0 else 4.0, speed = 2.0).copy(stationaryByMotion = true) }
+
+        val measurement = measure(drifting)
+
+        assertEquals(0.0, measurement.distanceMeters)
+        assertEquals(0.seconds, measurement.movingTime)
+    }
+
+    @Test
+    fun motionSensorsSayingMovingDontOverrideAStandstillBySpeed() {
+        val slow = (0..10).map { point(it, north = it * 0.1, speed = 0.1).copy(stationaryByMotion = false) }
+
+        assertEquals(0.seconds, measure(slow).movingTime)
+    }
 }

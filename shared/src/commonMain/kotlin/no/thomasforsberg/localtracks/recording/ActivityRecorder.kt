@@ -69,6 +69,8 @@ class ActivityRecorder(
 
     fun onBarometer(reading: BarometerReading) = session.onBarometer(reading)
 
+    fun onMotion(stationary: Boolean?) = session.onMotion(stationary)
+
     // Also call this when the app moves to the background.
     fun flush() {
         val id = activityId ?: return
