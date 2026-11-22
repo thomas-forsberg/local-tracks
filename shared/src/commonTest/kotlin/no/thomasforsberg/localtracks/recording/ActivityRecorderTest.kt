@@ -140,6 +140,29 @@ class ActivityRecorderTest {
     }
 
     @Test
+    fun savesStepsAndKeepsCountingAfterARelaunch() {
+        recorder.start(Sport.HIKING)
+        recorder.onSteps(12)
+        (1..5).forEach { recorder.recordAt(it) } // flushed at 5 s
+        assertEquals(12, repository.latestUnfinishedActivity()?.totals?.stepCount)
+
+        val restarted = newRecorder()
+        restarted.resumeUnfinished()
+        restarted.onSteps(3) // the pedometer restarted with the app
+
+        assertEquals(15, restarted.state.value.progressOrNull()?.steps)
+    }
+
+    @Test
+    fun stepsAreNotStoredForSportsThatDontCountThem() {
+        recorder.start(Sport.CYCLING)
+        recorder.onSteps(12)
+        (1..5).forEach { recorder.recordAt(it) }
+
+        assertNull(repository.latestUnfinishedActivity()?.totals?.stepCount)
+    }
+
+    @Test
     fun continueAfterRelaunchKeepsRecordingAnActivityThatWasRecording() {
         recorder.start(Sport.CYCLING)
         (1..5).forEach { recorder.recordAt(it) }

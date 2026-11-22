@@ -101,15 +101,16 @@ private struct LiveStatsView: View {
                     Stat(title: "Elapsed", value: Formatters.clock(seconds: state.elapsedSeconds(now: instant)))
                 }
                 GridRow {
-                    Stat(
-                        title: sport.currentSpeedTitle,
-                        value: Formatters.speedOrPace(metersPerSecond: isRecording ? progress?.currentSpeedMetersPerSecond?.doubleValue : nil, for: sport)
-                    )
-                    Stat(title: sport.averageSpeedTitle, value: Formatters.speedOrPace(metersPerSecond: state.averageSpeedMetersPerSecond(now: instant)?.doubleValue, for: sport))
+                    SpeedStat(title: sport.currentSpeedTitle, metersPerSecond: isRecording ? progress?.currentSpeedMetersPerSecond?.doubleValue : nil, sport: sport)
+                    SpeedStat(title: sport.averageSpeedTitle, metersPerSecond: state.averageSpeedMetersPerSecond(now: instant)?.doubleValue, sport: sport)
                 }
                 GridRow {
                     Stat(title: "Climb", value: Formatters.elevation(meters: progress?.elevationGain.meters ?? 0))
-                    Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
+                    if sport.countsSteps {
+                        Stat(title: "Steps", value: progress?.steps.map { Formatters.steps($0.intValue) } ?? "–")
+                    } else {
+                        Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
+                    }
                 }
             }
         }
@@ -120,14 +121,33 @@ private struct LiveStatsView: View {
 private struct Stat: View {
     let title: String
     let value: String
+    var detail: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title).font(.subheadline).foregroundStyle(.secondary)
             Text(value).font(.title.weight(.semibold).monospacedDigit())
+            if let detail {
+                Text(detail).font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
+    }
+}
+
+// Pace for running and hiking, with the speed in km/h underneath; speed alone for cycling.
+private struct SpeedStat: View {
+    let title: String
+    let metersPerSecond: Double?
+    let sport: Sport
+
+    var body: some View {
+        if sport.showsPace {
+            Stat(title: title, value: Formatters.pace(metersPerSecond: metersPerSecond), detail: Formatters.speed(metersPerSecond: metersPerSecond))
+        } else {
+            Stat(title: title, value: Formatters.speed(metersPerSecond: metersPerSecond))
+        }
     }
 }
 

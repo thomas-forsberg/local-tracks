@@ -1,0 +1,2 @@
+-- Schema version 3 → 4: pedometer steps per activity (NULL for older activities).
+ALTER TABLE activity ADD COLUMN step_count INTEGER;

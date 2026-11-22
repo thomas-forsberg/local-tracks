@@ -80,6 +80,8 @@ class ActivityRecorder(
 
     fun onMotion(stationary: Boolean?) = session.onMotion(stationary)
 
+    fun onSteps(stepsSinceSensorStart: Int) = session.onSteps(stepsSinceSensorStart)
+
     // Also call this when the app moves to the background.
     fun flush() {
         if (!inProgress) return
@@ -136,6 +138,7 @@ class ActivityRecorder(
             segmentIndex = lastPoint?.segmentIndex ?: 0,
             lastPoint = lastPoint?.point,
             currentSpeedMetersPerSecond = null,
+            stepCount = unfinished.totals.stepCount?.let { StepCount(it, lastReading = null) },
         )
         if (!session.restore(progress)) return null
         attach(unfinished.id, storedPointCount = unfinished.totals.pointCount)
@@ -167,6 +170,7 @@ class ActivityRecorder(
             pointCount = progress.pointCount,
             elevationGainMeters = progress.elevationGain.meters,
             movingTime = progress.measurement.movingTime,
+            stepCount = progress.steps,
         )
     }
 

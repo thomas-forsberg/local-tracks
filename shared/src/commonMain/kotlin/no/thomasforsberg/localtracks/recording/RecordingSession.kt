@@ -74,7 +74,10 @@ class RecordingSession(
     // so resume() opens a new segment and the gap is never counted as distance.
     fun restore(progress: ActivityProgress): Boolean = transition { current ->
         when (current) {
-            Idle, is Finished -> Paused(progress.copy(currentSpeedMetersPerSecond = null), pausedAt = clock.now())
+            Idle, is Finished -> Paused(
+                progress.copy(currentSpeedMetersPerSecond = null, stepCount = progress.stepCount?.copy(lastReading = null)),
+                pausedAt = clock.now(),
+            )
             is Recording, is Paused -> null
         }
     }
@@ -83,6 +86,20 @@ class RecordingSession(
     fun onMotion(stationary: Boolean?) {
         latestMotionStationary.value = stationary
     }
+
+    // stepsSinceSensorStart: the pedometer's running total. Ignored for sports that don't count steps.
+    fun onSteps(stepsSinceSensorStart: Int) {
+        mutableState.update { current ->
+            when {
+                current.progressOrNull()?.sport?.countsSteps != true -> current
+                current is Recording -> current.copy(progress = current.progress.withSteps { it.counting(stepsSinceSensorStart) })
+                current is Paused -> current.copy(progress = current.progress.withSteps { it.skipping(stepsSinceSensorStart) })
+                else -> current
+            }
+        }
+    }
+
+    private fun ActivityProgress.withSteps(update: (StepCount) -> StepCount) = copy(stepCount = update(stepCount ?: StepCount.NONE))
 
     fun onBarometer(reading: BarometerReading) {
         latestBarometer.value = reading

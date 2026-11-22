@@ -25,16 +25,16 @@ struct ElevationChart: View {
     }
 }
 
-// Speed for cycling; pace (min/km, faster at the top) for running and hiking.
+// Speed in km/h, or pace in min/km with faster at the top.
 // Pace is plotted negated so that faster is higher, with positive labels.
 struct SpeedChart: View {
     let profile: [ProfileSample]
-    let sport: Sport
+    let showsPace: Bool
 
     private var points: [(km: Double, value: Double)] {
         profile.compactMap { sample in
             guard let speed = sample.speedMetersPerSecond?.doubleValue, speed > 0 else { return nil }
-            let value = sport.showsPace ? -min(1000 / speed / 60, 30) : speed * 3.6
+            let value = showsPace ? -min(1000 / speed / 60, 30) : speed * 3.6
             return (sample.distanceMeters / 1000, value)
         }
     }
@@ -42,23 +42,23 @@ struct SpeedChart: View {
     var body: some View {
         let points = points
         Chart(points.indices, id: \.self) { index in
-            LineMark(x: .value("km", points[index].km), y: .value(sport.showsPace ? "min/km" : "km/h", points[index].value))
+            LineMark(x: .value("km", points[index].km), y: .value(showsPace ? "min/km" : "km/h", points[index].value))
                 .foregroundStyle(.blue)
                 .interpolationMethod(.monotone)
         }
-        .chartYScale(domain: Self.domain(for: points.map(\.value), minimumSpan: sport.showsPace ? 2 : 10, floor: sport.showsPace ? nil : 0))
+        .chartYScale(domain: Self.domain(for: points.map(\.value), minimumSpan: showsPace ? 2 : 10, floor: showsPace ? nil : 0))
         .chartYAxis {
             AxisMarks { value in
                 AxisGridLine()
                 AxisValueLabel {
                     if let number = value.as(Double.self) {
-                        Text(sport.showsPace ? Self.minutesAndSeconds(-number) : number.formatted(.number.precision(.fractionLength(0))))
+                        Text(showsPace ? Self.minutesAndSeconds(-number) : number.formatted(.number.precision(.fractionLength(0))))
                     }
                 }
             }
         }
         .chartXAxisLabel("km")
-        .chartYAxisLabel(sport.showsPace ? "min/km" : "km/h")
+        .chartYAxisLabel(showsPace ? "min/km" : "km/h")
     }
 
     // A nearly constant pace would otherwise fill the chart with magnified noise.
@@ -82,10 +82,11 @@ struct SplitsTable: View {
     let sport: Sport
 
     var body: some View {
-        Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 8) {
+        Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 8) {
             GridRow {
                 Text("Km")
-                Text(sport.showsPace ? "Pace" : "Speed")
+                if sport.showsPace { Text("Pace") }
+                Text("Speed")
                 Text("Time")
                 Text("Elev")
             }
@@ -94,7 +95,8 @@ struct SplitsTable: View {
             ForEach(splits, id: \.number) { split in
                 GridRow {
                     Text(split.distanceMeters >= 999.5 ? "\(split.number)" : Formatters.distance(meters: split.distanceMeters))
-                    Text(Formatters.speedOrPace(metersPerSecond: split.averageSpeedMetersPerSecond?.doubleValue, for: sport))
+                    if sport.showsPace { Text(Formatters.pace(metersPerSecond: split.averageSpeedMetersPerSecond?.doubleValue)) }
+                    Text(Formatters.speed(metersPerSecond: split.averageSpeedMetersPerSecond?.doubleValue))
                     Text(Formatters.clock(seconds: split.movingTimeSeconds))
                     Text(split.elevationChangeMeters.map { (($0.doubleValue >= 0 ? "+" : "") + Formatters.elevation(meters: $0.doubleValue)) } ?? "–")
                 }

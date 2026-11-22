@@ -20,10 +20,16 @@ struct ActivityDetailView: View {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 20) {
                     Stat(title: "Distance", value: Formatters.distance(meters: activity.totals.distanceMeters))
                     Stat(title: "Moving time", value: Formatters.clock(seconds: activity.totals.movingTimeSeconds))
-                    Stat(title: activity.sport.averageSpeedTitle, value: Formatters.speedOrPace(metersPerSecond: viewModel.averageSpeedMetersPerSecond, for: activity.sport))
+                    if activity.sport.showsPace {
+                        Stat(title: "Avg pace", value: Formatters.pace(metersPerSecond: viewModel.averageSpeedMetersPerSecond))
+                    }
+                    Stat(title: "Avg speed", value: Formatters.speed(metersPerSecond: viewModel.averageSpeedMetersPerSecond))
                     Stat(title: "Climb", value: Formatters.elevation(meters: activity.totals.elevationGainMeters))
                     Stat(title: "Elapsed time", value: viewModel.elapsedSeconds.map(Formatters.clock(seconds:)) ?? "–")
                     Stat(title: "Max speed", value: Formatters.speed(metersPerSecond: viewModel.analysis?.maxSpeedMetersPerSecond?.doubleValue))
+                    if activity.sport.countsSteps, let steps = activity.totals.stepCount {
+                        Stat(title: "Steps", value: Formatters.steps(steps.intValue))
+                    }
                 }
 
                 if let analysis = viewModel.analysis {
@@ -31,9 +37,7 @@ struct ActivityDetailView: View {
                         Section(title: "Elevation") { ElevationChart(profile: analysis.profile).frame(height: 160) }
                     }
                     if analysis.profile.contains(where: { $0.speedMetersPerSecond != nil }) {
-                        Section(title: activity.sport.showsPace ? "Pace" : "Speed") {
-                            SpeedChart(profile: analysis.profile, sport: activity.sport).frame(height: 160)
-                        }
+                        SpeedSection(profile: analysis.profile, sport: activity.sport)
                     }
                     if !analysis.splits.isEmpty {
                         Section(title: "Splits") { SplitsTable(splits: analysis.splits, sport: activity.sport) }
@@ -55,6 +59,27 @@ struct ActivityDetailView: View {
             Color.secondary.opacity(0.1).overlay(Label("No GPS points", systemImage: "location.slash").foregroundStyle(.secondary))
         case let segments?:
             RouteMapView(segments: segments)
+        }
+    }
+}
+
+// Running and hiking can switch the chart between pace and speed; cycling shows speed only.
+private struct SpeedSection: View {
+    let profile: [ProfileSample]
+    let sport: Sport
+    @State private var showsPace = true
+
+    var body: some View {
+        let showsPace = sport.showsPace && showsPace
+        Section(title: sport.showsPace ? "Pace and speed" : "Speed") {
+            if sport.showsPace {
+                Picker("Show", selection: $showsPace) {
+                    Text("Pace").tag(true)
+                    Text("Speed").tag(false)
+                }
+                .pickerStyle(.segmented)
+            }
+            SpeedChart(profile: profile, showsPace: showsPace).frame(height: 160)
         }
     }
 }

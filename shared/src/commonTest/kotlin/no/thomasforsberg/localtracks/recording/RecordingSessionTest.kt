@@ -230,6 +230,37 @@ class RecordingSessionTest {
     }
 
     @Test
+    fun countsStepsOnlyWhileRecording() {
+        session.start(Sport.HIKING)
+        assertNull(progress().steps, "no pedometer reading yet")
+
+        session.onSteps(40)
+        session.pause()
+        session.onSteps(55)
+        session.resume()
+        session.onSteps(60)
+
+        assertEquals(45, progress().steps)
+    }
+
+    @Test
+    fun stepsContinueWhenThePedometerRestarts() {
+        session.start(Sport.HIKING)
+        session.onSteps(100)
+        session.onSteps(7)
+
+        assertEquals(107, progress().steps)
+    }
+
+    @Test
+    fun ignoresStepsForSportsThatDontCountThem() {
+        session.start(Sport.CYCLING)
+        session.onSteps(40)
+
+        assertNull(progress().steps)
+    }
+
+    @Test
     fun stoppedSessionIgnoresFixesAndCanStartAgainFresh() {
         session.start(Sport.CYCLING)
         session.onLocation(fix(1))

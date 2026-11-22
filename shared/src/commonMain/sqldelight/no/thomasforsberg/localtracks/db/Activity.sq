@@ -12,7 +12,9 @@ CREATE TABLE activity (
     distance_meters REAL NOT NULL DEFAULT 0,
     point_count INTEGER NOT NULL DEFAULT 0,
     elevation_gain_meters REAL NOT NULL DEFAULT 0,
-    moving_time_ms INTEGER NOT NULL DEFAULT 0
+    moving_time_ms INTEGER NOT NULL DEFAULT 0,
+    -- NULL when steps weren't counted (other sports, no pedometer, older activities).
+    step_count INTEGER
 );
 
 CREATE INDEX activity_started_at ON activity (started_at);
@@ -26,7 +28,7 @@ SELECT last_insert_rowid();
 updateTotals:
 UPDATE activity
 SET active_time_ms = :activeTimeMs, distance_meters = :distanceMeters, point_count = :pointCount,
-    elevation_gain_meters = :elevationGainMeters, moving_time_ms = :movingTimeMs
+    elevation_gain_meters = :elevationGainMeters, moving_time_ms = :movingTimeMs, step_count = :stepCount
 WHERE id = :id;
 
 updateMeasurement:
@@ -38,7 +40,7 @@ SELECT id, sport FROM activity;
 finish:
 UPDATE activity
 SET finished_at = :finishedAt, active_time_ms = :activeTimeMs, distance_meters = :distanceMeters, point_count = :pointCount,
-    elevation_gain_meters = :elevationGainMeters, moving_time_ms = :movingTimeMs
+    elevation_gain_meters = :elevationGainMeters, moving_time_ms = :movingTimeMs, step_count = :stepCount
 WHERE id = :id;
 
 byId:

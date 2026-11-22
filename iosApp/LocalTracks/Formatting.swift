@@ -40,6 +40,10 @@ enum Formatters {
         return "\(secondsPerKilometer / 60):\(String(format: "%02d", secondsPerKilometer % 60)) /km"
     }
 
+    static func steps(_ count: Int, locale: Locale = .current) -> String {
+        count.formatted(.number.locale(locale))
+    }
+
     static func speedOrPace(metersPerSecond: Double?, for sport: Sport) -> String {
         sport.showsPace ? pace(metersPerSecond: metersPerSecond) : speed(metersPerSecond: metersPerSecond)
     }

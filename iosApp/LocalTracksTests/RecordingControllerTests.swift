@@ -53,6 +53,23 @@ final class FakeMotionSource: MotionSource {
     }
 }
 
+@MainActor
+final class FakePedometerSource: PedometerSource {
+    private(set) var startCount = 0
+    private var continuation: AsyncStream<Int>.Continuation?
+
+    func stepCounts() -> AsyncStream<Int> {
+        startCount += 1
+        let (stream, continuation) = AsyncStream.makeStream(of: Int.self)
+        self.continuation = continuation
+        return stream
+    }
+
+    func send(_ steps: Int) {
+        continuation?.yield(steps)
+    }
+}
+
 // Sensor events are handled on separate tasks, so tests wait for their effect.
 @MainActor
 func eventually(timeout: Duration = .seconds(5), _ condition: () -> Bool) async -> Bool {
@@ -70,6 +87,7 @@ struct RecordingControllerTests {
     private let location = FakeLocationSource()
     private let barometer = FakeBarometerSource()
     private let motion = FakeMotionSource()
+    private let pedometer = FakePedometerSource()
     // Shared by every environment in a test, like UserDefaults across app launches.
     private let stateStore = InMemoryRecordingStateStore()
 
@@ -78,7 +96,7 @@ struct RecordingControllerTests {
     }
 
     private func makeEnvironment() -> AppEnvironment {
-        AppEnvironment(databaseDirectory: directory, stateStore: stateStore, locationSource: location, barometerSource: barometer, motionSource: motion)
+        AppEnvironment(databaseDirectory: directory, stateStore: stateStore, locationSource: location, barometerSource: barometer, motionSource: motion, pedometerSource: pedometer)
     }
 
     private func fix(secondsFromNow seconds: Double, latitude: Double = 59.9) -> LocationEvent {
@@ -217,5 +235,24 @@ struct RecordingControllerTests {
 
         #expect(environment.repository.activity(id: id)?.totals.distanceMeters == 0)
         #expect(environment.repository.trackPoints(activityId: id).allSatisfy { $0.point.stationaryByMotion?.boolValue == true })
+    }
+
+    @Test func countsAndSavesStepsWhenHiking() async throws {
+        let environment = makeEnvironment()
+        let controller = environment.recording
+        controller.start(.hiking)
+        let id = try #require(environment.repository.latestUnfinishedActivity()).id
+
+        pedometer.send(42)
+        #expect(await eventually { controller.state.progressOrNull()?.steps?.intValue == 42 })
+        controller.stop()
+
+        #expect(environment.repository.activity(id: id)?.totals.stepCount?.intValue == 42)
+    }
+
+    @Test func doesNotStartThePedometerForCycling() {
+        makeEnvironment().recording.start(.cycling)
+
+        #expect(pedometer.startCount == 0)
     }
 }

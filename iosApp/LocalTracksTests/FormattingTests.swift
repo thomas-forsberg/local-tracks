@@ -35,6 +35,10 @@ struct FormattingTests {
         #expect(Sport.cycling.averageSpeedTitle == "Avg speed")
     }
 
+    @Test func stepsAreGroupedForTheLocale() {
+        #expect(Formatters.steps(4213, locale: Locale(identifier: "en_US")) == "4,213")
+    }
+
     @Test func markersOverlapWhenCloserThanOneMarkerOnScreen() {
         #expect(RouteMapView.Coordinator.markersOverlap(CGPoint(x: 100, y: 100), CGPoint(x: 110, y: 105)))
         #expect(!RouteMapView.Coordinator.markersOverlap(CGPoint(x: 100, y: 100), CGPoint(x: 100, y: 130)))
