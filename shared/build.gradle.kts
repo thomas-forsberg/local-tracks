@@ -26,14 +26,17 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.sqldelight.coroutines)
+            implementation(libs.ktor.client.core)
         }
         iosMain.dependencies {
             implementation(libs.sqldelight.native.driver)
+            implementation(libs.ktor.client.darwin)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.kotlinx.io.core)
+            implementation(libs.ktor.client.mock)
         }
         jvmTest.dependencies {
             implementation(libs.sqldelight.sqlite.driver)
