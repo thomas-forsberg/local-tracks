@@ -18,5 +18,7 @@ struct RootView: View {
                 MapsView(library: environment.maps)
             }
         }
+        // Every map in the app shows the downloaded regions.
+        .environment(environment.maps)
     }
 }

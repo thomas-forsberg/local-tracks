@@ -4,6 +4,7 @@ import SwiftUI
 struct RecordView: View {
     let controller: RecordingController
     @State private var chosenSport: Sport = .cycling
+    @State private var showsMap = false
 
     // While an activity is in progress its own sport wins over the picker.
     private var sport: Sport { controller.state.progressOrNull()?.sport ?? chosenSport }
@@ -26,20 +27,36 @@ struct RecordView: View {
                     }
                 }
 
-                TimelineView(.periodic(from: .now, by: 1)) { context in
-                    LiveStatsView(state: controller.state, sport: sport, now: context.date)
+                if showsMap && isInProgress {
+                    TrackMap(segments: controller.liveSegments, followsLatest: true)
+                        .clipShape(.rect(cornerRadius: 16))
+                    CompactStatsView(state: controller.state, sport: sport)
+                } else {
+                    TimelineView(.periodic(from: .now, by: 1)) { context in
+                        LiveStatsView(state: controller.state, sport: sport, now: context.date)
+                    }
+                    .padding(.top, 8)
+                    Spacer(minLength: 0)
                 }
-                .padding(.top, 8)
-
-                Spacer(minLength: 0)
                 controls
             }
             .padding()
             .navigationTitle("Record")
             .toolbar {
+                if isInProgress {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button(showsMap ? "Show stats" : "Show map", systemImage: showsMap ? "gauge.with.dots.needle.33percent" : "map") {
+                            showsMap.toggle()
+                        }
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) { StatusPill(state: controller.state) }
             }
         }
+    }
+
+    private var isInProgress: Bool {
+        controller.state is RecordingStateRecording || controller.state is RecordingStatePaused
     }
 
     @ViewBuilder private var controls: some View {
@@ -118,6 +135,23 @@ private struct LiveStatsView: View {
     }
 }
 
+// Under the live map: the numbers that matter most while moving.
+private struct CompactStatsView: View {
+    let state: RecordingState
+    let sport: Sport
+
+    var body: some View {
+        let progress = state.progressOrNull()
+        let speed = state is RecordingStateRecording ? progress?.currentSpeedMetersPerSecond?.doubleValue : nil
+        HStack {
+            Stat(title: "Distance", value: Formatters.distance(meters: progress?.distanceMeters ?? 0))
+            Stat(title: "Moving time", value: Formatters.clock(seconds: progress?.movingTimeSeconds ?? 0))
+            SpeedStat(title: sport.currentSpeedTitle, metersPerSecond: speed, sport: sport)
+        }
+        .dynamicTypeSize(...DynamicTypeSize.large)
+    }
+}
+
 private struct Stat: View {
     let title: String
     let value: String
@@ -126,7 +160,10 @@ private struct Stat: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title).font(.subheadline).foregroundStyle(.secondary)
-            Text(value).font(.title.weight(.semibold).monospacedDigit())
+            Text(value)
+                .font(.title.weight(.semibold).monospacedDigit())
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
             if let detail {
                 Text(detail).font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
             }

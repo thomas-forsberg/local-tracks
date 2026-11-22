@@ -103,6 +103,14 @@ class ActivityRecorder(
         isStorageFailing = runCatching(block).isFailure
     }
 
+    // Every point of the activity in progress, stored and not yet stored, e.g. to draw it on a live map
+    // after the app was relaunched. Empty when nothing is in progress.
+    fun recordedPoints(): List<RecordedPoint> {
+        if (!inProgress) return emptyList()
+        val stored = activityId?.let { id -> runCatching { repository.trackPoints(id) }.getOrNull() } ?: emptyList()
+        return stored + pendingPoints
+    }
+
     // An activity that was still recording when the app crashed or was killed.
     fun unfinishedActivity(): ActivitySummary? =
         if (inProgress) null else repository.latestUnfinishedActivity()
