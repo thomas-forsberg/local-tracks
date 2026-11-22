@@ -40,6 +40,11 @@ enum Formatters {
         return "\(secondsPerKilometer / 60):\(String(format: "%02d", secondsPerKilometer % 60)) /km"
     }
 
+    // "68 MB", "1,2 GB" (localized).
+    static func bytes(_ count: Int64, locale: Locale = .current) -> String {
+        count.formatted(.byteCount(style: .file).locale(locale))
+    }
+
     static func steps(_ count: Int, locale: Locale = .current) -> String {
         count.formatted(.number.locale(locale))
     }

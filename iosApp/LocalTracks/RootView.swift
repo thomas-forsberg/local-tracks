@@ -14,6 +14,9 @@ struct RootView: View {
             Tab("Stats", systemImage: "chart.bar") {
                 StatsView(viewModel: environment.stats)
             }
+            Tab("Maps", systemImage: "map") {
+                MapsView(library: environment.maps)
+            }
         }
     }
 }

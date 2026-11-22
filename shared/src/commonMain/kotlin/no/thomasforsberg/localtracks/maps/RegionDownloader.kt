@@ -76,7 +76,8 @@ class RegionDownloader(
         this(client, repository, openStore, Clock.System)
 
     // Returns when every tile is stored. Throws on a failed tile (after retries) or when cancelled;
-    // everything stored until then is kept.
+    // everything stored until then is kept. @Throws makes failures Swift errors instead of crashes.
+    @Throws(Exception::class)
     suspend fun download(regionId: Long): Unit = withContext(workContext) {
         val region = checkNotNull(repository.region(regionId)) { "No map region $regionId" }
         openStore(region).use { store ->

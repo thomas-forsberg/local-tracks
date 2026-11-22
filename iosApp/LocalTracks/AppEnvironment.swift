@@ -9,6 +9,8 @@ final class AppEnvironment {
     let recording: RecordingController
     let activities: ActivitiesViewModel
     let stats: StatsViewModel
+    let mapRegions: MapRegionRepository
+    let maps: MapLibrary
 
     init(
         databaseDirectory: URL,
@@ -16,7 +18,10 @@ final class AppEnvironment {
         locationSource: LocationSource = CoreLocationSource(),
         barometerSource: BarometerSource = CoreMotionBarometerSource(),
         motionSource: MotionSource = CoreMotionActivitySource(),
-        pedometerSource: PedometerSource = CoreMotionPedometerSource()
+        pedometerSource: PedometerSource = CoreMotionPedometerSource(),
+        // Defaults to a folder next to the database, for tests.
+        mapsDirectory: URL? = nil,
+        regionDownloader: ((MapRegionRepository, URL) -> RegionDownloading)? = nil
     ) {
         let database = Database_iosKt.createIosDatabase(
             directoryPath: databaseDirectory.path(percentEncoded: false),
@@ -33,6 +38,13 @@ final class AppEnvironment {
         )
         activities = ActivitiesViewModel(repository: repository)
         stats = StatsViewModel(repository: repository)
+        mapRegions = MapRegionRepository(database: database)
+        let mapsDirectory = mapsDirectory ?? databaseDirectory.appending(path: "Maps", directoryHint: .isDirectory)
+        maps = MapLibrary(
+            repository: mapRegions,
+            directory: mapsDirectory,
+            downloader: regionDownloader?(mapRegions, mapsDirectory) ?? KartverketRegionDownloader(repository: mapRegions, directory: mapsDirectory)
+        )
     }
 
     static func live() throws -> AppEnvironment {
@@ -43,7 +55,8 @@ final class AppEnvironment {
         #endif
         return AppEnvironment(
             databaseDirectory: try DatabaseDirectory.prepare(in: DatabaseDirectory.applicationSupport()),
-            stateStore: UserDefaultsRecordingStateStore()
+            stateStore: UserDefaultsRecordingStateStore(),
+            mapsDirectory: try DatabaseDirectory.prepare(in: DatabaseDirectory.library(), named: "Maps")
         )
     }
 }

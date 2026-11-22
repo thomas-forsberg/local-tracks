@@ -58,6 +58,26 @@ final class ScreenshotTour: XCTestCase {
         app.buttons["All time"].tap()
         sleep(1)
         snapshot("10-stats-all-time")
+
+        // Demo mode draws its own map tiles instead of downloading them.
+        app.tabBars.buttons["Maps"].tap()
+        XCTAssert(app.staticTexts["Nordmarka"].waitForExistence(timeout: 15))
+        app.staticTexts["Nordmarka"].tap() // zooms the map to it
+        sleep(3) // let the map draw
+        snapshot("11-maps")
+        app.buttons["Add area"].tap()
+        XCTAssert(app.buttons["Download"].waitForExistence(timeout: 5))
+        sleep(2)
+        snapshot("12-maps-add-area")
+        app.buttons["Cancel"].tap()
+    }
+
+    @MainActor
+    func testMapsBeforeDownloading() {
+        let app = launch("-demoDataEmpty")
+        app.tabBars.buttons["Maps"].tap()
+        XCTAssert(app.buttons["Download overview"].waitForExistence(timeout: 10))
+        snapshot("13-maps-empty")
     }
 
     @MainActor

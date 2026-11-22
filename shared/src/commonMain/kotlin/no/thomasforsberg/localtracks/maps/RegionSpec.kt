@@ -13,6 +13,12 @@ const val DETAILED_REGION_MAX_ZOOM = 16
 // Kartverket topo tiles in Norwegian terrain average about 50 KB (measured at zoom 13–16).
 const val ESTIMATED_BYTES_PER_TILE = 50_000L
 
+// Measured: low-zoom tiles are mostly sea and plain land, about 9 KB each.
+const val NORWAY_OVERVIEW_BYTES = 6_500_000L
+
+// About 1 GB: larger areas are better split up, and protect Kartverket from huge bulk downloads.
+const val MAX_REGION_TILES = 20_000L
+
 // Mainland Norway with Svalbard left out.
 val NORWAY = BoundingBox(west = 4.0, south = 57.8, east = 31.5, north = 71.3)
 
@@ -27,6 +33,8 @@ data class RegionSpec(val area: TileArea, val minZoom: Int, val maxZoom: Int) {
     val tileCount: Long get() = (minZoom..maxZoom).sumOf { area.at(it).tileCount }
 
     val estimatedBytes: Long get() = tileCount * ESTIMATED_BYTES_PER_TILE
+
+    val isTooLarge: Boolean get() = tileCount > MAX_REGION_TILES
 
     fun tiles(): Sequence<TileId> = (minZoom..maxZoom).asSequence().flatMap { area.at(it).tiles() }
 
