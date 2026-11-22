@@ -20,6 +20,10 @@ final class ScreenshotTour: XCTestCase {
         XCTAssert(app.buttons["Pause"].waitForExistence(timeout: 5))
         sleep(8)
         snapshot("02-recording")
+        app.buttons["Show map"].tap()
+        sleep(3) // let the map draw
+        snapshot("02b-recording-map")
+        app.buttons["Show stats"].tap()
         app.buttons["Pause"].tap()
         XCTAssert(app.buttons["Resume"].waitForExistence(timeout: 5))
         snapshot("03-paused")

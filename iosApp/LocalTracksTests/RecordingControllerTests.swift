@@ -255,4 +255,22 @@ struct RecordingControllerTests {
 
         #expect(pedometer.startCount == 0)
     }
+
+    @Test func liveMapLinesFollowSegmentsAndSurviveARelaunch() async {
+        let first = makeEnvironment().recording
+        first.start(.hiking)
+        location.send(fix(secondsFromNow: 1, latitude: 59.9))
+        location.send(fix(secondsFromNow: 2, latitude: 59.901))
+        #expect(await eventually { first.liveSegments.map(\.count) == [2] })
+        first.pause()
+        first.resume()
+        location.send(fix(secondsFromNow: 3, latitude: 59.902))
+        #expect(await eventually { first.liveSegments.map(\.count) == [2, 1] })
+        first.flush() // the app is then killed by iOS
+
+        let relaunched = makeEnvironment().recording
+        relaunched.continueAfterRelaunch()
+
+        #expect(relaunched.liveSegments.map(\.count) == [2, 1])
+    }
 }

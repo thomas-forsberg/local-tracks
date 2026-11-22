@@ -79,12 +79,7 @@ struct MapsView: View {
                         .allowsHitTesting(false)
                 }
                 if !library.displayableRegions.isEmpty {
-                    Text(OfflineMapLayers.attribution)
-                        .font(.caption2)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(.regularMaterial, in: .capsule)
-                        .padding(8)
+                    MapAttribution()
                 }
                 if library.overview?.isComplete != true {
                     OverviewPrompt(library: library)

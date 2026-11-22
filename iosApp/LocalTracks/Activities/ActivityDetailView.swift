@@ -58,7 +58,7 @@ struct ActivityDetailView: View {
         case let segments? where segments.allSatisfy(\.isEmpty):
             Color.secondary.opacity(0.1).overlay(Label("No GPS points", systemImage: "location.slash").foregroundStyle(.secondary))
         case let segments?:
-            RouteMapView(segments: segments)
+            TrackMap(segments: segments)
         }
     }
 }

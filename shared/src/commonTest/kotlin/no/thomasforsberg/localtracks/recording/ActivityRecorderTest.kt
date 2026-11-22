@@ -140,6 +140,24 @@ class ActivityRecorderTest {
     }
 
     @Test
+    fun recordedPointsIncludeStoredAndPendingPointsAcrossARelaunch() {
+        recorder.start(Sport.HIKING)
+        (1..7).forEach { recorder.recordAt(it) } // 5 stored at 5 s, 2 pending
+
+        assertEquals(7, recorder.recordedPoints().size)
+
+        recorder.flush()
+        val restarted = newRecorder()
+        assertEquals(emptyList(), restarted.recordedPoints(), "nothing in progress yet")
+        restarted.resumeUnfinished()
+        restarted.recordAt(20)
+
+        val points = restarted.recordedPoints()
+        assertEquals(8, points.size)
+        assertEquals(listOf(0, 1), points.map { it.segmentIndex }.distinct())
+    }
+
+    @Test
     fun savesStepsAndKeepsCountingAfterARelaunch() {
         recorder.start(Sport.HIKING)
         recorder.onSteps(12)

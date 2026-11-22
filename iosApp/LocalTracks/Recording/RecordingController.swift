@@ -1,3 +1,4 @@
+import CoreLocation
 import Observation
 import Shared
 
@@ -13,6 +14,8 @@ final class RecordingController {
     private(set) var stationaryByMotion: Bool?
     // A database write failed (e.g. the phone is full). Recording continues; points are kept until a write succeeds.
     private(set) var isStorageFailing = false
+    // The activity in progress as lines, one per segment, for the live map.
+    private(set) var liveSegments: [[CLLocationCoordinate2D]] = []
     // Left over from a crash or the app being killed; offered for resuming or saving on launch.
     private(set) var unfinishedActivity: ActivitySummary?
 
@@ -41,6 +44,8 @@ final class RecordingController {
 
     func start(_ sport: Sport) {
         guard recorder.start(sport: sport) else { return }
+        liveSegments = []
+        liveSegmentIndex = nil
         startSensors(for: sport)
         refreshState()
     }
@@ -67,6 +72,7 @@ final class RecordingController {
     func resumeUnfinished() {
         guard recorder.resumeUnfinished(), let sport = recorder.state.value.progressOrNull()?.sport else { return }
         unfinishedActivity = nil
+        reloadLiveSegments()
         startSensors(for: sport)
         refreshState()
     }
@@ -75,6 +81,7 @@ final class RecordingController {
     func continueAfterRelaunch() {
         guard recorder.continueAfterRelaunch(), let sport = recorder.state.value.progressOrNull()?.sport else { return }
         unfinishedActivity = nil
+        reloadLiveSegments()
         startSensors(for: sport)
         refreshState()
     }
@@ -132,6 +139,7 @@ final class RecordingController {
             locationProblem = nil
             if recorder.onLocation(fix: fix) {
                 refreshState()
+                appendToLiveSegments(fix)
             }
         case .problem(let problem):
             locationProblem = problem
@@ -151,6 +159,25 @@ final class RecordingController {
     private func handle(_ reading: BarometerReading) {
         recorder.onBarometer(reading: reading)
         latestBarometerReading = reading
+    }
+
+    @ObservationIgnored private var liveSegmentIndex: Int32?
+
+    private func appendToLiveSegments(_ fix: LocationFix) {
+        let coordinate = CLLocationCoordinate2D(latitude: fix.latitude, longitude: fix.longitude)
+        let index = state.progressOrNull()?.segmentIndex
+        if index == liveSegmentIndex, !liveSegments.isEmpty {
+            liveSegments[liveSegments.count - 1].append(coordinate)
+        } else {
+            liveSegments.append([coordinate])
+            liveSegmentIndex = index
+        }
+    }
+
+    private func reloadLiveSegments() {
+        let points = recorder.recordedPoints()
+        liveSegments = ActivityDetailViewModel.segments(from: points)
+        liveSegmentIndex = points.last?.segmentIndex
     }
 
     // The Kotlin state is a StateFlow; reading its value after every change keeps this synchronous and testable.

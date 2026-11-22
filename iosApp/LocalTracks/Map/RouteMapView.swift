@@ -1,11 +1,16 @@
 import MapLibre
+import Shared
 import SwiftUI
 
-// Shows a recorded route on MapLibre without any map tiles: the style is bundled and has no
-// sources, so the map makes no network requests. Offline Kartverket/OpenStreetMap tiles come later.
+// Shows a route on MapLibre, over downloaded map regions where there are any. The style is bundled and
+// only references local files, so the map makes no network requests.
 struct RouteMapView: UIViewRepresentable {
     // One polyline per segment, so a pause is never drawn as a straight line.
     let segments: [[CLLocationCoordinate2D]]
+    var regions: [MapRegion] = []
+    var fileURL: (MapRegion) -> URL = { _ in URL(fileURLWithPath: "/") }
+    // While recording: keeps the latest point in the middle instead of fitting the whole route.
+    var followsLatest = false
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -16,28 +21,30 @@ struct RouteMapView: UIViewRepresentable {
         let mapView = MLNMapView(frame: .zero, styleURL: styleURL)
         mapView.delegate = context.coordinator
         mapView.logoView.isHidden = true
-        mapView.attributionButton.isHidden = true // no data sources to attribute yet
+        mapView.attributionButton.isHidden = true // shown in SwiftUI instead
         mapView.compassView.isHidden = true
         mapView.isRotateEnabled = false
         mapView.isPitchEnabled = false
-        context.coordinator.segments = segments
+        context.coordinator.parent = self
         return mapView
     }
 
     func updateUIView(_ mapView: MLNMapView, context: Context) {
-        context.coordinator.segments = segments
+        context.coordinator.parent = self
         context.coordinator.colorScheme = context.environment.colorScheme
         context.coordinator.render(on: mapView)
     }
 
     @MainActor
     final class Coordinator: NSObject {
-        var segments: [[CLLocationCoordinate2D]] = []
+        var parent: RouteMapView?
         var colorScheme: ColorScheme = .light
         private var hasFittedCamera = false
+        private var segments: [[CLLocationCoordinate2D]] { parent?.segments ?? [] }
 
         func render(on mapView: MLNMapView) {
-            guard let style = mapView.style else { return } // called again once the style has loaded
+            guard let parent, let style = mapView.style else { return } // called again once the style has loaded
+            OfflineMapLayers.apply(parent.regions, fileURL: parent.fileURL, to: style, below: "route-casing")
             let background = style.layer(withIdentifier: "background") as? MLNBackgroundStyleLayer
             background?.backgroundColor = NSExpression(forConstantValue: colorScheme == .dark ? UIColor(white: 0.12, alpha: 1) : UIColor(red: 0.94, green: 0.93, blue: 0.9, alpha: 1))
 
@@ -59,7 +66,11 @@ struct RouteMapView: UIViewRepresentable {
             }
 
             let all = segments.flatMap { $0 }
-            if !hasFittedCamera, !all.isEmpty {
+            if parent.followsLatest, let latest = all.last {
+                // Street level the first time, then whatever zoom the user chose.
+                mapView.setCenter(latest, zoomLevel: hasFittedCamera ? mapView.zoomLevel : 15, animated: hasFittedCamera)
+                hasFittedCamera = true
+            } else if !hasFittedCamera, !all.isEmpty {
                 fitCamera(to: all, on: mapView)
                 hasFittedCamera = true
             }
@@ -72,7 +83,8 @@ struct RouteMapView: UIViewRepresentable {
                 false
             }
             setMarker(at: all.first, id: "start", color: .systemGreen, radius: overlap ? 11 : 7, in: style)
-            setMarker(at: all.last, id: "end", color: .systemRed, radius: overlap ? 5 : 7, in: style)
+            // While recording the last point is where you are.
+            setMarker(at: all.last, id: "end", color: parent.followsLatest ? .systemBlue : .systemRed, radius: overlap ? 5 : 7, in: style)
         }
 
         private func setShape(_ shape: MLNShape, sourceId: String, in style: MLNStyle, layers: (MLNSource) -> [MLNStyleLayer]) {
