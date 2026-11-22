@@ -5,6 +5,7 @@ import app.cash.sqldelight.EnumColumnAdapter
 import app.cash.sqldelight.db.SqlDriver
 import no.thomasforsberg.localtracks.db.Activity
 import no.thomasforsberg.localtracks.db.LocalTracksDatabase
+import no.thomasforsberg.localtracks.db.Map_region
 import no.thomasforsberg.localtracks.db.Track_point
 import no.thomasforsberg.localtracks.track.measure
 import kotlin.time.Instant
@@ -19,6 +20,11 @@ fun createDatabase(driver: SqlDriver): LocalTracksDatabase = LocalTracksDatabase
     track_pointAdapter = Track_point.Adapter(
         timeAdapter = InstantAdapter,
         baro_timeAdapter = InstantAdapter,
+    ),
+    map_regionAdapter = Map_region.Adapter(
+        kindAdapter = EnumColumnAdapter(),
+        created_atAdapter = InstantAdapter,
+        completed_atAdapter = InstantAdapter,
     ),
 )
 

@@ -45,9 +45,16 @@ sqldelight {
     databases {
         create("LocalTracksDatabase") {
             packageName = "no.thomasforsberg.localtracks.db"
+            srcDirs("src/commonMain/sqldelight")
             // Snapshots of each released schema version; migrations are verified against them at build time.
             schemaOutputDirectory = file("src/commonMain/sqldelight/databases")
             verifyMigrations = true
+        }
+        // One file per downloaded map region, in the standard MBTiles layout. Never migrated: a region
+        // is downloaded again rather than upgraded.
+        create("MBTilesDatabase") {
+            packageName = "no.thomasforsberg.localtracks.maps.db"
+            srcDirs("src/commonMain/mbtiles")
         }
     }
 }

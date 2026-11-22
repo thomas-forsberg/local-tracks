@@ -1,0 +1,32 @@
+-- The MBTiles 1.3 layout (github.com/mapbox/mbtiles-spec), which MapLibre reads directly.
+CREATE TABLE metadata (
+    name TEXT NOT NULL PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
+-- tile_row counts from the bottom (TMS), unlike the y of XYZ tile URLs.
+CREATE TABLE tiles (
+    zoom_level INTEGER NOT NULL,
+    tile_column INTEGER NOT NULL,
+    tile_row INTEGER NOT NULL,
+    tile_data BLOB NOT NULL,
+    PRIMARY KEY (zoom_level, tile_column, tile_row)
+);
+
+setMetadata:
+INSERT OR REPLACE INTO metadata (name, value) VALUES (?, ?);
+
+metadata:
+SELECT name, value FROM metadata;
+
+putTile:
+INSERT OR REPLACE INTO tiles (zoom_level, tile_column, tile_row, tile_data) VALUES (?, ?, ?, ?);
+
+tile:
+SELECT tile_data FROM tiles WHERE zoom_level = ? AND tile_column = ? AND tile_row = ?;
+
+storedTiles:
+SELECT zoom_level, tile_column, tile_row FROM tiles;
+
+totals:
+SELECT count(*) AS tileCount, coalesce(sum(length(tile_data)), 0) AS bytes FROM tiles;

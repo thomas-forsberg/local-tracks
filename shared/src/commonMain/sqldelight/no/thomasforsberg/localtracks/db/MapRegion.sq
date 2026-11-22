@@ -1,0 +1,47 @@
+import kotlin.time.Instant;
+import no.thomasforsberg.localtracks.maps.MapRegionKind;
+
+-- Downloaded map areas. The tiles themselves live in one MBTiles file per region.
+CREATE TABLE map_region (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind TEXT AS MapRegionKind NOT NULL,
+    name TEXT NOT NULL,
+    -- The area as whole tiles at area_zoom (see TileArea).
+    area_zoom INTEGER NOT NULL,
+    min_x INTEGER NOT NULL,
+    min_y INTEGER NOT NULL,
+    max_x INTEGER NOT NULL,
+    max_y INTEGER NOT NULL,
+    min_zoom INTEGER NOT NULL,
+    max_zoom INTEGER NOT NULL,
+    created_at INTEGER AS Instant NOT NULL,
+    -- NULL until every tile is downloaded.
+    completed_at INTEGER AS Instant,
+    downloaded_tiles INTEGER NOT NULL DEFAULT 0,
+    downloaded_bytes INTEGER NOT NULL DEFAULT 0
+);
+
+insert:
+INSERT INTO map_region (kind, name, area_zoom, min_x, min_y, max_x, max_y, min_zoom, max_zoom, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+lastInsertedId:
+SELECT last_insert_rowid();
+
+all:
+SELECT * FROM map_region ORDER BY kind = 'OVERVIEW' DESC, created_at;
+
+byId:
+SELECT * FROM map_region WHERE id = ?;
+
+updateProgress:
+UPDATE map_region SET downloaded_tiles = :tiles, downloaded_bytes = :bytes WHERE id = :id;
+
+complete:
+UPDATE map_region SET completed_at = :completedAt, downloaded_tiles = :tiles, downloaded_bytes = :bytes WHERE id = :id;
+
+rename:
+UPDATE map_region SET name = :name WHERE id = :id;
+
+delete:
+DELETE FROM map_region WHERE id = ?;
