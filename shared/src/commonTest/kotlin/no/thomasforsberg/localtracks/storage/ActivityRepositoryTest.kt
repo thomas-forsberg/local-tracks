@@ -63,7 +63,15 @@ class ActivityRepositoryTest {
 
     @Test
     fun totalsCanBeCreatedFromSeconds() {
-        assertEquals(ActivityTotals(90.seconds, 1.5, 3, 4.5, 80.seconds), ActivityTotals.ofSeconds(90.0, 1.5, 3, 4.5, 80.0))
+        assertEquals(ActivityTotals(90.seconds, 1.5, 3, 4.5, 80.seconds, 120), ActivityTotals.ofSeconds(90.0, 1.5, 3, 4.5, 80.0, 120))
+    }
+
+    @Test
+    fun storesStepCount() {
+        val id = repository.startActivity(Sport.HIKING, start)
+        repository.finishActivity(id, start + 2.minutes, ActivityTotals(100.seconds, 150.0, 1, stepCount = 230))
+
+        assertEquals(230, repository.activity(id)?.totals?.stepCount)
     }
 
     @Test

@@ -30,7 +30,7 @@ struct ActivityDetailViewModelTests {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let repository = AppEnvironment(databaseDirectory: directory, stateStore: InMemoryRecordingStateStore(), locationSource: FakeLocationSource(), barometerSource: FakeBarometerSource()).repository
         let id = repository.startActivity(sport: .hiking, startedAt: .from(start))
-        let totals = ActivityTotals.companion.ofSeconds(activeTimeSeconds: 600, distanceMeters: 1500, pointCount: 3, elevationGainMeters: 20, movingTimeSeconds: 500)
+        let totals = ActivityTotals.companion.ofSeconds(activeTimeSeconds: 600, distanceMeters: 1500, pointCount: 3, elevationGainMeters: 20, movingTimeSeconds: 500, stepCount: nil)
         repository.appendPoints(activityId: id, firstSeq: 0, points: [point(0, 59.90), point(0, 59.91), point(1, 59.92)], totals: totals)
         repository.finishActivity(activityId: id, finishedAt: .from(start.addingTimeInterval(900)), totals: totals)
         let viewModel = ActivityDetailViewModel(activity: try #require(repository.activity(id: id)), repository: repository)

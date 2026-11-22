@@ -53,8 +53,8 @@ targets:
           Local Tracks records your route while you record an activity.
           Your location never leaves your phone.
         NSMotionUsageDescription: >-
-          Local Tracks uses the barometer to measure elevation.
-          The data never leaves your phone.
+          Local Tracks uses the motion sensors to measure elevation, count steps
+          and notice when you stand still. The data never leaves your phone.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: no.thomasforsberg.localtracks

@@ -66,12 +66,16 @@ data class ActivityProgress(
     // Last accepted point of the current segment.
     val lastPoint: TrackPoint?,
     val currentSpeedMetersPerSecond: Double?,
+    // Null when the sport doesn't count steps or no pedometer reading has arrived (e.g. no permission).
+    val stepCount: StepCount? = null,
 ) {
     val distanceMeters: Double get() = measurement.distanceMeters
     val movingTimeSeconds: Double get() = measurement.movingTimeSeconds
 
     // False while standing still, which the UI shows as auto-paused.
     val isMoving: Boolean get() = measurement.isMoving
+
+    val steps: Int? get() = stepCount?.steps
 
     companion object {
         fun startingAt(sport: Sport, time: Instant) = ActivityProgress(

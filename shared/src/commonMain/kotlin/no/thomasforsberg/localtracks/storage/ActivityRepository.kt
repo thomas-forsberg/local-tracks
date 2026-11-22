@@ -32,6 +32,8 @@ data class ActivityTotals(
     val pointCount: Int,
     val elevationGainMeters: Double = 0.0,
     @property:HiddenFromObjC val movingTime: Duration = Duration.ZERO,
+    // Null when steps weren't counted.
+    val stepCount: Int? = null,
 ) {
     // Kotlin's Duration reaches Swift as its raw internal encoding, so Swift gets plain seconds instead.
     val activeTimeSeconds: Double get() = activeTime.toDouble(DurationUnit.SECONDS)
@@ -39,8 +41,14 @@ data class ActivityTotals(
 
     companion object {
         // For Swift: the primary constructor takes a Duration, which Swift can't pass correctly.
-        fun ofSeconds(activeTimeSeconds: Double, distanceMeters: Double, pointCount: Int, elevationGainMeters: Double, movingTimeSeconds: Double) =
-            ActivityTotals(activeTimeSeconds.seconds, distanceMeters, pointCount, elevationGainMeters, movingTimeSeconds.seconds)
+        fun ofSeconds(
+            activeTimeSeconds: Double,
+            distanceMeters: Double,
+            pointCount: Int,
+            elevationGainMeters: Double,
+            movingTimeSeconds: Double,
+            stepCount: Int?,
+        ) = ActivityTotals(activeTimeSeconds.seconds, distanceMeters, pointCount, elevationGainMeters, movingTimeSeconds.seconds, stepCount)
     }
 }
 
@@ -69,6 +77,7 @@ class ActivityRepository(
                 totals.pointCount.toLong(),
                 totals.elevationGainMeters,
                 totals.movingTime.inWholeMilliseconds,
+                totals.stepCount?.toLong(),
                 activityId,
             )
         }
@@ -82,6 +91,7 @@ class ActivityRepository(
             totals.pointCount.toLong(),
             totals.elevationGainMeters,
             totals.movingTime.inWholeMilliseconds,
+            totals.stepCount?.toLong(),
             activityId,
         )
     }
@@ -119,12 +129,13 @@ private fun activitySummary(
     pointCount: Long,
     elevationGainMeters: Double,
     movingTimeMs: Long,
+    stepCount: Long?,
 ) = ActivitySummary(
     id,
     sport,
     startedAt,
     finishedAt,
-    ActivityTotals(activeTimeMs.milliseconds, distanceMeters, pointCount.toInt(), elevationGainMeters, movingTimeMs.milliseconds),
+    ActivityTotals(activeTimeMs.milliseconds, distanceMeters, pointCount.toInt(), elevationGainMeters, movingTimeMs.milliseconds, stepCount?.toInt()),
 )
 
 private fun RecordedPoint.toRow(activityId: Long, seq: Int) = Track_point(

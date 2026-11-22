@@ -24,7 +24,8 @@ enum DemoMode {
             databaseDirectory: directory,
             stateStore: InMemoryRecordingStateStore(),
             locationSource: DemoLocationSource(),
-            barometerSource: DemoBarometerSource()
+            barometerSource: DemoBarometerSource(),
+            pedometerSource: DemoPedometerSource()
         )
         if self == .sampleActivities {
             DemoData.seed(environment.repository)
@@ -61,7 +62,8 @@ enum DemoData {
                 distanceMeters: sample.kilometers * 1000,
                 pointCount: Int32(points.count),
                 elevationGainMeters: sample.climb,
-                movingTimeSeconds: sample.minutes * 60
+                movingTimeSeconds: sample.minutes * 60,
+                stepCount: sample.sport.countsSteps ? KotlinInt(int: Int32(sample.kilometers * 1400)) : nil
             )
             repository.appendPoints(activityId: id, firstSeq: 0, points: points, totals: totals)
             repository.finishActivity(activityId: id, finishedAt: .from(startedAt.addingTimeInterval(sample.minutes * 60)), totals: totals)
@@ -136,6 +138,25 @@ final class DemoBarometerSource: BarometerSource {
                 while !Task.isCancelled {
                     continuation.yield(BarometerReading(time: .from(.now), relativeAltitudeMeters: altitude, pressureKilopascals: 100))
                     altitude += 0.4
+                    try? await Task.sleep(for: .seconds(1))
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+}
+
+// Pretend pedometer for demo mode: a walker's 1.8 steps per second.
+@MainActor
+final class DemoPedometerSource: PedometerSource {
+    func stepCounts() -> AsyncStream<Int> {
+        AsyncStream { continuation in
+            let task = Task { @MainActor in
+                var seconds = 0.0
+                while !Task.isCancelled {
+                    continuation.yield(Int(seconds * 1.8))
+                    seconds += 1
                     try? await Task.sleep(for: .seconds(1))
                 }
                 continuation.finish()

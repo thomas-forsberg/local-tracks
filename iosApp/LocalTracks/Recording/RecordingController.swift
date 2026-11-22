@@ -20,13 +20,21 @@ final class RecordingController {
     @ObservationIgnored private let locationSource: LocationSource
     @ObservationIgnored private let barometerSource: BarometerSource
     @ObservationIgnored private let motionSource: MotionSource
+    @ObservationIgnored private let pedometerSource: PedometerSource
     @ObservationIgnored private var sensorTasks: [Task<Void, Never>] = []
 
-    init(recorder: ActivityRecorder, locationSource: LocationSource, barometerSource: BarometerSource, motionSource: MotionSource) {
+    init(
+        recorder: ActivityRecorder,
+        locationSource: LocationSource,
+        barometerSource: BarometerSource,
+        motionSource: MotionSource,
+        pedometerSource: PedometerSource
+    ) {
         self.recorder = recorder
         self.locationSource = locationSource
         self.barometerSource = barometerSource
         self.motionSource = motionSource
+        self.pedometerSource = pedometerSource
         state = recorder.state.value
         unfinishedActivity = recorder.unfinishedActivity()
     }
@@ -103,6 +111,14 @@ final class RecordingController {
                 }
             },
         ]
+        if sport.countsSteps {
+            let stepCounts = pedometerSource.stepCounts()
+            sensorTasks.append(Task { [weak self] in
+                for await steps in stepCounts {
+                    self?.handleSteps(steps)
+                }
+            })
+        }
     }
 
     private func stopSensors() {
@@ -125,6 +141,11 @@ final class RecordingController {
     private func handleMotion(_ stationary: Bool?) {
         recorder.onMotion(stationary: stationary.map(KotlinBoolean.init(value:)))
         stationaryByMotion = stationary
+    }
+
+    private func handleSteps(_ stepsSinceSensorStart: Int) {
+        recorder.onSteps(stepsSinceSensorStart: Int32(stepsSinceSensorStart))
+        refreshState()
     }
 
     private func handle(_ reading: BarometerReading) {
