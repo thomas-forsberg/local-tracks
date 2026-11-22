@@ -2,6 +2,7 @@ package no.thomasforsberg.localtracks.maps
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class RegionSpecTest {
@@ -34,6 +35,15 @@ class RegionSpecTest {
         assertEquals(1_366, standard.tileCount)
         assertEquals(68_300_000, standard.estimatedBytes)
         assertEquals(standard.tileCount + 4_096, detailed.tileCount)
+    }
+
+    @Test
+    fun aCountyIsTooLargeForOneRegion() {
+        val oslo = RegionSpec.forSelection(BoundingBox(10.6, 59.9, 10.9, 60.1), DEFAULT_REGION_MAX_ZOOM)
+        val innlandet = RegionSpec.forSelection(BoundingBox(8.0, 60.2, 12.8, 62.7), DEFAULT_REGION_MAX_ZOOM)
+
+        assertFalse(oslo.isTooLarge)
+        assertTrue(innlandet.isTooLarge)
     }
 
     @Test
