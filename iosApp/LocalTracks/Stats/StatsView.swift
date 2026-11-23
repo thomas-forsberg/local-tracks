@@ -7,19 +7,23 @@ struct StatsView: View {
     var body: some View {
         NavigationStack {
             List {
+                // The picker is the header, not a row: as a transparent first row it took the section's
+                // rounded top corners, and the totals box looked cut off.
                 Section {
+                    let totals = viewModel.totals()
+                    if totals.isEmpty {
+                        Text("No activities in this period.")
+                            .foregroundStyle(Theme.inkSecondary)
+                            .listRowBackground(Theme.surface)
+                    }
+                    ForEach(totals, id: \.sport) { TotalsRow(totals: $0).listRowBackground(Theme.surface) }
+                } header: {
                     Picker("Period", selection: $viewModel.period) {
                         ForEach(StatsPeriod.allCases) { Text($0.rawValue).tag($0) }
                     }
                     .pickerStyle(.segmented)
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets())
-
-                    let totals = viewModel.totals()
-                    if totals.isEmpty {
-                        Text("No activities in this period.").foregroundStyle(.secondary)
-                    }
-                    ForEach(totals, id: \.sport) { TotalsRow(totals: $0).listRowBackground(Theme.surface) }
+                    .textCase(nil)
+                    .padding(.bottom, 8)
                 }
 
                 let records = viewModel.records
