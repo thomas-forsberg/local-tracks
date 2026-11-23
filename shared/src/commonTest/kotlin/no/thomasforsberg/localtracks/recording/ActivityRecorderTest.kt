@@ -12,6 +12,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
@@ -155,6 +156,60 @@ class ActivityRecorderTest {
         val points = restarted.recordedPoints()
         assertEquals(8, points.size)
         assertEquals(listOf(0, 1), points.map { it.segmentIndex }.distinct())
+    }
+
+    @Test
+    fun anAutomaticStartCountsTheStretchWalkedBeforeRecording() {
+        clock.now = start + 120.seconds
+        val departure = Departure(at = start, distanceMeters = 160.0, steps = 210)
+
+        assertTrue(recorder.startAutomatically(Sport.HIKING, departure))
+        val progress = assertNotNull(recorder.state.value.progressOrNull())
+        assertEquals(start, progress.startedAt)
+        assertEquals(160.0, progress.distanceMeters)
+        assertEquals(120.0, progress.movingTimeSeconds)
+        assertEquals(210, progress.steps)
+
+        val stored = assertNotNull(repository.latestUnfinishedActivity())
+        assertTrue(stored.autoStarted)
+        assertEquals(LeadIn(120.seconds, 160.0, 210), stored.leadIn)
+    }
+
+    @Test
+    fun anAutomaticRecordingTooShortToBeAnActivityIsDeletedWhenStoppedAtHome() {
+        recorder.startAutomatically(Sport.HIKING, departure = null)
+        (1..5).forEach { recorder.recordAt(it) }
+
+        assertEquals(AutoStopResult.DISCARDED, recorder.stopAutomatically())
+        assertNull(repository.latestUnfinishedActivity())
+        assertEquals(null, repository.activity(1))
+    }
+
+    @Test
+    fun aLongEnoughAutomaticRecordingIsKept() {
+        clock.now = start + 10.minutes
+        recorder.startAutomatically(Sport.HIKING, Departure(at = start, distanceMeters = 800.0, steps = null))
+
+        assertEquals(AutoStopResult.KEPT, recorder.stopAutomatically())
+        assertNotNull(repository.activity(1)?.finishedAt)
+    }
+
+    @Test
+    fun aManualRecordingIsNeverDeletedForBeingShort() {
+        recorder.start(Sport.HIKING)
+
+        assertEquals(AutoStopResult.KEPT, recorder.stopAutomatically())
+        assertNotNull(repository.activity(1))
+    }
+
+    @Test
+    fun theAutomaticFlagSurvivesARelaunch() {
+        recorder.startAutomatically(Sport.CYCLING, departure = null)
+        val restarted = newRecorder()
+
+        restarted.continueAfterRelaunch()
+
+        assertTrue(restarted.isAutoStarted)
     }
 
     @Test

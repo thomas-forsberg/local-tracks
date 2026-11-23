@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import no.thomasforsberg.localtracks.db.LocalTracksDatabase
 import no.thomasforsberg.localtracks.db.Track_point
 import no.thomasforsberg.localtracks.recording.BarometerReading
+import no.thomasforsberg.localtracks.recording.LeadIn
 import no.thomasforsberg.localtracks.recording.RecordedPoint
 import no.thomasforsberg.localtracks.recording.Sport
 import no.thomasforsberg.localtracks.track.TrackPoint
@@ -24,6 +25,10 @@ data class ActivitySummary(
     val startedAt: Instant,
     val finishedAt: Instant?,
     val totals: ActivityTotals,
+    // Started by auto-record rather than by hand.
+    val autoStarted: Boolean = false,
+    // The stretch before GPS recording started, already included in the totals; null if none.
+    val leadIn: LeadIn? = null,
 )
 
 data class ActivityTotals(
@@ -62,8 +67,13 @@ class ActivityRepository(
     private val activities get() = database.activityQueries
     private val trackPoints get() = database.trackPointQueries
 
-    fun startActivity(sport: Sport, startedAt: Instant): Long = database.transactionWithResult {
-        activities.insert(sport, startedAt)
+    fun startActivity(sport: Sport, startedAt: Instant): Long = startActivity(sport, startedAt, autoStarted = false, leadIn = null)
+
+    fun startActivity(sport: Sport, startedAt: Instant, autoStarted: Boolean, leadIn: LeadIn?): Long = database.transactionWithResult {
+        activities.insert(
+            sport, startedAt, autoStarted,
+            leadIn?.duration?.inWholeMilliseconds, leadIn?.distanceMeters, leadIn?.steps?.toLong(),
+        )
         activities.lastInsertedId().executeAsOne()
     }
 
@@ -130,12 +140,18 @@ private fun activitySummary(
     elevationGainMeters: Double,
     movingTimeMs: Long,
     stepCount: Long?,
+    autoStarted: Boolean,
+    leadInMs: Long?,
+    leadInMeters: Double?,
+    leadInSteps: Long?,
 ) = ActivitySummary(
     id,
     sport,
     startedAt,
     finishedAt,
     ActivityTotals(activeTimeMs.milliseconds, distanceMeters, pointCount.toInt(), elevationGainMeters, movingTimeMs.milliseconds, stepCount?.toInt()),
+    autoStarted,
+    if (leadInMs != null && leadInMeters != null) LeadIn(leadInMs.milliseconds, leadInMeters, leadInSteps?.toInt()) else null,
 )
 
 private fun RecordedPoint.toRow(activityId: Long, seq: Int) = Track_point(

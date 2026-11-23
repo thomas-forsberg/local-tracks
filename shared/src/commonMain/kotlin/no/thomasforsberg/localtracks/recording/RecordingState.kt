@@ -78,17 +78,24 @@ data class ActivityProgress(
     val steps: Int? get() = stepCount?.steps
 
     companion object {
-        fun startingAt(sport: Sport, time: Instant) = ActivityProgress(
-            sport = sport,
-            startedAt = time,
-            activeTimeBeforeResume = Duration.ZERO,
-            measurement = TrackMeasurement.EMPTY,
-            pointCount = 0,
-            elevationGain = ElevationGain.NONE,
-            segmentIndex = 0,
-            lastPoint = null,
-            currentSpeedMetersPerSecond = null,
-        )
+        // With a departure, the activity starts when the user set off, and the stretch walked before
+        // recording counts as moving time, distance and steps.
+        fun startingAt(sport: Sport, time: Instant, departure: Departure? = null): ActivityProgress {
+            val startedAt = departure?.at?.coerceAtMost(time) ?: time
+            val leadIn = time - startedAt
+            return ActivityProgress(
+                sport = sport,
+                startedAt = startedAt,
+                activeTimeBeforeResume = leadIn,
+                measurement = departure?.let { TrackMeasurement.continuing(it.distanceMeters, leadIn) } ?: TrackMeasurement.EMPTY,
+                pointCount = 0,
+                elevationGain = ElevationGain.NONE,
+                segmentIndex = 0,
+                lastPoint = null,
+                currentSpeedMetersPerSecond = null,
+                stepCount = departure?.steps?.takeIf { sport.countsSteps }?.let { StepCount(it, lastReading = null) },
+            )
+        }
     }
 }
 
