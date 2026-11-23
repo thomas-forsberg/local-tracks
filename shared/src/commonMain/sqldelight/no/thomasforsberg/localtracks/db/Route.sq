@@ -1,0 +1,77 @@
+import kotlin.Boolean;
+import kotlin.time.Instant;
+
+-- Routes found by matching activities against each other: loops and trips walked again and again.
+CREATE TABLE route (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    -- NULL until the user names it; the app then describes it by its length.
+    name TEXT,
+    -- The attempt new activities are compared with, and whose line maps draw.
+    reference_activity_id INTEGER NOT NULL,
+    created_at INTEGER AS Instant NOT NULL
+);
+
+-- One row per finished activity that has been checked: which route it follows, if any.
+CREATE TABLE route_activity (
+    activity_id INTEGER PRIMARY KEY,
+    -- NULL: matched nothing yet (a later activity may still match it).
+    route_id INTEGER,
+    -- Walked the other way round from the route's reference.
+    reversed INTEGER AS Boolean NOT NULL DEFAULT 0
+);
+
+CREATE INDEX route_activity_route ON route_activity (route_id);
+
+insertRoute:
+INSERT INTO route (reference_activity_id, created_at) VALUES (?, ?);
+
+lastInsertedId:
+SELECT last_insert_rowid();
+
+allRoutes:
+SELECT * FROM route ORDER BY created_at;
+
+routeById:
+SELECT * FROM route WHERE id = ?;
+
+rename:
+UPDATE route SET name = :name WHERE id = :id;
+
+assign:
+INSERT OR REPLACE INTO route_activity (activity_id, route_id, reversed) VALUES (?, ?, ?);
+
+membership:
+SELECT * FROM route_activity WHERE activity_id = ?;
+
+members:
+SELECT activity_id, reversed FROM route_activity WHERE route_id = ?;
+
+allMemberships:
+SELECT * FROM route_activity WHERE route_id IS NOT NULL;
+
+unmatched:
+SELECT activity_id FROM route_activity WHERE route_id IS NULL;
+
+unchecked:
+SELECT activity.id FROM activity
+LEFT JOIN route_activity ON route_activity.activity_id = activity.id
+WHERE activity.finished_at IS NOT NULL AND route_activity.activity_id IS NULL
+ORDER BY activity.started_at;
+
+-- Housekeeping after activities are deleted.
+forgetDeletedActivities:
+DELETE FROM route_activity WHERE activity_id NOT IN (SELECT id FROM activity);
+
+moveReferenceToAMember:
+UPDATE route
+SET reference_activity_id = (SELECT activity_id FROM route_activity WHERE route_id = route.id ORDER BY activity_id LIMIT 1)
+WHERE reference_activity_id NOT IN (SELECT id FROM activity)
+  AND EXISTS (SELECT 1 FROM route_activity WHERE route_id = route.id);
+
+-- A route of one attempt isn't a route any more: its last attempt goes back to being unmatched.
+releaseLoneMembers:
+UPDATE route_activity SET route_id = NULL, reversed = 0
+WHERE route_id IN (SELECT route_id FROM route_activity WHERE route_id IS NOT NULL GROUP BY route_id HAVING count(*) < 2);
+
+deleteEmptyRoutes:
+DELETE FROM route WHERE id NOT IN (SELECT route_id FROM route_activity WHERE route_id IS NOT NULL);
