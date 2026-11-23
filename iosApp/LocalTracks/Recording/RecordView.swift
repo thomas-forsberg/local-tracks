@@ -55,7 +55,11 @@ struct RecordView: View {
                         Button("Settings", systemImage: "gearshape") { showsSettings = true }
                     }
                 }
-                ToolbarItem(placement: .topBarTrailing) { StatusPill(state: controller.state) }
+                if isInProgress {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        RecordingDot(isRecording: controller.state is RecordingStateRecording)
+                    }
+                }
             }
         }
     }
@@ -217,32 +221,31 @@ private struct SportPicker: View {
     }
 }
 
-private struct StatusPill: View {
-    let state: RecordingState
+// Shows at a glance that a recording is running: a red dot that slowly fades in and out like a
+// recording light, still and dimmed while paused, and still with Reduce Motion.
+private struct RecordingDot: View {
+    let isRecording: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        switch onEnum(of: state) {
-        case .recording(let recording) where recording.progress.pointCount > 0 && !recording.progress.isMoving:
-            // Standing still: distance and moving time stop counting until you move again.
-            Label("Auto-paused", systemImage: "pause.circle").pill(tint: .orange)
-        case .recording:
-            Label("Recording", systemImage: "circle.fill").pill(tint: .red)
-        case .paused:
-            Label("Paused", systemImage: "pause.circle.fill").pill(tint: .orange)
-        case .idle, .finished:
-            EmptyView()
+        Group {
+            if isRecording && !reduceMotion {
+                dot.phaseAnimator([1.0, 0.25]) { view, opacity in
+                    view.opacity(opacity)
+                } animation: { _ in
+                    .easeInOut(duration: 1)
+                }
+            } else {
+                dot.opacity(isRecording ? 1 : 0.35)
+            }
         }
+        .padding(.horizontal, 6)
+        .accessibilityElement()
+        .accessibilityLabel(isRecording ? "Recording" : "Paused")
     }
-}
 
-private extension Label where Title == Text, Icon == Image {
-    func pill(tint: Color) -> some View {
-        font(.footnote.weight(.semibold))
-            .labelStyle(.titleAndIcon)
-            .foregroundStyle(tint)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .background(tint.opacity(0.15), in: .capsule)
+    private var dot: some View {
+        Circle().fill(.red).frame(width: 12, height: 12)
     }
 }
 

@@ -57,7 +57,7 @@ private struct LockScreenCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Label(statusText, systemImage: attributes.sportSymbol)
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(state.status == .recording ? Color.secondary : Color.orange)
+                    .foregroundStyle(state.status == .paused ? Color.orange : Color.secondary)
                 RecordingTime(state: state).font(.system(size: 34, weight: .bold, design: .rounded))
             }
             Spacer(minLength: 0)
@@ -72,12 +72,9 @@ private struct LockScreenCard: View {
         }
     }
 
+    // Auto-pause only keeps standing still out of the moving time; it isn't something to show.
     private var statusText: String {
-        switch state.status {
-        case .recording: attributes.sportName
-        case .autoPaused: "Auto-paused"
-        case .paused: "Paused"
-        }
+        state.status == .paused ? "Paused" : attributes.sportName
     }
 }
 
