@@ -20,5 +20,6 @@ struct RootView: View {
         }
         // Every map in the app shows the downloaded regions.
         .environment(environment.maps)
+        .tint(Theme.accent)
     }
 }

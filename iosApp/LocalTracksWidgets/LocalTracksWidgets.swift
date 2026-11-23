@@ -15,7 +15,7 @@ struct RecordingLiveActivity: Widget {
         ActivityConfiguration(for: RecordingActivityAttributes.self) { context in
             LockScreenCard(attributes: context.attributes, state: context.state)
                 .padding()
-                .activityBackgroundTint(Color(.systemBackground).opacity(0.85))
+                .activityBackgroundTint(Theme.surface)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
@@ -57,12 +57,12 @@ private struct LockScreenCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Label(statusText, systemImage: attributes.sportSymbol)
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(state.status == .paused ? Color.orange : Color.secondary)
-                RecordingTime(state: state).font(.system(size: 34, weight: .bold, design: .rounded))
+                    .foregroundStyle(state.status == .paused ? Theme.accent : Theme.inkSecondary)
+                RecordingTime(state: state).font(.numbers(40, weight: .bold)).foregroundStyle(Theme.ink)
             }
             Spacer(minLength: 0)
             VStack(alignment: .trailing, spacing: 4) {
-                Text(LiveActivityFormat.distance(state.distanceMeters)).font(.title3.weight(.semibold))
+                Text(LiveActivityFormat.distance(state.distanceMeters)).font(.numbers(26)).foregroundStyle(Theme.ink)
                 Text(LiveActivityFormat.speedOrPace(state.averageSpeedMetersPerSecond, showsPace: attributes.showsPace))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -106,7 +106,7 @@ private struct PauseButton: View {
         }
         .buttonStyle(.borderedProminent)
         .buttonBorderShape(.circle)
-        .tint(status == .paused ? .green : .orange)
+        .tint(status == .paused ? Theme.forest : Theme.accent)
         .accessibilityLabel(status == .paused ? "Resume" : "Pause")
     }
 }

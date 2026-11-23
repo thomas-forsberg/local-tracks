@@ -11,11 +11,11 @@ struct ActivityDetailView: View {
             VStack(alignment: .leading, spacing: 20) {
                 Text(activity.startedAt.date.formatted(date: .complete, time: .shortened))
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.inkSecondary)
                 if let note = Self.autoRecordNote(for: activity) {
                     Label(note, systemImage: "figure.walk.departure")
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.inkSecondary)
                 }
 
                 map
@@ -51,6 +51,8 @@ struct ActivityDetailView: View {
             }
             .padding()
         }
+        .foregroundStyle(Theme.ink)
+        .background(Theme.background)
         .navigationTitle(activity.sport.title)
         .navigationBarTitleDisplayMode(.inline)
         .task { viewModel.load() }
@@ -93,7 +95,7 @@ private struct SpeedSection: View {
                 }
                 .pickerStyle(.segmented)
             }
-            SpeedChart(profile: profile, showsPace: showsPace).frame(height: 160)
+            SpeedChart(profile: profile, showsPace: showsPace, color: sport.color).frame(height: 160)
         }
     }
 }
@@ -104,7 +106,7 @@ private struct Section<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title).font(.headline)
+            Text(title).font(.numbers(24, weight: .bold, relativeTo: .title3))
             content
         }
         .padding(.top, 8)
@@ -117,11 +119,9 @@ private struct Stat: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            StatLabel(title)
             Text(value)
-                .font(.title2.weight(.semibold).monospacedDigit())
+                .font(.numbers(30))
         }
         .accessibilityElement(children: .combine)
     }

@@ -51,6 +51,7 @@ struct SettingsView: View {
                     Text("When you leave home on foot or by bike, recording starts by itself and stops when you're back. Leaving by car doesn't start anything until you're home again. Short trips are deleted. Your home is stored only on this phone.")
                 }
             }
+            .themedList()
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

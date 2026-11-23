@@ -94,6 +94,28 @@ final class ScreenshotTour: XCTestCase {
         app.buttons["Cancel"].tap()
     }
 
+    // The same screens in dark mode, the Night trail palette.
+    @MainActor
+    func testDarkMode() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demoData", "-darkMode"]
+        app.launch()
+        XCTAssert(app.buttons["Start"].waitForExistence(timeout: 30))
+        app.buttons["Hiking"].tap()
+        app.buttons["Start"].tap()
+        XCTAssert(app.buttons["Pause"].waitForExistence(timeout: 5))
+        sleep(6)
+        snapshot("20-dark-recording")
+        app.buttons["Stop"].tap()
+        app.tabBars.buttons["Activities"].tap()
+        XCTAssert(app.cells.firstMatch.waitForExistence(timeout: 10))
+        snapshot("21-dark-activities")
+        app.cells.element(boundBy: 3).tap()
+        XCTAssert(app.staticTexts["Moving time"].waitForExistence(timeout: 10))
+        sleep(2)
+        snapshot("22-dark-activity-detail")
+    }
+
     @MainActor
     func testMapsBeforeDownloading() {
         let app = launch("-demoDataEmpty")

@@ -17,6 +17,14 @@ enum Formatters {
         Duration.seconds(seconds.rounded(.down)).formatted(.time(pattern: seconds < 3600 ? .minuteSecond : .hourMinuteSecond))
     }
 
+    // Shortest, for cards: "27 s", "44 min", "1:32 h".
+    static func compactDuration(seconds: Double) -> String {
+        let total = Int(seconds.rounded())
+        if total < 60 { return "\(total) s" }
+        if total < 3600 { return "\(total / 60) min" }
+        return "\(total / 3600):\(String(format: "%02d", (total % 3600) / 60)) h"
+    }
+
     // Compact, for lists: "9 sec", "44 min", "1 hr, 32 min" (localized).
     static func shortDuration(seconds: Double, locale: Locale = .current) -> String {
         let style = seconds < 60

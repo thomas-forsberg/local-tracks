@@ -6,11 +6,18 @@ struct LocalTracksApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.scenePhase) private var scenePhase
 
+    init() {
+        Appearance.apply()
+    }
+
     var body: some Scene {
         WindowGroup {
             switch appDelegate.environment {
             case .success(let environment):
                 RootView(environment: environment)
+                #if DEBUG
+                    .preferredColorScheme(DemoMode.forcesDarkMode ? .dark : nil)
+                #endif
             case .failure(let error):
                 // Only happens if the app can't create its own folder, e.g. when the disk is full.
                 ContentUnavailableView("Can't open storage", systemImage: "externaldrive.badge.xmark", description: Text(error.localizedDescription))

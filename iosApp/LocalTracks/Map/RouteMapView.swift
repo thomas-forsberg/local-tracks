@@ -46,7 +46,8 @@ struct RouteMapView: UIViewRepresentable {
             guard let parent, let style = mapView.style else { return } // called again once the style has loaded
             OfflineMapLayers.apply(parent.regions, fileURL: parent.fileURL, to: style, below: "route-casing")
             let background = style.layer(withIdentifier: "background") as? MLNBackgroundStyleLayer
-            background?.backgroundColor = NSExpression(forConstantValue: colorScheme == .dark ? UIColor(white: 0.12, alpha: 1) : UIColor(red: 0.94, green: 0.93, blue: 0.9, alpha: 1))
+            // Where no map is downloaded: a plain paper (or slate) background.
+            background?.backgroundColor = NSExpression(forConstantValue: UIColor(rgb: colorScheme == .dark ? 0x12201F : 0xEFE8DA))
 
             let polylines = segments.filter { $0.count > 1 }.map { coordinates in
                 MLNPolylineFeature(coordinates: coordinates, count: UInt(coordinates.count))
@@ -58,7 +59,7 @@ struct RouteMapView: UIViewRepresentable {
                 casing.lineCap = NSExpression(forConstantValue: "round")
                 casing.lineJoin = NSExpression(forConstantValue: "round")
                 let line = MLNLineStyleLayer(identifier: "route-line", source: source)
-                line.lineColor = NSExpression(forConstantValue: UIColor.systemBlue)
+                line.lineColor = NSExpression(forConstantValue: UIColor(Theme.accent))
                 line.lineWidth = NSExpression(forConstantValue: 4)
                 line.lineCap = NSExpression(forConstantValue: "round")
                 line.lineJoin = NSExpression(forConstantValue: "round")
@@ -82,9 +83,9 @@ struct RouteMapView: UIViewRepresentable {
             } else {
                 false
             }
-            setMarker(at: all.first, id: "start", color: .systemGreen, radius: overlap ? 11 : 7, in: style)
+            setMarker(at: all.first, id: "start", color: UIColor(Theme.forest), radius: overlap ? 11 : 7, in: style)
             // While recording the last point is where you are.
-            setMarker(at: all.last, id: "end", color: parent.followsLatest ? .systemBlue : .systemRed, radius: overlap ? 5 : 7, in: style)
+            setMarker(at: all.last, id: "end", color: UIColor(Theme.accent), radius: overlap ? 5 : 7, in: style)
         }
 
         private func setShape(_ shape: MLNShape, sourceId: String, in style: MLNStyle, layers: (MLNSource) -> [MLNStyleLayer]) {
