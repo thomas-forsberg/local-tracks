@@ -158,7 +158,7 @@ private struct CompactStatsView: View {
     var body: some View {
         let progress = state.progressOrNull()
         let speed = state is RecordingStateRecording ? progress?.currentSpeedMetersPerSecond?.doubleValue : nil
-        HStack {
+        HStack(alignment: .top) {
             Stat(title: "Distance", value: Formatters.distance(meters: progress?.distanceMeters ?? 0))
             Stat(title: "Moving time", value: Formatters.clock(seconds: progress?.movingTimeSeconds ?? 0))
             SpeedStat(title: sport.currentSpeedTitle, metersPerSecond: speed, sport: sport)

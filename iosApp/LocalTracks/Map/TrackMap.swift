@@ -7,6 +7,7 @@ struct TrackMap: View {
     let segments: [[CLLocationCoordinate2D]]
     var followsLatest = false
     @Environment(MapLibrary.self) private var library: MapLibrary?
+    @State private var isFollowing = true
 
     var body: some View {
         let regions = library?.displayableRegions ?? []
@@ -14,10 +15,23 @@ struct TrackMap: View {
             segments: segments,
             regions: regions,
             fileURL: { region in library?.fileURL(for: region) ?? URL(fileURLWithPath: "/") },
-            followsLatest: followsLatest
+            followsLatest: followsLatest,
+            isFollowing: $isFollowing
         )
         .overlay(alignment: .bottomLeading) {
             if !regions.isEmpty { MapAttribution() }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            if followsLatest && !isFollowing {
+                Button("Re-centre", systemImage: "location.fill") { isFollowing = true }
+                    .labelStyle(.iconOnly)
+                    .font(.title3)
+                    .frame(width: 48, height: 48)
+                    .foregroundStyle(Theme.accent)
+                    .background(Theme.surface, in: .circle)
+                    .overlay(Circle().strokeBorder(Theme.border))
+                    .padding(10)
+            }
         }
     }
 }
