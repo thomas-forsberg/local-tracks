@@ -135,6 +135,7 @@ class ActivityRepository(
             trackPoints.deleteForActivity(activityId)
             activities.delete(activityId)
         }
+        // Its route membership is tidied up by RouteLibrary.
     }
 }
 

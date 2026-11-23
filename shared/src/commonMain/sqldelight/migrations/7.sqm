@@ -1,0 +1,15 @@
+-- Schema version 7 → 8: routes.
+CREATE TABLE route (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    reference_activity_id INTEGER NOT NULL,
+    created_at INTEGER NOT NULL
+);
+
+CREATE TABLE route_activity (
+    activity_id INTEGER PRIMARY KEY,
+    route_id INTEGER,
+    reversed INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX route_activity_route ON route_activity (route_id);

@@ -7,6 +7,7 @@ import no.thomasforsberg.localtracks.db.Activity
 import no.thomasforsberg.localtracks.db.Auto_record
 import no.thomasforsberg.localtracks.db.LocalTracksDatabase
 import no.thomasforsberg.localtracks.db.Map_region
+import no.thomasforsberg.localtracks.db.Route
 import no.thomasforsberg.localtracks.db.Track_point
 import no.thomasforsberg.localtracks.track.measure
 import kotlin.time.Instant
@@ -27,6 +28,7 @@ fun createDatabase(driver: SqlDriver): LocalTracksDatabase = LocalTracksDatabase
         left_home_atAdapter = InstantAdapter,
         arrived_home_atAdapter = InstantAdapter,
     ),
+    routeAdapter = Route.Adapter(created_atAdapter = InstantAdapter),
     map_regionAdapter = Map_region.Adapter(
         kindAdapter = EnumColumnAdapter(),
         created_atAdapter = InstantAdapter,
