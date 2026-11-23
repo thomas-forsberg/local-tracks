@@ -28,6 +28,20 @@ final class ScreenshotTour: XCTestCase {
         sleep(3) // let the map draw
         snapshot("02b-recording-map")
         app.buttons["Show stats"].tap()
+
+        // The Live Activity: compact in the Dynamic Island on the home screen, and as the card in the
+        // Notification Center (which shows what the lock screen shows).
+        XCUIDevice.shared.press(.home)
+        sleep(2)
+        snapshot("02c-dynamic-island")
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.005))
+            .press(forDuration: 0.1, thenDragTo: springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.7)))
+        sleep(2)
+        snapshot("02d-lock-screen-card")
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssert(app.buttons["Pause"].waitForExistence(timeout: 10))
         app.buttons["Pause"].tap()
         XCTAssert(app.buttons["Resume"].waitForExistence(timeout: 5))
         snapshot("03-paused")

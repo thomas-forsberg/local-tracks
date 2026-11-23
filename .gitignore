@@ -22,6 +22,7 @@ xcuserdata/
 DerivedData/
 *.xcresult
 iosApp/LocalTracks/Info.plist
+iosApp/LocalTracksWidgets/Info.plist
 iosApp/Config/Local.xcconfig
 
 # macOS

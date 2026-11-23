@@ -22,6 +22,8 @@ final class RecordingController {
     // For auto-record: recordings the user started by hand, and every recording that ends.
     @ObservationIgnored var onUserStarted: (() -> Void)?
     @ObservationIgnored var onStopped: (() -> Void)?
+    // Every change to the recording, e.g. for the lock-screen card.
+    @ObservationIgnored var onStateChange: (() -> Void)?
 
     @ObservationIgnored private let recorder: ActivityRecorder
     @ObservationIgnored private let locationSource: LocationSource
@@ -78,6 +80,15 @@ final class RecordingController {
     func resume() {
         recorder.resume()
         refreshState()
+    }
+
+    // For the Pause/Resume button on the lock-screen card.
+    func togglePause() {
+        if state is RecordingStateRecording {
+            pause()
+        } else if state is RecordingStatePaused {
+            resume()
+        }
     }
 
     func stop() {
@@ -217,5 +228,6 @@ final class RecordingController {
     private func refreshState() {
         state = recorder.state.value
         isStorageFailing = recorder.isStorageFailing
+        onStateChange?()
     }
 }

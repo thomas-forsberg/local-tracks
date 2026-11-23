@@ -17,9 +17,15 @@ struct LocalTracksApp: App {
             }
         }
         .onChange(of: scenePhase) { _, phase in
-            // The app may be killed at any time once in the background, so write pending points now.
-            if phase == .background, case .success(let environment) = appDelegate.environment {
+            guard case .success(let environment) = appDelegate.environment else { return }
+            switch phase {
+            case .background:
+                // The app may be killed at any time once in the background, so write pending points now.
                 environment.recording.flush()
+            case .active:
+                environment.liveActivity.appBecameActive()
+            default:
+                break
             }
         }
     }

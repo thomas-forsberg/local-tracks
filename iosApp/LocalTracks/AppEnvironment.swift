@@ -12,6 +12,7 @@ final class AppEnvironment {
     let mapRegions: MapRegionRepository
     let maps: MapLibrary
     let autoRecord: AutoRecordController
+    let liveActivity: LiveActivityController
 
     init(
         databaseDirectory: URL,
@@ -58,6 +59,9 @@ final class AppEnvironment {
             permissions: sensors.permissions,
             notifier: sensors.notifier
         )
+        let liveActivity = LiveActivityController(recording: recording)
+        self.liveActivity = liveActivity
+        recording.onStateChange = { [weak liveActivity] in liveActivity?.recordingChanged() }
     }
 
     static func live() throws -> AppEnvironment {

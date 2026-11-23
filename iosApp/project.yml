@@ -35,8 +35,10 @@ targets:
     platform: iOS
     dependencies:
       - package: MapLibre
+      - target: LocalTracksWidgets
     sources:
       - path: LocalTracks
+      - path: LiveActivity
       # Referenced by the scheme for Xcode location simulation; not bundled into the app.
       - path: ../fixtures/gpx
         buildPhase: none
@@ -49,6 +51,8 @@ targets:
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         # Keeps recording with the screen locked; iOS shows the blue location indicator.
         UIBackgroundModes: [location]
+        # The lock-screen card while recording.
+        NSSupportsLiveActivities: true
         NSLocationWhenInUseUsageDescription: >-
           Local Tracks records your route while you record an activity.
           Your location never leaves your phone.
@@ -72,6 +76,26 @@ targets:
         script: |
           cd "$SRCROOT/.."
           ./gradlew :shared:embedAndSignAppleFrameworkForXcode
+
+  # The lock-screen card and Dynamic Island. Plain Swift: doesn't link the Kotlin framework.
+  LocalTracksWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: LocalTracksWidgets
+      - path: LiveActivity
+    dependencies:
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+    info:
+      path: LocalTracksWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: Local Tracks
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: no.thomasforsberg.localtracks.widgets
 
   LocalTracksTests:
     type: bundle.unit-test
