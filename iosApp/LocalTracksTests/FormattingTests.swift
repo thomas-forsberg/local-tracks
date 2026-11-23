@@ -35,6 +35,12 @@ struct FormattingTests {
         #expect(Sport.cycling.averageSpeedTitle == "Avg speed")
     }
 
+    @Test func compactDurationsFitOnACard() {
+        #expect(Formatters.compactDuration(seconds: 27) == "27 s")
+        #expect(Formatters.compactDuration(seconds: 44 * 60) == "44 min")
+        #expect(Formatters.compactDuration(seconds: 92 * 60) == "1:32 h")
+    }
+
     @Test func stepsAreGroupedForTheLocale() {
         #expect(Formatters.steps(4213, locale: Locale(identifier: "en_US")) == "4,213")
     }

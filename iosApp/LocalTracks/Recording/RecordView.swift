@@ -43,6 +43,18 @@ struct RecordView: View {
                 controls
             }
             .padding()
+            .foregroundStyle(Theme.ink)
+            .background {
+                ZStack(alignment: .top) {
+                    Theme.background
+                    // Behind the distance only, fading out towards the stats.
+                    ContourLines()
+                        .frame(height: 300)
+                        .mask(LinearGradient(colors: [.clear, .black, .black, .clear], startPoint: .top, endPoint: .bottom))
+                        .padding(.top, 150)
+                }
+                .ignoresSafeArea()
+            }
             .navigationTitle("Record")
             .sheet(isPresented: $showsSettings) { SettingsView(autoRecord: autoRecord) }
             .toolbar {
@@ -74,29 +86,25 @@ struct RecordView: View {
             VStack(spacing: 16) {
                 SportPicker(selection: $chosenSport)
                 Button { controller.start(chosenSport) } label: {
-                    Label("Start", systemImage: "play.fill").frame(maxWidth: .infinity)
+                    Label("Start", systemImage: "play.fill")
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.extraLarge)
+                .buttonStyle(PillButtonStyle(.filled(Theme.accent, text: Theme.onAccent)))
                 .disabled(controller.unfinishedActivity != nil)
             }
         case .recording:
             HStack(spacing: 12) {
-                Button(action: controller.pause) { Label("Pause", systemImage: "pause.fill").frame(maxWidth: .infinity) }
-                    .buttonStyle(.bordered)
-                Button(role: .destructive, action: controller.stop) { Label("Stop", systemImage: "stop.fill").frame(maxWidth: .infinity) }
-                    .buttonStyle(.borderedProminent)
+                Button(action: controller.pause) { Label("Pause", systemImage: "pause.fill") }
+                    .buttonStyle(PillButtonStyle(.outlined(Theme.forest)))
+                Button(action: controller.stop) { Label("Stop", systemImage: "stop.fill") }
+                    .buttonStyle(PillButtonStyle(.filled(Theme.accent, text: Theme.onAccent)))
             }
-            .controlSize(.extraLarge)
         case .paused:
             HStack(spacing: 12) {
-                Button(action: controller.resume) { Label("Resume", systemImage: "play.fill").frame(maxWidth: .infinity) }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.green)
-                Button(role: .destructive, action: controller.stop) { Label("Stop", systemImage: "stop.fill").frame(maxWidth: .infinity) }
-                    .buttonStyle(.bordered)
+                Button(action: controller.resume) { Label("Resume", systemImage: "play.fill") }
+                    .buttonStyle(PillButtonStyle(.filled(Theme.forest, text: Theme.onForest)))
+                Button(action: controller.stop) { Label("Stop", systemImage: "stop.fill") }
+                    .buttonStyle(PillButtonStyle(.outlined(Theme.accent)))
             }
-            .controlSize(.extraLarge)
         }
     }
 }
@@ -111,13 +119,13 @@ private struct LiveStatsView: View {
         let instant = KotlinInstant.from(now)
         let isRecording = state is RecordingStateRecording
         VStack(spacing: 28) {
-            VStack(spacing: 0) {
+            VStack(spacing: 4) {
                 Text(((progress?.distanceMeters ?? 0) / 1000).formatted(.number.precision(.fractionLength(2))))
-                    .font(.system(size: 80, weight: .bold, design: .rounded).monospacedDigit())
+                    .font(.numbers(118, weight: .bold, relativeTo: .largeTitle))
                     .contentTransition(.numericText())
-                Text("km")
-                    .font(.title3)
-                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                StatLabel("Kilometres")
             }
             .accessibilityElement(children: .combine)
 
@@ -131,7 +139,7 @@ private struct LiveStatsView: View {
                     SpeedStat(title: sport.averageSpeedTitle, metersPerSecond: state.averageSpeedMetersPerSecond(now: instant)?.doubleValue, sport: sport)
                 }
                 GridRow {
-                    Stat(title: "Climb", value: Formatters.elevation(meters: progress?.elevationGain.meters ?? 0))
+                    Stat(title: "Climb", value: Formatters.elevation(meters: progress?.elevationGain.meters ?? 0), color: Theme.climb)
                     if sport.countsSteps {
                         Stat(title: "Steps", value: progress?.steps.map { Formatters.steps($0.intValue) } ?? "–")
                     } else {
@@ -165,16 +173,18 @@ private struct Stat: View {
     let title: String
     let value: String
     var detail: String?
+    var color: Color = Theme.ink
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title).font(.subheadline).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 4) {
+            StatLabel(title)
             Text(value)
-                .font(.title.weight(.semibold).monospacedDigit())
+                .font(.numbers(40))
+                .foregroundStyle(color)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
             if let detail {
-                Text(detail).font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
+                Text(detail).font(.subheadline.monospacedDigit()).foregroundStyle(Theme.inkSecondary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -211,8 +221,9 @@ private struct SportPicker: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
-                    .foregroundStyle(isSelected ? Color.white : Color.primary)
-                    .background(isSelected ? Color.accentColor : Color.secondary.opacity(0.12), in: .rect(cornerRadius: 12))
+                    .foregroundStyle(isSelected ? Theme.onForest : Theme.ink)
+                    .background(isSelected ? sport.color : Theme.surface, in: .rect(cornerRadius: 14))
+                    .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(isSelected ? Color.clear : Theme.border))
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(isSelected ? .isSelected : [])

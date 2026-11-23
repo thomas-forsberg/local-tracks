@@ -15,9 +15,9 @@ struct ElevationChart: View {
         let high = (points.map(\.meters).max() ?? 0) + 5
         Chart(points.indices, id: \.self) { index in
             AreaMark(x: .value("km", points[index].km), yStart: .value("Base", low), yEnd: .value("Elevation", points[index].meters))
-                .foregroundStyle(.green.opacity(0.25))
+                .foregroundStyle(LinearGradient(colors: [Theme.climb.opacity(0.35), Theme.climb.opacity(0.03)], startPoint: .top, endPoint: .bottom))
             LineMark(x: .value("km", points[index].km), y: .value("Elevation", points[index].meters))
-                .foregroundStyle(.green)
+                .foregroundStyle(Theme.climb)
         }
         .chartYScale(domain: low...high)
         .chartXAxisLabel("km")
@@ -30,6 +30,7 @@ struct ElevationChart: View {
 struct SpeedChart: View {
     let profile: [ProfileSample]
     let showsPace: Bool
+    var color: Color = Theme.accent
 
     private var points: [(km: Double, value: Double)] {
         profile.compactMap { sample in
@@ -43,7 +44,7 @@ struct SpeedChart: View {
         let points = points
         Chart(points.indices, id: \.self) { index in
             LineMark(x: .value("km", points[index].km), y: .value(showsPace ? "min/km" : "km/h", points[index].value))
-                .foregroundStyle(.blue)
+                .foregroundStyle(color)
                 .interpolationMethod(.monotone)
         }
         .chartYScale(domain: Self.domain(for: points.map(\.value), minimumSpan: showsPace ? 2 : 10, floor: showsPace ? nil : 0))

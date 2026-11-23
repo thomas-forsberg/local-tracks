@@ -29,18 +29,24 @@ struct ActivitiesView: View {
     @ViewBuilder private var content: some View {
         switch viewModel.activities {
         case nil:
-            ProgressView()
+            ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.background)
         case let activities? where activities.isEmpty:
             ContentUnavailableView("No activities yet", systemImage: "figure.walk", description: Text("Recorded activities show up here."))
+                .background(Theme.background)
         case let activities?:
             List(activities, id: \.id) { activity in
-                NavigationLink(value: activity) {
-                    ActivityRow(activity: activity)
-                }
+                ActivityRow(activity: activity)
+                    // The link fills the card but draws nothing, so rows don't get list chevrons.
+                    .background(NavigationLink(value: activity) { EmptyView() }.opacity(0))
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
                     .swipeActions {
                         Button("Delete", systemImage: "trash", role: .destructive) { pendingDeletion = activity }
                     }
             }
+            .listStyle(.plain)
+            .themedList()
         }
     }
 
@@ -54,26 +60,34 @@ private struct ActivityRow: View {
     let activity: ActivitySummary
 
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 14) {
             Image(systemName: activity.sport.systemImage)
-                .font(.title2)
-                .frame(width: 36)
-                .foregroundStyle(.tint)
-            VStack(alignment: .leading, spacing: 4) {
+                .font(.title)
+                .foregroundStyle(activity.sport.color)
+                .frame(width: 64, height: 64)
+                .background(activity.sport.color.opacity(0.14), in: .rect(cornerRadius: 12))
+            VStack(alignment: .leading, spacing: 2) {
                 Text(activity.sport.title)
                     .font(.headline)
+                    .foregroundStyle(activity.sport.color)
                 Text(activity.startedAt.date.formatted(date: .abbreviated, time: .shortened))
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                Text([
-                    Formatters.distance(meters: activity.totals.distanceMeters),
-                    Formatters.shortDuration(seconds: activity.totals.movingTimeSeconds),
-                    "↑ " + Formatters.elevation(meters: activity.totals.elevationGainMeters),
-                ].joined(separator: " · "))
-                    .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(Theme.inkSecondary)
+                HStack(spacing: 14) {
+                    Text(Formatters.distance(meters: activity.totals.distanceMeters))
+                    Text(Formatters.compactDuration(seconds: activity.totals.movingTimeSeconds))
+                    Text("↑ " + Formatters.elevation(meters: activity.totals.elevationGainMeters)).foregroundStyle(Theme.climb)
+                }
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .font(.numbers(22, relativeTo: .title3))
+                .foregroundStyle(Theme.ink)
+                .padding(.top, 4)
             }
+            Spacer(minLength: 0)
         }
-        .padding(.vertical, 4)
+        .padding(14)
+        .card()
         .accessibilityElement(children: .combine)
     }
 }

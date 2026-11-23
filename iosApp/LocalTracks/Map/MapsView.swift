@@ -43,6 +43,7 @@ struct MapsView: View {
                     )
                 }
             }
+            .background(Theme.background)
             .navigationTitle("Maps")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -230,6 +231,7 @@ private struct RegionList: View {
             }
         }
         .listStyle(.plain)
+        .themedList()
         .frame(maxHeight: 260)
     }
 }

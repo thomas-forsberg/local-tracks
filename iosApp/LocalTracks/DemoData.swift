@@ -7,9 +7,12 @@ import Shared
 // so they never touch real recordings.
 //   -demoData       a few example activities
 //   -demoDataEmpty  no activities
+//   -darkMode       dark appearance, for screenshots (the simulator ignores the test's setting)
 enum DemoMode {
     case sampleActivities
     case empty
+
+    static var forcesDarkMode: Bool { ProcessInfo.processInfo.arguments.contains("-darkMode") }
 
     static func fromLaunchArguments(_ arguments: [String] = ProcessInfo.processInfo.arguments) -> DemoMode? {
         if arguments.contains("-demoData") { return .sampleActivities }

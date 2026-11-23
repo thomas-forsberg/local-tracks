@@ -38,7 +38,7 @@ targets:
       - target: LocalTracksWidgets
     sources:
       - path: LocalTracks
-      - path: LiveActivity
+      - path: Common
       # Referenced by the scheme for Xcode location simulation; not bundled into the app.
       - path: ../fixtures/gpx
         buildPhase: none
@@ -53,6 +53,7 @@ targets:
         UIBackgroundModes: [location]
         # The lock-screen card while recording.
         NSSupportsLiveActivities: true
+        UIAppFonts: [BarlowCondensed-Medium.ttf, BarlowCondensed-SemiBold.ttf, BarlowCondensed-Bold.ttf]
         NSLocationWhenInUseUsageDescription: >-
           Local Tracks records your route while you record an activity.
           Your location never leaves your phone.
@@ -83,7 +84,7 @@ targets:
     platform: iOS
     sources:
       - path: LocalTracksWidgets
-      - path: LiveActivity
+      - path: Common
     dependencies:
       - sdk: WidgetKit.framework
       - sdk: SwiftUI.framework
@@ -91,6 +92,7 @@ targets:
       path: LocalTracksWidgets/Info.plist
       properties:
         CFBundleDisplayName: Local Tracks
+        UIAppFonts: [BarlowCondensed-Medium.ttf, BarlowCondensed-SemiBold.ttf, BarlowCondensed-Bold.ttf]
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:

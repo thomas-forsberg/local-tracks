@@ -19,7 +19,7 @@ struct StatsView: View {
                     if totals.isEmpty {
                         Text("No activities in this period.").foregroundStyle(.secondary)
                     }
-                    ForEach(totals, id: \.sport) { TotalsRow(totals: $0) }
+                    ForEach(totals, id: \.sport) { TotalsRow(totals: $0).listRowBackground(Theme.surface) }
                 }
 
                 let records = viewModel.records
@@ -30,12 +30,14 @@ struct StatsView: View {
                             Section("\(sport.title) records") {
                                 ForEach(ofSport, id: \.kind) { record in
                                     NavigationLink(value: record.activity) { RecordRow(record: record) }
+                                        .listRowBackground(Theme.surface)
                                 }
                             }
                         }
                     }
                 }
             }
+            .themedList()
             .navigationTitle("Stats")
             .navigationDestination(for: ActivitySummary.self) { activity in
                 ActivityDetailView(viewModel: viewModel.detail(for: activity))
@@ -53,7 +55,7 @@ private struct TotalsRow: View {
             Image(systemName: totals.sport.systemImage)
                 .font(.title2)
                 .frame(width: 36)
-                .foregroundStyle(.tint)
+                .foregroundStyle(totals.sport.color)
             VStack(alignment: .leading, spacing: 4) {
                 Text("\(totals.sport.title) · \(totals.activityCount) \(totals.activityCount == 1 ? "activity" : "activities")")
                     .font(.headline)
@@ -62,7 +64,7 @@ private struct TotalsRow: View {
                     Formatters.shortDuration(seconds: totals.movingTimeSeconds),
                     "↑ " + Formatters.elevation(meters: totals.elevationGainMeters),
                 ].joined(separator: " · "))
-                    .font(.subheadline.monospacedDigit())
+                    .font(.numbers(20, relativeTo: .body))
             }
         }
         .padding(.vertical, 4)

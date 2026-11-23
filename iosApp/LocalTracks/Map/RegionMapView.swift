@@ -65,7 +65,7 @@ struct RegionMapView: UIViewRepresentable {
 
             let outlines = parent.regions.filter { $0.kind == .area }.map { Self.outline(of: $0.spec.bounds) }
             setLines(outlines, id: "area-outlines", color: .secondaryLabel, width: 1.5, dashed: true, in: style)
-            setLines(parent.selection.map { [Self.outline(of: $0)] } ?? [], id: "selection-outline", color: .systemBlue, width: 3, dashed: false, in: style)
+            setLines(parent.selection.map { [Self.outline(of: $0)] } ?? [], id: "selection-outline", color: UIColor(Theme.accent), width: 3, dashed: false, in: style)
         }
 
         func reportSelection(of mapView: MLNMapView) {
