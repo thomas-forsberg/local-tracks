@@ -32,9 +32,9 @@ class RecordingSession(
     private val latestBarometer = MutableStateFlow<BarometerReading?>(null)
     private val latestMotionStationary = MutableStateFlow<Boolean?>(null)
 
-    fun start(sport: Sport): Boolean = transition { current ->
+    fun start(sport: Sport, departure: Departure? = null): Boolean = transition { current ->
         when (current) {
-            Idle, is Finished -> clock.now().let { now -> Recording(ActivityProgress.startingAt(sport, now), resumedAt = now) }
+            Idle, is Finished -> clock.now().let { now -> Recording(ActivityProgress.startingAt(sport, now, departure), resumedAt = now) }
             is Recording, is Paused -> null
         }
     }

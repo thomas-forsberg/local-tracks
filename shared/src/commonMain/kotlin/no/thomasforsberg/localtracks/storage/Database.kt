@@ -4,6 +4,7 @@ import app.cash.sqldelight.ColumnAdapter
 import app.cash.sqldelight.EnumColumnAdapter
 import app.cash.sqldelight.db.SqlDriver
 import no.thomasforsberg.localtracks.db.Activity
+import no.thomasforsberg.localtracks.db.Auto_record
 import no.thomasforsberg.localtracks.db.LocalTracksDatabase
 import no.thomasforsberg.localtracks.db.Map_region
 import no.thomasforsberg.localtracks.db.Track_point
@@ -20,6 +21,10 @@ fun createDatabase(driver: SqlDriver): LocalTracksDatabase = LocalTracksDatabase
     track_pointAdapter = Track_point.Adapter(
         timeAdapter = InstantAdapter,
         baro_timeAdapter = InstantAdapter,
+    ),
+    auto_recordAdapter = Auto_record.Adapter(
+        phaseAdapter = EnumColumnAdapter(),
+        left_home_atAdapter = InstantAdapter,
     ),
     map_regionAdapter = Map_region.Adapter(
         kindAdapter = EnumColumnAdapter(),
@@ -38,9 +43,14 @@ fun migrateDatabase(driver: SqlDriver, oldVersion: Long, newVersion: Long) {
 
 fun remeasureAllActivities(database: LocalTracksDatabase) {
     val repository = ActivityRepository(database)
-    database.activityQueries.allIds().executeAsList().forEach { (id, sport) ->
+    database.activityQueries.allIds().executeAsList().forEach { (id, sport, leadInMs, leadInMeters) ->
         val measurement = repository.trackPoints(id).measure(sport)
-        database.activityQueries.updateMeasurement(measurement.distanceMeters, measurement.movingTime.inWholeMilliseconds, id)
+        // The stretch before GPS started has no points; it's counted on top.
+        database.activityQueries.updateMeasurement(
+            measurement.distanceMeters + (leadInMeters ?: 0.0),
+            measurement.movingTime.inWholeMilliseconds + (leadInMs ?: 0),
+            id,
+        )
     }
 }
 

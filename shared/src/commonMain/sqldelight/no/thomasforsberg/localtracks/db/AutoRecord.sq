@@ -1,0 +1,30 @@
+import kotlin.Boolean;
+import kotlin.time.Instant;
+import no.thomasforsberg.localtracks.auto.AutoRecordPhase;
+
+-- Auto-record's settings and state: a single row. Home never leaves the phone: the database is
+-- excluded from iCloud backup.
+CREATE TABLE auto_record (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    enabled INTEGER AS Boolean NOT NULL DEFAULT 0,
+    home_latitude REAL,
+    home_longitude REAL,
+    phase TEXT AS AutoRecordPhase NOT NULL DEFAULT 'AT_HOME',
+    is_home INTEGER AS Boolean NOT NULL DEFAULT 1,
+    left_home_at INTEGER AS Instant
+);
+
+ensureRow:
+INSERT OR IGNORE INTO auto_record (id) VALUES (1);
+
+get:
+SELECT * FROM auto_record WHERE id = 1;
+
+setEnabled:
+UPDATE auto_record SET enabled = ? WHERE id = 1;
+
+setHome:
+UPDATE auto_record SET home_latitude = ?, home_longitude = ? WHERE id = 1;
+
+saveState:
+UPDATE auto_record SET phase = ?, is_home = ?, left_home_at = ? WHERE id = 1;

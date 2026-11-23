@@ -1,3 +1,4 @@
+import kotlin.Boolean;
 import kotlin.time.Instant;
 import no.thomasforsberg.localtracks.recording.Sport;
 
@@ -14,13 +15,18 @@ CREATE TABLE activity (
     elevation_gain_meters REAL NOT NULL DEFAULT 0,
     moving_time_ms INTEGER NOT NULL DEFAULT 0,
     -- NULL when steps weren't counted (other sports, no pedometer, older activities).
-    step_count INTEGER
+    step_count INTEGER,
+    auto_started INTEGER AS Boolean NOT NULL DEFAULT 0,
+    -- The stretch walked before an automatic recording started (no points; included in the totals above).
+    lead_in_ms INTEGER,
+    lead_in_meters REAL,
+    lead_in_steps INTEGER
 );
 
 CREATE INDEX activity_started_at ON activity (started_at);
 
 insert:
-INSERT INTO activity (sport, started_at) VALUES (?, ?);
+INSERT INTO activity (sport, started_at, auto_started, lead_in_ms, lead_in_meters, lead_in_steps) VALUES (?, ?, ?, ?, ?, ?);
 
 lastInsertedId:
 SELECT last_insert_rowid();
@@ -35,7 +41,7 @@ updateMeasurement:
 UPDATE activity SET distance_meters = :distanceMeters, moving_time_ms = :movingTimeMs WHERE id = :id;
 
 allIds:
-SELECT id, sport FROM activity;
+SELECT id, sport, lead_in_ms, lead_in_meters FROM activity;
 
 finish:
 UPDATE activity

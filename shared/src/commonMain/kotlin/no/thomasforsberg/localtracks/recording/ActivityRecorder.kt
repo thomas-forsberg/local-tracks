@@ -1,6 +1,8 @@
 package no.thomasforsberg.localtracks.recording
 
 import kotlinx.coroutines.flow.StateFlow
+import no.thomasforsberg.localtracks.auto.MIN_AUTO_RECORDING_METERS
+import no.thomasforsberg.localtracks.auto.MIN_AUTO_RECORDING_TIME
 import no.thomasforsberg.localtracks.recording.RecordingState.Finished
 import no.thomasforsberg.localtracks.storage.ActivityRepository
 import no.thomasforsberg.localtracks.storage.ActivitySummary
@@ -35,16 +37,46 @@ class ActivityRecorder(
     private val pendingPoints = mutableListOf<RecordedPoint>()
     private var lastFlushAt: Instant = clock.now()
 
+    // Whether the recording in progress was started by auto-record, and what it filled in before GPS started.
+    var isAutoStarted: Boolean = false
+        private set
+    private var leadIn: LeadIn? = null
+
     // True after a failed database write, until the next one succeeds.
     var isStorageFailing: Boolean = false
         private set
 
-    fun start(sport: Sport): Boolean {
-        if (!session.start(sport)) return false
+    fun start(sport: Sport): Boolean = start(sport, departure = null, automatic = false)
+
+    // For auto-record: the departure fills in the stretch walked before recording started (null for none).
+    fun startAutomatically(sport: Sport, departure: Departure?): Boolean = start(sport, departure, automatic = true)
+
+    private fun start(sport: Sport, departure: Departure?, automatic: Boolean): Boolean {
+        if (!session.start(sport, departure)) return false
         attach(null, storedPointCount = 0)
+        isAutoStarted = automatic
+        leadIn = departure?.let {
+            val progress = checkNotNull(state.value.progressOrNull())
+            LeadIn(progress.activeTimeBeforeResume, it.distanceMeters, progress.steps)
+        }
         stateStore.clear()
         write { ensureActivityId() }
         return true
+    }
+
+    // Stops an automatic recording when the user gets home, deleting it if it's too short to be an activity.
+    fun stopAutomatically(): AutoStopResult {
+        val id = activityId
+        val wasAutomatic = isAutoStarted
+        if (!stop()) return AutoStopResult.NOT_RECORDING
+        val finished = state.value as Finished
+        val tooShort = finished.progress.activeTimeBeforeResume < MIN_AUTO_RECORDING_TIME ||
+            finished.progress.distanceMeters < MIN_AUTO_RECORDING_METERS
+        if (wasAutomatic && tooShort && id != null) {
+            write { repository.delete(id) }
+            return AutoStopResult.DISCARDED
+        }
+        return AutoStopResult.KEPT
     }
 
     fun pause(): Boolean {
@@ -64,6 +96,8 @@ class ActivityRecorder(
         activityId?.let { id -> write { repository.finishActivity(id, finished.finishedAt, totalsOf(finished)) } }
         activityId = null
         inProgress = false
+        isAutoStarted = false
+        leadIn = null
         stateStore.clear()
         return true
     }
@@ -96,7 +130,7 @@ class ActivityRecorder(
 
     private fun ensureActivityId(): Long = activityId ?: run {
         val progress = checkNotNull(state.value.progressOrNull())
-        repository.startActivity(progress.sport, progress.startedAt).also { activityId = it }
+        repository.startActivity(progress.sport, progress.startedAt, isAutoStarted, leadIn).also { activityId = it }
     }
 
     private fun write(block: () -> Unit) {
@@ -150,6 +184,7 @@ class ActivityRecorder(
         )
         if (!session.restore(progress)) return null
         attach(unfinished.id, storedPointCount = unfinished.totals.pointCount)
+        isAutoStarted = unfinished.autoStarted
         return unfinished
     }
 
@@ -186,3 +221,5 @@ class ActivityRecorder(
         val DEFAULT_FLUSH_INTERVAL: Duration = 5.seconds
     }
 }
+
+enum class AutoStopResult { NOT_RECORDING, KEPT, DISCARDED }
