@@ -75,6 +75,7 @@ class ActivityRepository(
         activities.insert(
             sport, startedAt, autoStarted,
             leadIn?.duration?.inWholeMilliseconds, leadIn?.distanceMeters, leadIn?.steps?.toLong(),
+            leadIn?.startLatitude, leadIn?.startLongitude,
         )
         activities.lastInsertedId().executeAsOne()
     }
@@ -120,7 +121,11 @@ class ActivityRepository(
         trackPoints.forActivity(activityId).executeAsList().map { it.toRecordedPoint() }
 
     // For Swift, where Kotlin default arguments aren't available.
-    fun routePreview(activityId: Long): RoutePreview? = trackPoints(activityId).routePreview()
+    fun routePreview(activityId: Long): RoutePreview? {
+        val leadIn = activity(activityId)?.leadIn
+        val start = if (leadIn?.startLatitude != null && leadIn.startLongitude != null) leadIn.startLatitude to leadIn.startLongitude else null
+        return trackPoints(activityId).routePreview(leadInStart = start)
+    }
 
     fun lastTrackPoint(activityId: Long): RecordedPoint? =
         trackPoints.lastForActivity(activityId).executeAsOneOrNull()?.toRecordedPoint()
@@ -149,6 +154,8 @@ private fun activitySummary(
     leadInMs: Long?,
     leadInMeters: Double?,
     leadInSteps: Long?,
+    leadInLatitude: Double?,
+    leadInLongitude: Double?,
 ) = ActivitySummary(
     id,
     sport,
@@ -156,7 +163,11 @@ private fun activitySummary(
     finishedAt,
     ActivityTotals(activeTimeMs.milliseconds, distanceMeters, pointCount.toInt(), elevationGainMeters, movingTimeMs.milliseconds, stepCount?.toInt()),
     autoStarted,
-    if (leadInMs != null && leadInMeters != null) LeadIn(leadInMs.milliseconds, leadInMeters, leadInSteps?.toInt()) else null,
+    if (leadInMs != null && leadInMeters != null) {
+        LeadIn(leadInMs.milliseconds, leadInMeters, leadInSteps?.toInt(), leadInLatitude, leadInLongitude)
+    } else {
+        null
+    },
 )
 
 private fun RecordedPoint.toRow(activityId: Long, seq: Int) = Track_point(

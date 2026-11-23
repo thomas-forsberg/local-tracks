@@ -64,7 +64,7 @@ struct ActivityDetailView: View {
         guard let leadIn = activity.leadIn, leadIn.distanceMeters > 0 else { return "Started automatically when you left home" }
         let meters = Measurement(value: leadIn.distanceMeters.rounded(), unit: UnitLength.meters)
             .formatted(.measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .number.precision(.fractionLength(0))))
-        return "Started automatically. Includes \(meters) walked before GPS started."
+        return "Started automatically. Includes \(meters) walked before GPS started, shown dashed."
     }
 
     @ViewBuilder private var map: some View {
@@ -74,7 +74,7 @@ struct ActivityDetailView: View {
         case let segments? where segments.allSatisfy(\.isEmpty):
             Color.secondary.opacity(0.1).overlay(Label("No GPS points", systemImage: "location.slash").foregroundStyle(.secondary))
         case let segments?:
-            TrackMap(segments: segments)
+            TrackMap(segments: segments, leadIn: viewModel.leadInLine)
         }
     }
 }

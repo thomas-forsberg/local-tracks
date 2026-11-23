@@ -20,13 +20,17 @@ CREATE TABLE activity (
     -- The stretch walked before an automatic recording started (no points; included in the totals above).
     lead_in_ms INTEGER,
     lead_in_meters REAL,
-    lead_in_steps INTEGER
+    lead_in_steps INTEGER,
+    -- Where that stretch started (home), so maps can draw it.
+    lead_in_latitude REAL,
+    lead_in_longitude REAL
 );
 
 CREATE INDEX activity_started_at ON activity (started_at);
 
 insert:
-INSERT INTO activity (sport, started_at, auto_started, lead_in_ms, lead_in_meters, lead_in_steps) VALUES (?, ?, ?, ?, ?, ?);
+INSERT INTO activity (sport, started_at, auto_started, lead_in_ms, lead_in_meters, lead_in_steps, lead_in_latitude, lead_in_longitude)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 lastInsertedId:
 SELECT last_insert_rowid();
@@ -60,3 +64,10 @@ SELECT * FROM activity WHERE finished_at IS NOT NULL ORDER BY started_at DESC;
 
 delete:
 DELETE FROM activity WHERE id = ?;
+
+-- Version 7 data fix: activities recorded before the start point was stored started at today's home.
+fillLeadInStartFromHome:
+UPDATE activity
+SET lead_in_latitude = (SELECT home_latitude FROM auto_record WHERE id = 1),
+    lead_in_longitude = (SELECT home_longitude FROM auto_record WHERE id = 1)
+WHERE lead_in_ms IS NOT NULL AND lead_in_latitude IS NULL;

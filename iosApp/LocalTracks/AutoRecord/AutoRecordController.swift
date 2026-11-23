@@ -50,6 +50,10 @@ final class AutoRecordController {
         policy = AutoRecordPolicy(initial: state)
         phase = state.phase
         recording.onUserStarted = { [weak self] in self?.apply(self?.policy.manualRecordingStarted()) }
+        recording.onPointRecorded = { [weak self] fix in
+            guard let self, let home = settings.home else { return }
+            apply(policy.position(distanceFromHomeMeters: home.distanceMetersTo(latitude: fix.latitude, longitude: fix.longitude), at: fix.time))
+        }
         recording.onStopped = { [weak self] in
             self?.policy.recordingStopped()
             self?.save()
@@ -64,6 +68,7 @@ final class AutoRecordController {
         needsAlwaysLocation = !permissions.hasAlwaysLocation
         startWatchingHome(home)
         if policy.state.phase == .watching { startWatchingMotion() }
+        if policy.state.phase == .arrivingHome { startWatchingArrival() }
     }
 
     // Asks for the permissions first; stays off if "Always" location access isn't given.
@@ -117,7 +122,7 @@ final class AutoRecordController {
     private func handle(_ event: HomeEvent) {
         switch event {
         case .left(let date): apply(policy.leftHome(at: .from(date)))
-        case .arrived: apply(policy.arrivedHome())
+        case .arrived(let date): apply(policy.arrivedHome(at: .from(date)))
         }
     }
 
@@ -134,7 +139,10 @@ final class AutoRecordController {
         case .startRecording(let start):
             stopWatchingMotion()
             Task { await startRecording(start.sport, departedAt: start.departedAt?.date) }
+        case .watchArrival:
+            startWatchingArrival()
         case .stopRecording:
+            stopWatchingMotion()
             recording.stopAutomatically()
         }
     }
@@ -167,6 +175,28 @@ final class AutoRecordController {
         ]
     }
 
+    // Back in the home circle while recording: the recording keeps the app running and reports positions
+    // (see init); motion and a tick catch standing still and the time limit.
+    private func startWatchingArrival() {
+        guard watchTasks.isEmpty else { return }
+        let live = motion.samples()
+        watchTasks = [
+            Task { [weak self] in
+                for await sample in live {
+                    self?.apply(self?.policy.motion(sample: sample))
+                    // Samples can arrive late: check against the time now, too.
+                    self?.apply(self?.policy.tick(now: .from(.now)))
+                }
+            },
+            Task { [weak self, tickInterval] in
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: tickInterval)
+                    self?.apply(self?.policy.tick(now: .from(.now)))
+                }
+            },
+        ]
+    }
+
     private func stopWatchingMotion() {
         watchTasks.forEach { $0.cancel() }
         watchTasks = []
@@ -177,7 +207,14 @@ final class AutoRecordController {
         var departure: Departure?
         if let departedAt {
             let walked = await pedometer.walked(from: departedAt, to: .now)
-            departure = Departure(at: .from(departedAt), distanceMeters: walked?.meters ?? 0, steps: walked.map { KotlinInt(int: Int32($0.steps)) })
+            let home = settings.home
+            departure = Departure(
+                at: .from(departedAt),
+                distanceMeters: walked?.meters ?? 0,
+                steps: walked.map { KotlinInt(int: Int32($0.steps)) },
+                startLatitude: home.map { KotlinDouble(value: $0.latitude) },
+                startLongitude: home.map { KotlinDouble(value: $0.longitude) }
+            )
         }
         if recording.startAutomatically(sport, departure: departure) {
             notifier.recordingStarted(sport)

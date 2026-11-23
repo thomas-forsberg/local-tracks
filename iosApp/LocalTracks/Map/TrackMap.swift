@@ -5,6 +5,7 @@ import SwiftUI
 // A route over whatever map regions are downloaded, credited to Kartverket when any are shown.
 struct TrackMap: View {
     let segments: [[CLLocationCoordinate2D]]
+    var leadIn: [CLLocationCoordinate2D]?
     var followsLatest = false
     @Environment(MapLibrary.self) private var library: MapLibrary?
     @State private var isFollowing = true
@@ -13,6 +14,7 @@ struct TrackMap: View {
         let regions = library?.displayableRegions ?? []
         RouteMapView(
             segments: segments,
+            leadIn: leadIn,
             regions: regions,
             fileURL: { region in library?.fileURL(for: region) ?? URL(fileURLWithPath: "/") },
             followsLatest: followsLatest,

@@ -11,7 +11,8 @@ CREATE TABLE auto_record (
     home_longitude REAL,
     phase TEXT AS AutoRecordPhase NOT NULL DEFAULT 'AT_HOME',
     is_home INTEGER AS Boolean NOT NULL DEFAULT 1,
-    left_home_at INTEGER AS Instant
+    left_home_at INTEGER AS Instant,
+    arrived_home_at INTEGER AS Instant
 );
 
 ensureRow:
@@ -27,4 +28,4 @@ setHome:
 UPDATE auto_record SET home_latitude = ?, home_longitude = ? WHERE id = 1;
 
 saveState:
-UPDATE auto_record SET phase = ?, is_home = ?, left_home_at = ? WHERE id = 1;
+UPDATE auto_record SET phase = ?, is_home = ?, left_home_at = ?, arrived_home_at = ? WHERE id = 1;

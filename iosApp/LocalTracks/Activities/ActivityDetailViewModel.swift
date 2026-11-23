@@ -26,6 +26,15 @@ final class ActivityDetailViewModel {
         analysis = ActivityAnalysisKt.analyze(points: points, sport: activity.sport, maxSamples: 300)
     }
 
+    // The stretch before GPS started, from where it began (home) to the first recorded point; drawn dashed.
+    var leadInLine: [CLLocationCoordinate2D]? {
+        guard let leadIn = activity.leadIn,
+              let latitude = leadIn.startLatitude?.doubleValue, let longitude = leadIn.startLongitude?.doubleValue,
+              let first = segments?.first?.first
+        else { return nil }
+        return [CLLocationCoordinate2D(latitude: latitude, longitude: longitude), first]
+    }
+
     var elapsedSeconds: Double? {
         activity.finishedAt.map { $0.date.timeIntervalSince(activity.startedAt.date) }
     }

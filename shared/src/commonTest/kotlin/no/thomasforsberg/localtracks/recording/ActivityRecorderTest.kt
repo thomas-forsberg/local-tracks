@@ -161,7 +161,7 @@ class ActivityRecorderTest {
     @Test
     fun anAutomaticStartCountsTheStretchWalkedBeforeRecording() {
         clock.now = start + 120.seconds
-        val departure = Departure(at = start, distanceMeters = 160.0, steps = 210)
+        val departure = Departure(at = start, distanceMeters = 160.0, steps = 210, startLatitude = 59.94, startLongitude = 10.72)
 
         assertTrue(recorder.startAutomatically(Sport.HIKING, departure))
         val progress = assertNotNull(recorder.state.value.progressOrNull())
@@ -172,7 +172,7 @@ class ActivityRecorderTest {
 
         val stored = assertNotNull(repository.latestUnfinishedActivity())
         assertTrue(stored.autoStarted)
-        assertEquals(LeadIn(120.seconds, 160.0, 210), stored.leadIn)
+        assertEquals(LeadIn(120.seconds, 160.0, 210, 59.94, 10.72), stored.leadIn)
     }
 
     @Test
@@ -188,7 +188,7 @@ class ActivityRecorderTest {
     @Test
     fun aLongEnoughAutomaticRecordingIsKept() {
         clock.now = start + 10.minutes
-        recorder.startAutomatically(Sport.HIKING, Departure(at = start, distanceMeters = 800.0, steps = null))
+        recorder.startAutomatically(Sport.HIKING, Departure(at = start, distanceMeters = 800.0, steps = null, startLatitude = null, startLongitude = null))
 
         assertEquals(AutoStopResult.KEPT, recorder.stopAutomatically())
         assertNotNull(repository.activity(1)?.finishedAt)
