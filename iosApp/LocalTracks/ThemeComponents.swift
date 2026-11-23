@@ -101,3 +101,58 @@ enum Appearance {
         }
     }
 }
+
+// Stop needs a one-second press, so a pocket tap or a slip can't end an activity. A short tap only
+// explains that; VoiceOver users get a plain "Stop" action instead of the hold.
+struct HoldToStopButton: View {
+    let filled: Bool
+    let action: () -> Void
+
+    @State private var progress: CGFloat = 0
+    @State private var showsHint = false
+    @State private var stopped = 0
+
+    private static let holdDuration = 1.0
+
+    var body: some View {
+        Label(showsHint ? "Hold to stop" : "Stop", systemImage: "stop.fill")
+            .font(.headline)
+            .frame(maxWidth: .infinity, minHeight: 56)
+            .foregroundStyle(filled ? Theme.onAccent : Theme.accent)
+            .background {
+                ZStack(alignment: .leading) {
+                    Capsule().fill(filled ? Theme.accent : .clear)
+                    // Fills up while held.
+                    GeometryReader { geometry in
+                        Capsule()
+                            .fill(filled ? Theme.ink.opacity(0.25) : Theme.accent.opacity(0.25))
+                            .frame(width: geometry.size.width * progress)
+                    }
+                }
+                .clipShape(.capsule)
+            }
+            .overlay { if !filled { Capsule().strokeBorder(Theme.accent, lineWidth: 1.5) } }
+            .contentShape(.capsule)
+            .onLongPressGesture(minimumDuration: Self.holdDuration, maximumDistance: 40) {
+                stopped += 1
+                progress = 0
+                action()
+            } onPressingChanged: { pressing in
+                if pressing {
+                    showsHint = true
+                    withAnimation(.linear(duration: Self.holdDuration)) { progress = 1 }
+                } else {
+                    withAnimation(.easeOut(duration: 0.2)) { progress = 0 }
+                    Task {
+                        try? await Task.sleep(for: .seconds(2))
+                        showsHint = false
+                    }
+                }
+            }
+            .sensoryFeedback(.success, trigger: stopped)
+            .accessibilityElement()
+            .accessibilityLabel("Stop")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { action() }
+    }
+}

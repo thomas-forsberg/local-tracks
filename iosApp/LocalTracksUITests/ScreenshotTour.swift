@@ -45,7 +45,7 @@ final class ScreenshotTour: XCTestCase {
         app.buttons["Pause"].tap()
         XCTAssert(app.buttons["Resume"].waitForExistence(timeout: 5))
         snapshot("03-paused")
-        app.buttons["Stop"].tap()
+        app.buttons["Stop"].press(forDuration: 1.5)
         XCTAssert(app.buttons["Start"].waitForExistence(timeout: 5))
 
         app.tabBars.buttons["Activities"].tap()
@@ -106,7 +106,7 @@ final class ScreenshotTour: XCTestCase {
         XCTAssert(app.buttons["Pause"].waitForExistence(timeout: 5))
         sleep(6)
         snapshot("20-dark-recording")
-        app.buttons["Stop"].tap()
+        app.buttons["Stop"].press(forDuration: 1.5)
         app.tabBars.buttons["Activities"].tap()
         XCTAssert(app.cells.firstMatch.waitForExistence(timeout: 10))
         snapshot("21-dark-activities")
