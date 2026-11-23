@@ -13,6 +13,10 @@ final class ScreenshotTour: XCTestCase {
         let app = launch("-demoData")
         XCTAssert(app.buttons["Start"].waitForExistence(timeout: 30))
         snapshot("01-record")
+        app.buttons["Settings"].tap()
+        XCTAssert(app.switches["Record when I leave home"].waitForExistence(timeout: 5))
+        snapshot("01b-settings")
+        app.buttons["Done"].tap()
 
         // Demo mode feeds pretend GPS, barometer and pedometer data, so this records without real sensors.
         app.buttons["Hiking"].tap()

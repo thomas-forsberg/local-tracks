@@ -3,6 +3,8 @@ import SwiftUI
 
 struct RecordView: View {
     let controller: RecordingController
+    let autoRecord: AutoRecordController
+    @State private var showsSettings = false
     @State private var chosenSport: Sport = .cycling
     @State private var showsMap = false
 
@@ -42,12 +44,15 @@ struct RecordView: View {
             }
             .padding()
             .navigationTitle("Record")
+            .sheet(isPresented: $showsSettings) { SettingsView(autoRecord: autoRecord) }
             .toolbar {
-                if isInProgress {
-                    ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .topBarLeading) {
+                    if isInProgress {
                         Button(showsMap ? "Show stats" : "Show map", systemImage: showsMap ? "gauge.with.dots.needle.33percent" : "map") {
                             showsMap.toggle()
                         }
+                    } else {
+                        Button("Settings", systemImage: "gearshape") { showsSettings = true }
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) { StatusPill(state: controller.state) }

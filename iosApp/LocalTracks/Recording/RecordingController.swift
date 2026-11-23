@@ -19,6 +19,10 @@ final class RecordingController {
     // Left over from a crash or the app being killed; offered for resuming or saving on launch.
     private(set) var unfinishedActivity: ActivitySummary?
 
+    // For auto-record: recordings the user started by hand, and every recording that ends.
+    @ObservationIgnored var onUserStarted: (() -> Void)?
+    @ObservationIgnored var onStopped: (() -> Void)?
+
     @ObservationIgnored private let recorder: ActivityRecorder
     @ObservationIgnored private let locationSource: LocationSource
     @ObservationIgnored private let barometerSource: BarometerSource
@@ -44,6 +48,21 @@ final class RecordingController {
 
     func start(_ sport: Sport) {
         guard recorder.start(sport: sport) else { return }
+        began(sport)
+        onUserStarted?()
+    }
+
+    // Started by auto-record, with the stretch already walked (if any).
+    @discardableResult
+    func startAutomatically(_ sport: Sport, departure: Departure?) -> Bool {
+        guard recorder.startAutomatically(sport: sport, departure: departure) else { return false }
+        began(sport)
+        return true
+    }
+
+    var isAutoStarted: Bool { recorder.isAutoStarted }
+
+    private func began(_ sport: Sport) {
         liveSegments = []
         liveSegmentIndex = nil
         startSensors(for: sport)
@@ -63,10 +82,23 @@ final class RecordingController {
 
     func stop() {
         guard recorder.stop() else { return }
+        ended()
+    }
+
+    // Auto-record's stop on arriving home; deletes the recording if it's too short to be an activity.
+    @discardableResult
+    func stopAutomatically() -> AutoStopResult {
+        let result = recorder.stopAutomatically()
+        if result != .notRecording { ended() }
+        return result
+    }
+
+    private func ended() {
         stopSensors()
         locationProblem = nil
         latestBarometerReading = nil
         refreshState()
+        onStopped?()
     }
 
     func resumeUnfinished() {
@@ -75,6 +107,7 @@ final class RecordingController {
         reloadLiveSegments()
         startSensors(for: sport)
         refreshState()
+        if !recorder.isAutoStarted { onUserStarted?() }
     }
 
     // Called when iOS relaunched the app in the background mid-recording: carries on without user action.
