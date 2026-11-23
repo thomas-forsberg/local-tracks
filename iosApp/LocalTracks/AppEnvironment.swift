@@ -9,6 +9,7 @@ final class AppEnvironment {
     let recording: RecordingController
     let activities: ActivitiesViewModel
     let stats: StatsViewModel
+    let routes: RouteLibrary
     let mapRegions: MapRegionRepository
     let maps: MapLibrary
     let autoRecord: AutoRecordController
@@ -39,8 +40,9 @@ final class AppEnvironment {
             motionSource: motionSource,
             pedometerSource: pedometerSource
         )
-        activities = ActivitiesViewModel(repository: repository)
-        stats = StatsViewModel(repository: repository)
+        routes = RouteLibrary(database: database, activities: repository)
+        activities = ActivitiesViewModel(repository: repository, routes: routes)
+        stats = StatsViewModel(repository: repository, routes: routes)
         mapRegions = MapRegionRepository(database: database)
         let mapsDirectory = mapsDirectory ?? databaseDirectory.appending(path: "Maps", directoryHint: .isDirectory)
         maps = MapLibrary(

@@ -9,11 +9,13 @@ final class ActivitiesViewModel {
     private(set) var activities: [ActivitySummary]?
 
     @ObservationIgnored private let repository: ActivityRepository
+    @ObservationIgnored let routeLibrary: RouteLibrary
     // Route shapes by activity id; a finished activity's points never change.
     @ObservationIgnored private var previews: [Int64: RoutePreview?] = [:]
 
-    init(repository: ActivityRepository) {
+    init(repository: ActivityRepository, routes: RouteLibrary) {
         self.repository = repository
+        routeLibrary = routes
     }
 
     // Follows the database until the calling task is cancelled (SwiftUI's .task does that when the view goes away).
@@ -25,7 +27,7 @@ final class ActivitiesViewModel {
     }
 
     func detail(for activity: ActivitySummary) -> ActivityDetailViewModel {
-        ActivityDetailViewModel(activity: activity, repository: repository)
+        ActivityDetailViewModel(activity: activity, repository: repository, routes: routeLibrary)
     }
 
     func routePreview(for activity: ActivitySummary) -> RoutePreview? {

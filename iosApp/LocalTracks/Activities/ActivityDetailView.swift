@@ -37,6 +37,27 @@ struct ActivityDetailView: View {
                     }
                 }
 
+                if let route = viewModel.route, let line = viewModel.routeSummaryLine, let library = viewModel.routeLibrary {
+                    NavigationLink {
+                        RouteDetailView(viewModel: RouteDetailViewModel(route: route, library: library, repository: viewModel.repository))
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "arrow.triangle.turn.up.right.circle")
+                                .font(.title2)
+                                .foregroundStyle(Theme.accent)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(route.displayName).font(.headline)
+                                Text(line).font(.subheadline).foregroundStyle(Theme.inkSecondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right").foregroundStyle(Theme.inkSecondary)
+                        }
+                        .padding(14)
+                        .card()
+                    }
+                    .buttonStyle(.plain)
+                }
+
                 if let analysis = viewModel.analysis {
                     if analysis.profile.contains(where: { $0.elevationMeters != nil }) {
                         Section(title: "Elevation") { ElevationChart(profile: analysis.profile).frame(height: 160) }
@@ -55,7 +76,10 @@ struct ActivityDetailView: View {
         .background(Theme.background)
         .navigationTitle(activity.sport.title)
         .navigationBarTitleDisplayMode(.inline)
-        .task { viewModel.load() }
+        .task {
+            viewModel.load()
+            await viewModel.loadRoute()
+        }
     }
 
     // The stretch before GPS started isn't drawn (it would show where the user lives), so it's described.

@@ -11,11 +11,31 @@ final class ActivityDetailViewModel {
     // Charts, splits and max speed, computed in Kotlin from the same points. Nil until loaded.
     private(set) var analysis: ActivityAnalysis?
 
-    @ObservationIgnored private let repository: ActivityRepository
+    // The route this activity follows, if it's been walked before (or since).
+    private(set) var route: RouteSummary?
 
-    init(activity: ActivitySummary, repository: ActivityRepository) {
+    @ObservationIgnored let repository: ActivityRepository
+    @ObservationIgnored let routeLibrary: RouteLibrary?
+
+    init(activity: ActivitySummary, repository: ActivityRepository, routes: RouteLibrary? = nil) {
         self.activity = activity
         self.repository = repository
+        routeLibrary = routes
+    }
+
+    func loadRoute() async {
+        guard let routeLibrary else { return }
+        await routeLibrary.matchNewActivitiesInBackground()
+        route = routeLibrary.routeFor(activityId: activity.id)
+    }
+
+    // "On Sognsvann rundt for the 5th time, 0:42 faster than your average."
+    var routeSummaryLine: String? {
+        guard let route, let stats = route.stats(sport: activity.sport),
+              let index = route.attempts.filter({ $0.activity.sport == activity.sport }).firstIndex(where: { $0.activity.id == activity.id })
+        else { return nil }
+        let seconds = activity.totals.movingTimeSeconds - stats.averageMovingTimeSeconds
+        return "\(RouteFormat.ordinal(index + 1)) time, \(RouteFormat.versusAverage(seconds: seconds))."
     }
 
     // Reads on the main actor, which is fine for walks (~700 points). A 4-hour ride is ~15k points:

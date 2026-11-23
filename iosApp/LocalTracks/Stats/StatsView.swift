@@ -26,6 +26,19 @@ struct StatsView: View {
                     .padding(.bottom, 8)
                 }
 
+                if !viewModel.routes.isEmpty {
+                    Section("Routes") {
+                        ForEach(viewModel.routes, id: \.id) { route in
+                            NavigationLink {
+                                RouteDetailView(viewModel: viewModel.detail(for: route))
+                            } label: {
+                                RouteRow(route: route)
+                            }
+                            .listRowBackground(Theme.surface)
+                        }
+                    }
+                }
+
                 let records = viewModel.records
                 if !records.isEmpty {
                     ForEach(Sport.allCases, id: \.self) { sport in
@@ -48,6 +61,30 @@ struct StatsView: View {
             }
         }
         .task { await viewModel.observe() }
+    }
+}
+
+private struct RouteRow: View {
+    let route: RouteSummary
+
+    var body: some View {
+        let sport = route.sports().first ?? .hiking
+        let stats = route.stats(sport: sport)
+        HStack(spacing: 16) {
+            Image(systemName: sport.systemImage)
+                .font(.title2)
+                .frame(width: 36)
+                .foregroundStyle(sport.color)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(route.displayName).font(.headline)
+                if let stats {
+                    Text("\(stats.count) times · best \(Formatters.clock(seconds: stats.best[0].activity.totals.movingTimeSeconds))")
+                        .font(.numbers(20, relativeTo: .body))
+                }
+            }
+        }
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
     }
 }
 
