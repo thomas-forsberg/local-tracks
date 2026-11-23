@@ -9,6 +9,8 @@ final class ActivitiesViewModel {
     private(set) var activities: [ActivitySummary]?
 
     @ObservationIgnored private let repository: ActivityRepository
+    // Route shapes by activity id; a finished activity's points never change.
+    @ObservationIgnored private var previews: [Int64: RoutePreview?] = [:]
 
     init(repository: ActivityRepository) {
         self.repository = repository
@@ -24,6 +26,13 @@ final class ActivitiesViewModel {
 
     func detail(for activity: ActivitySummary) -> ActivityDetailViewModel {
         ActivityDetailViewModel(activity: activity, repository: repository)
+    }
+
+    func routePreview(for activity: ActivitySummary) -> RoutePreview? {
+        if let cached = previews[activity.id] { return cached }
+        let preview = repository.routePreview(activityId: activity.id)
+        previews[activity.id] = .some(preview)
+        return preview
     }
 
     func delete(_ activity: ActivitySummary) {

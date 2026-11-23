@@ -63,4 +63,23 @@ struct ActivitiesViewModelTests {
         _ = await eventually { viewModel.activities?.first != nil }
         return viewModel.activities?.first
     }
+
+    @Test func routePreviewsComeFromTheStoredPoints() async throws {
+        let id = environment.repository.startActivity(sport: .hiking, startedAt: .from(.now))
+        let points = (0..<10).map { index in
+            RecordedPoint(segmentIndex: 0, point: TrackPoint(
+                latitude: 59.9 + Double(index) * 0.001, longitude: 10.7, elevationMeters: nil, time: .from(.now),
+                horizontalAccuracyMeters: nil, speedMetersPerSecond: nil, barometer: nil, stationaryByMotion: nil
+            ))
+        }
+        environment.repository.appendPoints(activityId: id, firstSeq: 0, points: points, totals: ActivityTotals.companion.ofSeconds(
+            activeTimeSeconds: 60, distanceMeters: 1000, pointCount: 10, elevationGainMeters: 0, movingTimeSeconds: 60, stepCount: nil
+        ))
+        let activity = try #require(environment.repository.activity(id: id))
+
+        let preview = try #require(environment.activities.routePreview(for: activity))
+
+        #expect(preview.segments.count == 1)
+        #expect(preview.segments[0].count == 10)
+    }
 }

@@ -35,7 +35,7 @@ struct ActivitiesView: View {
                 .background(Theme.background)
         case let activities?:
             List(activities, id: \.id) { activity in
-                ActivityRow(activity: activity)
+                ActivityRow(activity: activity, preview: viewModel.routePreview(for: activity))
                     // The link fills the card but draws nothing, so rows don't get list chevrons.
                     .background(NavigationLink(value: activity) { EmptyView() }.opacity(0))
                     .listRowBackground(Color.clear)
@@ -58,14 +58,12 @@ struct ActivitiesView: View {
 
 private struct ActivityRow: View {
     let activity: ActivitySummary
+    let preview: RoutePreview?
 
     var body: some View {
         HStack(spacing: 14) {
-            Image(systemName: activity.sport.systemImage)
-                .font(.title)
-                .foregroundStyle(activity.sport.color)
-                .frame(width: 64, height: 64)
-                .background(activity.sport.color.opacity(0.14), in: .rect(cornerRadius: 12))
+            RouteThumbnail(preview: preview, sport: activity.sport)
+                .frame(width: 84, height: 84)
             VStack(alignment: .leading, spacing: 2) {
                 Text(activity.sport.title)
                     .font(.headline)

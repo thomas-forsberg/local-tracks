@@ -10,7 +10,9 @@ import no.thomasforsberg.localtracks.recording.BarometerReading
 import no.thomasforsberg.localtracks.recording.LeadIn
 import no.thomasforsberg.localtracks.recording.RecordedPoint
 import no.thomasforsberg.localtracks.recording.Sport
+import no.thomasforsberg.localtracks.track.RoutePreview
 import no.thomasforsberg.localtracks.track.TrackPoint
+import no.thomasforsberg.localtracks.track.routePreview
 import kotlin.coroutines.CoroutineContext
 import kotlin.native.HiddenFromObjC
 import kotlin.time.Duration
@@ -116,6 +118,9 @@ class ActivityRepository(
 
     fun trackPoints(activityId: Long): List<RecordedPoint> =
         trackPoints.forActivity(activityId).executeAsList().map { it.toRecordedPoint() }
+
+    // For Swift, where Kotlin default arguments aren't available.
+    fun routePreview(activityId: Long): RoutePreview? = trackPoints(activityId).routePreview()
 
     fun lastTrackPoint(activityId: Long): RecordedPoint? =
         trackPoints.lastForActivity(activityId).executeAsOneOrNull()?.toRecordedPoint()
