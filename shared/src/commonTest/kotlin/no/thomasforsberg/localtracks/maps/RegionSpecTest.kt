@@ -1,8 +1,8 @@
 package no.thomasforsberg.localtracks.maps
 
+import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class RegionSpecTest {
@@ -38,12 +38,29 @@ class RegionSpecTest {
     }
 
     @Test
-    fun aCountyIsTooLargeForOneRegion() {
-        val oslo = RegionSpec.forSelection(BoundingBox(10.6, 59.9, 10.9, 60.1), DEFAULT_REGION_MAX_ZOOM)
+    fun batchesListEveryTileOnceStartingWithTheCoarseZooms() {
+        val spec = RegionSpec(TileArea(11, 1084, 594, 1086, 595), REGION_MIN_ZOOM, 13)
+        val batches = spec.batches(Random(1)).toList()
+
+        assertEquals(listOf(9, 10), batches.first().map { it.zoom })
+        assertEquals(1 + 6, batches.size, "the coarse zooms, then one batch per grid square")
+        val tiles = batches.flatten().flatMap { it.tiles().toList() }
+        assertEquals(spec.tiles().toSet(), tiles.toSet())
+        assertEquals(tiles.size, tiles.toSet().size)
+    }
+
+    @Test
+    fun theOverviewIsBatchedByItsOwnTiles() {
+        val tiles = RegionSpec.NORWAY_OVERVIEW.batches(Random(1)).flatten().flatMap { it.tiles().toList() }.toList()
+
+        assertEquals(RegionSpec.NORWAY_OVERVIEW.tileCount, tiles.size.toLong())
+    }
+
+    @Test
+    fun aCountySizedAreaIsEstimatedInGigabytes() {
         val innlandet = RegionSpec.forSelection(BoundingBox(8.0, 60.2, 12.8, 62.7), DEFAULT_REGION_MAX_ZOOM)
 
-        assertFalse(oslo.isTooLarge)
-        assertTrue(innlandet.isTooLarge)
+        assertTrue(innlandet.estimatedBytes > 5_000_000_000L, "${innlandet.estimatedBytes}")
     }
 
     @Test

@@ -82,44 +82,44 @@ class RegionDownloader(
         val region = checkNotNull(repository.region(regionId)) { "No map region $regionId" }
         openStore(region).use { store ->
             store.writeMetadata(region.name, region.spec, source.attribution)
-            val stored = store.storedTiles()
-            val remaining = region.spec.tiles().filterNot { it in stored }.toList().shuffled(random)
-            val progress = Progress(tiles = stored.size.toLong(), bytes = store.totalBytes())
-
-            downloadAll(remaining) { batch ->
+            val progress = Progress(tiles = store.tileCount(), bytes = store.totalBytes())
+            // Workers take turns with the store, so it's never used by two at once.
+            val storeLock = Mutex()
+            val batch = mutableMapOf<TileId, ByteArray>()
+            fun save() {
                 store.putAll(batch)
                 progress.add(batch)
                 repository.updateProgress(regionId, progress.tiles, progress.bytes)
+                batch.clear()
             }
-            repository.complete(regionId, clock.now(), progress.tiles, progress.bytes)
-        }
-    }
-
-    private suspend fun downloadAll(tiles: List<TileId>, save: (Map<TileId, ByteArray>) -> Unit) {
-        val batch = mutableMapOf<TileId, ByteArray>()
-        // Workers take turns saving, so the store is never written by two at once.
-        val saving = Mutex()
-        try {
-            coroutineScope {
-                val queue = produce { tiles.forEach { send(it) } }
-                repeat(parallelRequests) {
-                    launch {
-                        for (tile in queue) {
-                            val data = fetch(tile)
-                            saving.withLock {
-                                batch[tile] = data
-                                if (batch.size >= BATCH_SIZE) {
-                                    save(batch.toMap())
-                                    batch.clear()
+            try {
+                coroutineScope {
+                    // Lists one grid square at a time, so even a county never sits in memory at once.
+                    val queue = produce {
+                        for (areas in region.spec.batches(random)) {
+                            val missing = storeLock.withLock {
+                                areas.flatMap { area -> store.storedTilesIn(area).let { stored -> area.tiles().filterNot { it in stored }.toList() } }
+                            }
+                            missing.shuffled(random).forEach { send(it) }
+                        }
+                    }
+                    repeat(parallelRequests) {
+                        launch {
+                            for (tile in queue) {
+                                val data = fetch(tile)
+                                storeLock.withLock {
+                                    batch[tile] = data
+                                    if (batch.size >= BATCH_SIZE) save()
                                 }
                             }
                         }
                     }
                 }
+            } finally {
+                // Keep what has arrived even when a tile failed or the download was cancelled.
+                if (batch.isNotEmpty()) withContext(NonCancellable) { save() }
             }
-        } finally {
-            // Keep what has arrived even when a tile failed or the download was cancelled.
-            if (batch.isNotEmpty()) withContext(NonCancellable) { save(batch.toMap()) }
+            repository.complete(regionId, clock.now(), progress.tiles, progress.bytes)
         }
     }
 

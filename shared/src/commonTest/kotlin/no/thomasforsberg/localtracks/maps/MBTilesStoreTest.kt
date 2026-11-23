@@ -30,6 +30,16 @@ class MBTilesStoreTest {
     }
 
     @Test
+    fun findsStoredTilesWithinAnArea() {
+        store.putAll(mapOf(TileId(12, 2168, 1188) to byteArrayOf(1), TileId(12, 2169, 1189) to byteArrayOf(2), TileId(12, 2200, 1188) to byteArrayOf(3)))
+
+        assertEquals(
+            setOf(TileId(12, 2168, 1188), TileId(12, 2169, 1189)),
+            store.storedTilesIn(TileArea(12, 2168, 1188, 2169, 1189)),
+        )
+    }
+
+    @Test
     fun writesTheMetadataMapLibreReads() {
         store.writeMetadata("Nordmarka", RegionSpec(TileArea(11, 1084, 594, 1085, 595), 9, 15), "© Kartverket")
         val metadata = store.metadata()

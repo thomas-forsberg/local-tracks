@@ -24,7 +24,14 @@ struct MapsView: View {
             VStack(spacing: 0) {
                 map
                 if isChoosingArea {
-                    AreaChooser(spec: chosenSpec, name: $areaName, detailed: $detailed, onCancel: stopChoosing, onDownload: download)
+                    AreaChooser(
+                        spec: chosenSpec,
+                        availableBytes: library.availableBytes(),
+                        name: $areaName,
+                        detailed: $detailed,
+                        onCancel: stopChoosing,
+                        onDownload: download
+                    )
                 } else {
                     RegionList(
                         library: library,
@@ -100,7 +107,7 @@ struct MapsView: View {
     }
 
     private func download() {
-        guard let spec = chosenSpec, !spec.isTooLarge else { return }
+        guard let spec = chosenSpec, AreaChooser.fits(spec, in: library.availableBytes()) else { return }
         let name = areaName.trimmingCharacters(in: .whitespacesAndNewlines)
         library.addArea(named: name.isEmpty ? library.nextAreaName() : name, spec: spec)
         stopChoosing()
@@ -135,8 +142,9 @@ private struct OverviewPrompt: View {
     }
 }
 
-private struct AreaChooser: View {
+struct AreaChooser: View {
     let spec: RegionSpec?
+    let availableBytes: Int64?
     @Binding var name: String
     @Binding var detailed: Bool
     let onCancel: () -> Void
@@ -151,22 +159,47 @@ private struct AreaChooser: View {
                 .textFieldStyle(.roundedBorder)
             Toggle("Extra detail (about 4× larger)", isOn: $detailed)
             if let spec {
-                if spec.isTooLarge {
-                    Text("Too large. Zoom in to choose a smaller area.").foregroundStyle(.red)
-                } else {
-                    Text("About \(Formatters.bytes(spec.estimatedBytes)), \(spec.tileCount.formatted()) map tiles")
-                        .monospacedDigit()
-                }
+                StorageNeeded(spec: spec, availableBytes: availableBytes)
             }
             HStack {
                 Button("Cancel", action: onCancel).buttonStyle(.bordered)
                 Spacer()
                 Button("Download", systemImage: "arrow.down.circle", action: onDownload)
                     .buttonStyle(.borderedProminent)
-                    .disabled(spec?.isTooLarge != false)
+                    .disabled(spec.map { !Self.fits($0, in: availableBytes) } ?? true)
             }
         }
         .padding()
+    }
+}
+
+extension AreaChooser {
+    // Unknown free space doesn't block: the download stops by itself if the phone fills up.
+    static func fits(_ spec: RegionSpec, in availableBytes: Int64?) -> Bool {
+        availableBytes.map { spec.estimatedBytes <= $0 } ?? true
+    }
+}
+
+// How much space the selected area needs, next to what's free, so a big download is never a surprise.
+private struct StorageNeeded: View {
+    let spec: RegionSpec
+    let availableBytes: Int64?
+
+    var body: some View {
+        let fits = AreaChooser.fits(spec, in: availableBytes)
+        VStack(alignment: .leading, spacing: 2) {
+            Label("Needs about \(Formatters.bytes(spec.estimatedBytes))", systemImage: "internaldrive")
+                .font(.headline)
+                .foregroundStyle(fits ? Color.primary : Color.red)
+            if let availableBytes {
+                Text(fits
+                    ? "\(Formatters.bytes(availableBytes)) free on this phone"
+                    : "Only \(Formatters.bytes(availableBytes)) free on this phone. Zoom in to choose a smaller area.")
+                    .font(.footnote)
+                    .foregroundStyle(fits ? Color.secondary : Color.red)
+            }
+        }
+        .monospacedDigit()
     }
 }
 
