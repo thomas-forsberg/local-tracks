@@ -3,9 +3,9 @@ import SwiftUI
 
 // Small uppercase label above a number.
 struct StatLabel: View {
-    let text: String
+    let text: LocalizedStringKey
 
-    init(_ text: String) {
+    init(_ text: LocalizedStringKey) {
         self.text = text
     }
 
@@ -115,7 +115,7 @@ struct HoldToStopButton: View {
     private static let holdDuration = 1.0
 
     var body: some View {
-        Label(showsHint ? "Hold to stop" : "Stop", systemImage: "stop.fill")
+        Label(showsHint ? String(localized: "Hold to stop") : String(localized: "Stop"), systemImage: "stop.fill")
             .font(.headline)
             .frame(maxWidth: .infinity, minHeight: 56)
             .foregroundStyle(filled ? Theme.onAccent : Theme.accent)

@@ -19,7 +19,7 @@ struct StatsView: View {
                     ForEach(totals, id: \.sport) { TotalsRow(totals: $0).listRowBackground(Theme.surface) }
                 } header: {
                     Picker("Period", selection: $viewModel.period) {
-                        ForEach(StatsPeriod.allCases) { Text($0.rawValue).tag($0) }
+                        ForEach(StatsPeriod.allCases) { Text($0.title).tag($0) }
                     }
                     .pickerStyle(.segmented)
                     .textCase(nil)
@@ -78,7 +78,7 @@ private struct RouteRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(route.displayName).font(.headline)
                 if let stats {
-                    Text("\(stats.count) times · best \(Formatters.clock(seconds: stats.best[0].activity.totals.movingTimeSeconds))")
+                    Text(String(localized: "\(stats.count)× · best \(Formatters.clock(seconds: stats.best[0].activity.totals.movingTimeSeconds))"))
                         .font(.numbers(20, relativeTo: .body))
                 }
             }
@@ -98,7 +98,7 @@ private struct TotalsRow: View {
                 .frame(width: 36)
                 .foregroundStyle(totals.sport.color)
             VStack(alignment: .leading, spacing: 4) {
-                Text("\(totals.sport.title) · \(totals.activityCount) \(totals.activityCount == 1 ? "activity" : "activities")")
+                Text("\(totals.sport.title) · \(String(localized: "\(totals.activityCount) activities"))")
                     .font(.headline)
                 Text([
                     Formatters.distance(meters: totals.distanceMeters),
@@ -142,10 +142,10 @@ private struct RecordRow: View {
 extension RecordKind {
     var title: String {
         switch self {
-        case .longestDistance: "Longest distance"
-        case .longestMovingTime: "Longest moving time"
-        case .biggestClimb: "Biggest climb"
-        case .fastestAverageSpeed: "Fastest average"
+        case .longestDistance: String(localized: "Longest distance")
+        case .longestMovingTime: String(localized: "Longest moving time")
+        case .biggestClimb: String(localized: "Biggest climb")
+        case .fastestAverageSpeed: String(localized: "Fastest average")
         }
     }
 }

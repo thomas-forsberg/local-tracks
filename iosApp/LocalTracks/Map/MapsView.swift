@@ -134,7 +134,7 @@ private struct OverviewPrompt: View {
                 if let overview, let failure = library.failures[overview.id] {
                     Text(failure).font(.footnote).foregroundStyle(.red)
                 }
-                Button(overview == nil ? "Download overview" : "Continue download", action: library.downloadOverview)
+                Button(overview == nil ? String(localized: "Download overview") : String(localized: "Continue download"), action: library.downloadOverview)
                     .buttonStyle(.borderedProminent)
             }
         }
@@ -244,7 +244,7 @@ private struct RegionRow: View {
         let isDownloading = library.downloading.contains(region.id)
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(region.kind == .overview ? "Norway overview" : region.name).font(.body.weight(.medium))
+                Text(region.kind == .overview ? String(localized: "Norway overview") : region.name).font(.body.weight(.medium))
                 if region.isComplete {
                     Text(Formatters.bytes(region.downloadedBytes)).font(.footnote).foregroundStyle(.secondary)
                 } else if isDownloading {

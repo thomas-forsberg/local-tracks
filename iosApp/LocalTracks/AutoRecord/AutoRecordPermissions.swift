@@ -73,8 +73,8 @@ protocol AutoRecordNotifier {
 final class LocalNotifier: AutoRecordNotifier {
     func recordingStarted(_ sport: Sport) {
         let content = UNMutableNotificationContent()
-        content.title = "\(sport.title) recording started"
-        content.body = "Local Tracks started recording automatically when you left home. It stops when you're back."
+        content.title = String(localized: "\(sport.title) recording started")
+        content.body = String(localized: "Sporløs started recording automatically when you left home. It stops when you're back.")
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "auto-record-started", content: content, trigger: nil))
     }
 }

@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import SwiftUI
 import Shared
 
 enum StatsPeriod: String, CaseIterable, Identifiable {
@@ -9,6 +10,15 @@ enum StatsPeriod: String, CaseIterable, Identifiable {
     case allTime = "All time"
 
     var id: Self { self }
+
+    var title: LocalizedStringKey {
+        switch self {
+        case .week: "Week"
+        case .month: "Month"
+        case .year: "Year"
+        case .allTime: "All time"
+        }
+    }
 
     // Uses the user's calendar, so a Norwegian week starts on Monday.
     func start(containing date: Date, calendar: Calendar = .current) -> Date? {

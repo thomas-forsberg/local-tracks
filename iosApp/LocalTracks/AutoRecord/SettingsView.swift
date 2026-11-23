@@ -30,7 +30,7 @@ struct SettingsView: View {
                     NavigationLink {
                         HomePickerView(autoRecord: autoRecord)
                     } label: {
-                        LabeledContent("Home", value: autoRecord.settings.home == nil ? "Not set" : "Set")
+                        LabeledContent("Home", value: autoRecord.settings.home == nil ? String(localized: "Not set") : String(localized: "Set"))
                     }
 
                     if autoRecord.isEnabled {
@@ -50,6 +50,17 @@ struct SettingsView: View {
                 } footer: {
                     Text("When you leave home on foot or by bike, recording starts by itself and stops when you're back. Leaving by car doesn't start anything until you're home again. Short trips are deleted. Your home is stored only on this phone.")
                 }
+                Section {
+                    // iOS keeps a language per app; the app follows the phone's language until it's changed there.
+                    Button {
+                        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                    } label: {
+                        LabeledContent("Language", value: Locale.current.localizedString(forLanguageCode: Locale.current.language.languageCode?.identifier ?? "en")?.localizedCapitalized ?? "")
+                    }
+                    .foregroundStyle(Theme.ink)
+                } footer: {
+                    Text("Sporløs is in Norwegian and English and follows your phone's language. Change it for this app in iOS Settings.")
+                }
             }
             .themedList()
             .navigationTitle("Settings")
@@ -66,12 +77,12 @@ struct SettingsView: View {
 extension AutoRecordPhase {
     var description: String {
         switch self {
-        case .atHome: "At home"
-        case .watching: "Left home, checking how you're moving"
-        case .autoRecording: "Recording"
-        case .arrivingHome: "Recording the last bit home"
-        case .manualRecording: "Recording (started by you)"
-        case .waitingForHome: "Paused until you're home again"
+        case .atHome: String(localized: "At home")
+        case .watching: String(localized: "Left home, checking how you're moving")
+        case .autoRecording: String(localized: "Recording")
+        case .arrivingHome: String(localized: "Recording the last bit home")
+        case .manualRecording: String(localized: "Recording (started by you)")
+        case .waitingForHome: String(localized: "Paused until you're home again")
         }
     }
 }

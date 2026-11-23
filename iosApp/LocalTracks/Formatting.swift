@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import Shared
 
 enum Formatters {
@@ -65,9 +66,9 @@ enum Formatters {
 extension Sport {
     var title: String {
         switch self {
-        case .cycling: "Cycling"
-        case .running: "Running"
-        case .hiking: "Hiking"
+        case .cycling: String(localized: "Cycling")
+        case .running: String(localized: "Running")
+        case .hiking: String(localized: "Hiking")
         }
     }
 
@@ -86,6 +87,6 @@ extension Sport {
         }
     }
 
-    var currentSpeedTitle: String { showsPace ? "Pace" : "Speed" }
-    var averageSpeedTitle: String { showsPace ? "Avg pace" : "Avg speed" }
+    var currentSpeedTitle: LocalizedStringKey { showsPace ? "Pace" : "Speed" }
+    var averageSpeedTitle: LocalizedStringKey { showsPace ? "Avg pace" : "Avg speed" }
 }

@@ -74,7 +74,7 @@ private struct LockScreenCard: View {
 
     // Auto-pause only keeps standing still out of the moving time; it isn't something to show.
     private var statusText: String {
-        state.status == .paused ? "Paused" : attributes.sportName
+        state.status == .paused ? String(localized: "Paused") : attributes.sportName
     }
 }
 
@@ -107,6 +107,6 @@ private struct PauseButton: View {
         .buttonStyle(.borderedProminent)
         .buttonBorderShape(.circle)
         .tint(status == .paused ? Theme.forest : Theme.accent)
-        .accessibilityLabel(status == .paused ? "Resume" : "Pause")
+        .accessibilityLabel(status == .paused ? String(localized: "Resume") : String(localized: "Pause"))
     }
 }

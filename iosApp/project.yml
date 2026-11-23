@@ -3,6 +3,7 @@ name: LocalTracks
 
 options:
   bundleIdPrefix: no.thomasforsberg
+  developmentLanguage: en
   deploymentTarget:
     iOS: "18.0"
   createIntermediateGroups: true
@@ -45,7 +46,9 @@ targets:
     info:
       path: LocalTracks/Info.plist
       properties:
-        CFBundleDisplayName: Local Tracks
+        CFBundleDisplayName: Sporløs
+        # English and Norwegian (Bokmål); iOS picks by the phone's language, and Settings › Sporløs › Language can override it.
+        CFBundleLocalizations: [en, nb]
         ITSAppUsesNonExemptEncryption: false
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
@@ -55,13 +58,13 @@ targets:
         NSSupportsLiveActivities: true
         UIAppFonts: [BarlowCondensed-Medium.ttf, BarlowCondensed-SemiBold.ttf, BarlowCondensed-Bold.ttf]
         NSLocationWhenInUseUsageDescription: >-
-          Local Tracks records your route while you record an activity.
+          Sporløs records your route while you record an activity.
           Your location never leaves your phone.
         NSLocationAlwaysAndWhenInUseUsageDescription: >-
-          With auto-record on, Local Tracks notices when you leave home and starts recording
+          With auto-record on, Sporløs notices when you leave home and starts recording
           your walk, run or ride. Your home and your location never leave your phone.
         NSMotionUsageDescription: >-
-          Local Tracks uses the motion sensors to measure elevation, count steps
+          Sporløs uses the motion sensors to measure elevation, count steps
           and notice when you stand still. The data never leaves your phone.
     settings:
       base:
@@ -92,7 +95,7 @@ targets:
     info:
       path: LocalTracksWidgets/Info.plist
       properties:
-        CFBundleDisplayName: Local Tracks
+        CFBundleDisplayName: Sporløs
         UIAppFonts: [BarlowCondensed-Medium.ttf, BarlowCondensed-SemiBold.ttf, BarlowCondensed-Bold.ttf]
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
@@ -148,6 +151,8 @@ schemes:
         defaultLocation: ../fixtures/gpx/synthetic-sognsvann-loop.gpx
     test:
       config: Debug
+      # The app now has a Norwegian translation: test in English whatever the machine's language is.
+      language: en
       targets:
         - LocalTracksTests
     archive:

@@ -81,7 +81,7 @@ final class MapLibrary {
     }
 
     func nextAreaName() -> String {
-        "Area \(areas.count + 1)"
+        String(localized: "Area \(areas.count + 1)")
     }
 
     func start(_ region: MapRegion) {
@@ -96,7 +96,7 @@ final class MapLibrary {
                 // Paused by the user; what arrived is kept.
             } catch {
                 if !Task.isCancelled {
-                    failures[region.id] = "Download stopped. Check the connection and try again."
+                    failures[region.id] = String(localized: "Download stopped. Check the connection and try again.")
                 }
             }
             tasks[region.id] = nil

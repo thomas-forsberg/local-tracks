@@ -1,0 +1,1376 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%@ faster": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ raskere"
+          }
+        }
+      }
+    },
+    "%@ faster than your average": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ raskere enn snittet ditt"
+          }
+        }
+      }
+    },
+    "%@ loop": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ runde"
+          }
+        }
+      }
+    },
+    "%@ recording started": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opptak av %@ startet"
+          }
+        }
+      }
+    },
+    "%@ records": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rekorder – %@"
+          }
+        }
+      }
+    },
+    "%@ route": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ rute"
+          }
+        }
+      }
+    },
+    "%@ slower": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ tregere"
+          }
+        }
+      }
+    },
+    "%@ slower than your average": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ tregere enn snittet ditt"
+          }
+        }
+      }
+    },
+    "%@ time, %@.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ gang, %@."
+          }
+        }
+      }
+    },
+    "%lld activities": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld activity"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld activities"
+                }
+              }
+            }
+          }
+        },
+        "nb": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld aktivitet"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld aktiviteter"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld× · best %@": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld× · beste %@"
+          }
+        }
+      }
+    },
+    "Activities": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktiviteter"
+          }
+        }
+      }
+    },
+    "Add area": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legg til område"
+          }
+        }
+      }
+    },
+    "All time": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Totalt"
+          }
+        }
+      }
+    },
+    "Anticlockwise": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mot klokka"
+          }
+        }
+      }
+    },
+    "Area %lld": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Område %lld"
+          }
+        }
+      }
+    },
+    "At home": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hjemme"
+          }
+        }
+      }
+    },
+    "Auto-record": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatisk opptak"
+          }
+        }
+      }
+    },
+    "Average time": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snittid"
+          }
+        }
+      }
+    },
+    "Avg pace": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snittempo"
+          }
+        }
+      }
+    },
+    "Avg speed": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snittfart"
+          }
+        }
+      }
+    },
+    "Best time": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beste tid"
+          }
+        }
+      }
+    },
+    "Best times": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beste tider"
+          }
+        }
+      }
+    },
+    "Biggest climb": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mest stigning"
+          }
+        }
+      }
+    },
+    "Can't open storage": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kan ikke åpne lagringen"
+          }
+        }
+      }
+    },
+    "Can't save to the phone's storage. It may be full. Recording continues, and points are saved once there's space.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kan ikke lagre på telefonen. Den kan være full. Opptaket fortsetter, og punktene lagres når det blir plass."
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avbryt"
+          }
+        }
+      }
+    },
+    "Climb": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stigning"
+          }
+        }
+      }
+    },
+    "Clockwise": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Med klokka"
+          }
+        }
+      }
+    },
+    "Continue download": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortsett nedlastingen"
+          }
+        }
+      }
+    },
+    "Couldn't find your location.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fant ikke posisjonen din."
+          }
+        }
+      }
+    },
+    "Cycling": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sykling"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slett"
+          }
+        }
+      }
+    },
+    "Directions": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retninger"
+          }
+        }
+      }
+    },
+    "Distance": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distanse"
+          }
+        }
+      }
+    },
+    "Done": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ferdig"
+          }
+        }
+      }
+    },
+    "Download": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last ned"
+          }
+        }
+      }
+    },
+    "Download overview": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last ned oversikt"
+          }
+        }
+      }
+    },
+    "Download stopped. Check the connection and try again.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nedlastingen stoppet. Sjekk tilkoblingen og prøv igjen."
+          }
+        }
+      }
+    },
+    "Elapsed": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Totaltid"
+          }
+        }
+      }
+    },
+    "Elapsed time": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Totaltid"
+          }
+        }
+      }
+    },
+    "Elev": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Høyde"
+          }
+        }
+      }
+    },
+    "Extra detail (about 4× larger)": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ekstra detaljer (omtrent 4× større)"
+          }
+        }
+      }
+    },
+    "Fastest average": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raskeste snitt"
+          }
+        }
+      }
+    },
+    "Hiking": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fottur"
+          }
+        }
+      }
+    },
+    "Hold to stop": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hold for å stoppe"
+          }
+        }
+      }
+    },
+    "Home": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hjem"
+          }
+        }
+      }
+    },
+    "Kilometres": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilometer"
+          }
+        }
+      }
+    },
+    "Km": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Km"
+          }
+        }
+      }
+    },
+    "Language": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Språk"
+          }
+        }
+      }
+    },
+    "Last done": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sist gått"
+          }
+        }
+      }
+    },
+    "Last time": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sist"
+          }
+        }
+      }
+    },
+    "Leave it empty to describe it by its length.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La det stå tomt for å beskrive den med lengden."
+          }
+        }
+      }
+    },
+    "Left home, checking how you're moving": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Har dratt hjemmefra, sjekker hvordan du beveger deg"
+          }
+        }
+      }
+    },
+    "Location access is off. Turn it on in Settings to record.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posisjonstilgang er av. Slå den på i Innstillinger for å ta opp."
+          }
+        }
+      }
+    },
+    "Location access must be set to Always for this to work.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posisjonstilgang må stå på Alltid for at dette skal virke."
+          }
+        }
+      }
+    },
+    "Longest distance": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lengste distanse"
+          }
+        }
+      }
+    },
+    "Longest moving time": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lengste bevegelsestid"
+          }
+        }
+      }
+    },
+    "Maps": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kart"
+          }
+        }
+      }
+    },
+    "Maps stay on your phone": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kartene blir på telefonen"
+          }
+        }
+      }
+    },
+    "Max speed": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toppfart"
+          }
+        }
+      }
+    },
+    "Month": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Måned"
+          }
+        }
+      }
+    },
+    "Move the map so the house is over your home. Anywhere within %@ m counts as home.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flytt kartet så huset står over hjemmet ditt. Alt innenfor %@ m regnes som hjemme."
+          }
+        }
+      }
+    },
+    "Move the map to frame the area. It's rounded out to whole squares of about 10 km, so the download doesn't reveal your exact plans.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flytt kartet for å ramme inn området. Det rundes av til hele ruter på rundt 10 km, så nedlastingen ikke avslører de nøyaktige planene dine."
+          }
+        }
+      }
+    },
+    "Moving time": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bevegelsestid"
+          }
+        }
+      }
+    },
+    "Name": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Navn"
+          }
+        }
+      }
+    },
+    "Name this route": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gi ruten et navn"
+          }
+        }
+      }
+    },
+    "Needs about %@": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trenger omtrent %@"
+          }
+        }
+      }
+    },
+    "No GPS points": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen GPS-punkter"
+          }
+        }
+      }
+    },
+    "No activities in this period.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen aktiviteter i denne perioden."
+          }
+        }
+      }
+    },
+    "No activities yet": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen aktiviteter ennå"
+          }
+        }
+      }
+    },
+    "No detailed maps yet. Tap + to download an area.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen detaljerte kart ennå. Trykk + for å laste ned et område."
+          }
+        }
+      }
+    },
+    "Norway overview": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Norgesoversikt"
+          }
+        }
+      }
+    },
+    "Not set": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ikke satt"
+          }
+        }
+      }
+    },
+    "Now": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nå"
+          }
+        }
+      }
+    },
+    "Open Settings": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åpne Innstillinger"
+          }
+        }
+      }
+    },
+    "Pace": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tempo"
+          }
+        }
+      }
+    },
+    "Pace and speed": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tempo og fart"
+          }
+        }
+      }
+    },
+    "Pause": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause"
+          }
+        }
+      }
+    },
+    "Pause or resume recording": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause eller fortsett opptaket"
+          }
+        }
+      }
+    },
+    "Paused": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause"
+          }
+        }
+      }
+    },
+    "Paused until you're home again": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "På pause til du er hjemme igjen"
+          }
+        }
+      }
+    },
+    "Period": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Periode"
+          }
+        }
+      }
+    },
+    "Precise Location is off. Turn it on in Settings for accurate tracks.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nøyaktig posisjon er av. Slå den på i Innstillinger for nøyaktige spor."
+          }
+        }
+      }
+    },
+    "Re-centre": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sentrer"
+          }
+        }
+      }
+    },
+    "Record": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opptak"
+          }
+        }
+      }
+    },
+    "Record when I leave home": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta opp når jeg drar hjemmefra"
+          }
+        }
+      }
+    },
+    "Recorded activities show up here.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktiviteter du tar opp, dukker opp her."
+          }
+        }
+      }
+    },
+    "Recording": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tar opp"
+          }
+        }
+      }
+    },
+    "Recording (started by you)": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tar opp (startet av deg)"
+          }
+        }
+      }
+    },
+    "Recording the last bit home": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tar opp den siste biten hjem"
+          }
+        }
+      }
+    },
+    "Rename": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gi nytt navn"
+          }
+        }
+      }
+    },
+    "Rename area": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gi området nytt navn"
+          }
+        }
+      }
+    },
+    "Resume": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortsett"
+          }
+        }
+      }
+    },
+    "Routes": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ruter"
+          }
+        }
+      }
+    },
+    "Running": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Løping"
+          }
+        }
+      }
+    },
+    "Save": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lagre"
+          }
+        }
+      }
+    },
+    "Save as is": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lagre som den er"
+          }
+        }
+      }
+    },
+    "Set": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Satt"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Innstillinger"
+          }
+        }
+      }
+    },
+    "Show": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vis"
+          }
+        }
+      }
+    },
+    "Show map": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vis kart"
+          }
+        }
+      }
+    },
+    "Show stats": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vis tall"
+          }
+        }
+      }
+    },
+    "Speed": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fart"
+          }
+        }
+      }
+    },
+    "Splits": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilometertider"
+          }
+        }
+      }
+    },
+    "Sporløs is in Norwegian and English and follows your phone's language. Change it for this app in iOS Settings.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sporløs finnes på norsk og engelsk og følger språket på telefonen. Du kan endre det for denne appen i Innstillinger."
+          }
+        }
+      }
+    },
+    "Sporløs started recording automatically when you left home. It stops when you're back.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sporløs startet opptaket automatisk da du dro hjemmefra. Det stopper når du er tilbake."
+          }
+        }
+      }
+    },
+    "Sport": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivitet"
+          }
+        }
+      }
+    },
+    "Start": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start"
+          }
+        }
+      }
+    },
+    "Start with an overview of Norway (about %@), then download detailed maps of the areas you go to. Maps are from Kartverket and work without a connection.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start med en oversikt over Norge (omtrent %@), og last ned detaljerte kart over områdene du går i. Kartene er fra Kartverket og virker uten nett."
+          }
+        }
+      }
+    },
+    "Started %@, %@ recorded.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Startet %@, %@ tatt opp."
+          }
+        }
+      }
+    },
+    "Started automatically when you left home": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Startet automatisk da du dro hjemmefra"
+          }
+        }
+      }
+    },
+    "Started automatically. Includes %@ walked before GPS started, shown dashed.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Startet automatisk. Inkluderer %@ gått før GPS-en startet, vist stiplet."
+          }
+        }
+      }
+    },
+    "Stats": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistikk"
+          }
+        }
+      }
+    },
+    "Steps": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skritt"
+          }
+        }
+      }
+    },
+    "Stop": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stopp"
+          }
+        }
+      }
+    },
+    "The other way": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Andre veien"
+          }
+        }
+      }
+    },
+    "This can't be undone. Your activities only exist on this phone.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dette kan ikke angres. Aktivitetene dine finnes bare på denne telefonen."
+          }
+        }
+      }
+    },
+    "This way": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denne veien"
+          }
+        }
+      }
+    },
+    "Time": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tid"
+          }
+        }
+      }
+    },
+    "Times": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ganger"
+          }
+        }
+      }
+    },
+    "Total distance": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total distanse"
+          }
+        }
+      }
+    },
+    "Total time": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total tid"
+          }
+        }
+      }
+    },
+    "Unfinished %@ activity": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uferdig aktivitet: %@"
+          }
+        }
+      }
+    },
+    "Waiting for GPS…": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venter på GPS …"
+          }
+        }
+      }
+    },
+    "Week": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uke"
+          }
+        }
+      }
+    },
+    "When you leave home on foot or by bike, recording starts by itself and stops when you're back. Leaving by car doesn't start anything until you're home again. Short trips are deleted. Your home is stored only on this phone.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Når du drar hjemmefra til fots eller på sykkel, starter opptaket av seg selv og stopper når du er tilbake. Drar du med bil, starter ingenting før du er hjemme igjen. Korte turer slettes. Hjemmet ditt lagres bare på denne telefonen."
+          }
+        }
+      }
+    },
+    "Year": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "År"
+          }
+        }
+      }
+    },
+    "every %lld days on average": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "every day on average"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "every %lld days on average"
+                }
+              }
+            }
+          }
+        },
+        "nb": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "hver dag i snitt"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "hver %lld. dag i snitt"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "same time": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "samme tid"
+          }
+        }
+      }
+    },
+    "your average time": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "snittiden din"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

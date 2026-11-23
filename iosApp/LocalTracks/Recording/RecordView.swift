@@ -60,7 +60,7 @@ struct RecordView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     if isInProgress {
-                        Button(showsMap ? "Show stats" : "Show map", systemImage: showsMap ? "gauge.with.dots.needle.33percent" : "map") {
+                        Button(showsMap ? String(localized: "Show stats") : String(localized: "Show map"), systemImage: showsMap ? "gauge.with.dots.needle.33percent" : "map") {
                             showsMap.toggle()
                         }
                     } else {
@@ -168,7 +168,7 @@ private struct CompactStatsView: View {
 }
 
 private struct Stat: View {
-    let title: String
+    let title: LocalizedStringKey
     let value: String
     var detail: String?
     var color: Color = Theme.ink
@@ -192,7 +192,7 @@ private struct Stat: View {
 
 // Pace for running and hiking, with the speed in km/h underneath; speed alone for cycling.
 private struct SpeedStat: View {
-    let title: String
+    let title: LocalizedStringKey
     let metersPerSecond: Double?
     let sport: Sport
 
@@ -250,7 +250,7 @@ private struct RecordingDot: View {
         }
         .padding(.horizontal, 6)
         .accessibilityElement()
-        .accessibilityLabel(isRecording ? "Recording" : "Paused")
+        .accessibilityLabel(isRecording ? String(localized: "Recording") : String(localized: "Paused"))
     }
 
     private var dot: some View {
@@ -295,9 +295,9 @@ private struct UnfinishedActivityBanner: View {
 extension LocationProblem {
     var message: String {
         switch self {
-        case .permissionDenied: "Location access is off. Turn it on in Settings to record."
-        case .approximateLocationOnly: "Precise Location is off. Turn it on in Settings for accurate tracks."
-        case .unavailable: "Waiting for GPS…"
+        case .permissionDenied: String(localized: "Location access is off. Turn it on in Settings to record.")
+        case .approximateLocationOnly: String(localized: "Precise Location is off. Turn it on in Settings for accurate tracks.")
+        case .unavailable: String(localized: "Waiting for GPS…")
         }
     }
 }
