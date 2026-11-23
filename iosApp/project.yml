@@ -52,6 +52,9 @@ targets:
         NSLocationWhenInUseUsageDescription: >-
           Local Tracks records your route while you record an activity.
           Your location never leaves your phone.
+        NSLocationAlwaysAndWhenInUseUsageDescription: >-
+          With auto-record on, Local Tracks notices when you leave home and starts recording
+          your walk, run or ride. Your home and your location never leave your phone.
         NSMotionUsageDescription: >-
           Local Tracks uses the motion sensors to measure elevation, count steps
           and notice when you stand still. The data never leaves your phone.

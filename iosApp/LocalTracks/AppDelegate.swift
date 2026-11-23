@@ -17,6 +17,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         if relaunchedForLocation, case .success(let environment) = environment {
             environment.recording.continueAfterRelaunch()
         }
+        // Also when relaunched for leaving or reaching home: the home monitor must be recreated at once
+        // to receive the event that woke the app.
+        if case .success(let environment) = environment {
+            environment.autoRecord.resume()
+        }
         return true
     }
 

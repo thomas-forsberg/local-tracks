@@ -1,8 +1,10 @@
 package no.thomasforsberg.localtracks.auto
 
 import no.thomasforsberg.localtracks.recording.Sport
+import kotlin.native.HiddenFromObjC
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.DurationUnit
 import kotlin.time.Instant
 
 // What the phone's motion classifier says the user is doing.
@@ -167,17 +169,24 @@ class AutoRecordPolicy(
 
     companion object {
         // Moving this long without driving means it's an activity, not the walk to the car.
+        @HiddenFromObjC
         val HOLD_BACK: Duration = 2.minutes
 
         // Leaving home without walking, running or cycling for this long (a bus, a visit next door)
         // stops the watching, which would otherwise keep GPS running.
+        @HiddenFromObjC
         val WATCH_LIMIT: Duration = 10.minutes
 
         // iOS notices leaving the home circle a little late; this covers that and the hold-back.
+        @HiddenFromObjC
         val MAX_BACKFILL: Duration = 5.minutes
+
+        // For Swift, which gets Kotlin Durations as their raw encoding.
+        val MAX_BACKFILL_SECONDS: Double get() = MAX_BACKFILL.toDouble(DurationUnit.SECONDS)
     }
 }
 
 // Automatic recordings this short are deleted: a trip to the mailbox isn't an activity.
+@HiddenFromObjC
 val MIN_AUTO_RECORDING_TIME: Duration = 5.minutes
 const val MIN_AUTO_RECORDING_METERS = 300.0

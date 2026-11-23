@@ -6,7 +6,7 @@ struct RootView: View {
     var body: some View {
         TabView {
             Tab("Record", systemImage: "record.circle") {
-                RecordView(controller: environment.recording)
+                RecordView(controller: environment.recording, autoRecord: environment.autoRecord)
             }
             Tab("Activities", systemImage: "list.bullet") {
                 ActivitiesView(viewModel: environment.activities)

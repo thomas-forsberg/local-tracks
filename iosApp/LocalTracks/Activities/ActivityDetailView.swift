@@ -12,6 +12,11 @@ struct ActivityDetailView: View {
                 Text(activity.startedAt.date.formatted(date: .complete, time: .shortened))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                if let note = Self.autoRecordNote(for: activity) {
+                    Label(note, systemImage: "figure.walk.departure")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
 
                 map
                     .frame(height: 340)
@@ -49,6 +54,15 @@ struct ActivityDetailView: View {
         .navigationTitle(activity.sport.title)
         .navigationBarTitleDisplayMode(.inline)
         .task { viewModel.load() }
+    }
+
+    // The stretch before GPS started isn't drawn (it would show where the user lives), so it's described.
+    static func autoRecordNote(for activity: ActivitySummary) -> String? {
+        guard activity.autoStarted else { return nil }
+        guard let leadIn = activity.leadIn, leadIn.distanceMeters > 0 else { return "Started automatically when you left home" }
+        let meters = Measurement(value: leadIn.distanceMeters.rounded(), unit: UnitLength.meters)
+            .formatted(.measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .number.precision(.fractionLength(0))))
+        return "Started automatically. Includes \(meters) walked before GPS started."
     }
 
     @ViewBuilder private var map: some View {
