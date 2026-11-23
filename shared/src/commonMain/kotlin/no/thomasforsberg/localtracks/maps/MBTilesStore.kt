@@ -39,6 +39,14 @@ class MBTilesStore(private val driver: SqlDriver) : AutoCloseable {
         TileId(z, column.toInt(), flip(row.toInt(), z))
     }.executeAsList().toSet()
 
+    fun storedTilesIn(area: TileArea): Set<TileId> = queries.storedTilesIn(
+        zoom = area.zoom.toLong(),
+        minColumn = area.minX.toLong(),
+        maxColumn = area.maxX.toLong(),
+        minRow = flip(area.maxY, area.zoom).toLong(),
+        maxRow = flip(area.minY, area.zoom).toLong(),
+    ) { column, row -> TileId(area.zoom, column.toInt(), flip(row.toInt(), area.zoom)) }.executeAsList().toSet()
+
     fun tileCount(): Long = queries.totals().executeAsOne().tileCount
 
     fun totalBytes(): Long = queries.totals().executeAsOne().bytes ?: 0

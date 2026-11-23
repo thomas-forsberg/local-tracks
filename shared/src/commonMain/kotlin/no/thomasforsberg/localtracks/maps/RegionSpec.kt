@@ -1,5 +1,7 @@
 package no.thomasforsberg.localtracks.maps
 
+import kotlin.random.Random
+
 // Downloaded areas are rounded out to whole tiles at this zoom (about 10 × 10 km in southern Norway),
 // so the tiles requested reveal only a coarse grid cell, not the exact trip being planned.
 const val REGION_GRID_ZOOM = 11
@@ -16,9 +18,6 @@ const val ESTIMATED_BYTES_PER_TILE = 50_000L
 // Measured: low-zoom tiles are mostly sea and plain land, about 9 KB each.
 const val NORWAY_OVERVIEW_BYTES = 6_500_000L
 
-// About 1 GB: larger areas are better split up, and protect Kartverket from huge bulk downloads.
-const val MAX_REGION_TILES = 20_000L
-
 // Mainland Norway with Svalbard left out.
 val NORWAY = BoundingBox(west = 4.0, south = 57.8, east = 31.5, north = 71.3)
 
@@ -34,9 +33,21 @@ data class RegionSpec(val area: TileArea, val minZoom: Int, val maxZoom: Int) {
 
     val estimatedBytes: Long get() = tileCount * ESTIMATED_BYTES_PER_TILE
 
-    val isTooLarge: Boolean get() = tileCount > MAX_REGION_TILES
-
     fun tiles(): Sequence<TileId> = (minZoom..maxZoom).asSequence().flatMap { area.at(it).tiles() }
+
+    // The tiles in download order, in batches small enough to list even for a whole county: first every
+    // zoom coarser than the area's own, then one area tile (a ~10 km grid square for areas) at a time with
+    // everything inside it, the squares in random order.
+    fun batches(random: Random): Sequence<List<TileArea>> = sequence {
+        val coarse = (minZoom until minOf(area.zoom, maxZoom + 1)).map { area.at(it) }
+        if (coarse.isNotEmpty()) yield(coarse)
+        val fine = maxOf(minZoom, area.zoom)..maxZoom
+        if (!fine.isEmpty()) {
+            for (square in area.tiles().toList().shuffled(random)) {
+                yield(fine.map { TileArea(square.zoom, square.x, square.y, square.x, square.y).at(it) })
+            }
+        }
+    }
 
     companion object {
         // A user-chosen area, rounded out to the region grid.

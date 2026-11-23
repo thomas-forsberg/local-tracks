@@ -50,6 +50,11 @@ final class MapLibrary {
     // Regions with at least some tiles, overview first: what maps can show.
     var displayableRegions: [MapRegion] { regions.filter { $0.downloadedTiles > 0 } }
 
+    // Space iOS can make available for the user's own data (it may clear caches to get there).
+    func availableBytes() -> Int64? {
+        try? directory.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage
+    }
+
     func fileURL(for region: MapRegion) -> URL {
         directory.appending(path: region.fileName)
     }

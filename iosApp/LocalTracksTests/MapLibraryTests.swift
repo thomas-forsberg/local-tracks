@@ -126,3 +126,17 @@ struct MapLibraryTests {
         #expect(library.nextAreaName() == "Area 2")
     }
 }
+
+@MainActor
+struct AreaChooserTests {
+    private let spec = RegionSpec.companion.forSelection(
+        selection: BoundingBox(west: 10.70, south: 59.98, east: 10.72, north: 59.99),
+        maxZoom: RegionSpecKt.DEFAULT_REGION_MAX_ZOOM
+    )
+
+    @Test func anAreaFitsWhenThereIsSpaceForIt() {
+        #expect(AreaChooser.fits(spec, in: spec.estimatedBytes))
+        #expect(!AreaChooser.fits(spec, in: spec.estimatedBytes - 1))
+        #expect(AreaChooser.fits(spec, in: nil), "unknown free space doesn't block")
+    }
+}
