@@ -95,15 +95,13 @@ struct RecordView: View {
             HStack(spacing: 12) {
                 Button(action: controller.pause) { Label("Pause", systemImage: "pause.fill") }
                     .buttonStyle(PillButtonStyle(.outlined(Theme.forest)))
-                Button(action: controller.stop) { Label("Stop", systemImage: "stop.fill") }
-                    .buttonStyle(PillButtonStyle(.filled(Theme.accent, text: Theme.onAccent)))
+                HoldToStopButton(filled: true, action: controller.stop)
             }
         case .paused:
             HStack(spacing: 12) {
                 Button(action: controller.resume) { Label("Resume", systemImage: "play.fill") }
                     .buttonStyle(PillButtonStyle(.filled(Theme.forest, text: Theme.onForest)))
-                Button(action: controller.stop) { Label("Stop", systemImage: "stop.fill") }
-                    .buttonStyle(PillButtonStyle(.outlined(Theme.accent)))
+                HoldToStopButton(filled: false, action: controller.stop)
             }
         }
     }
