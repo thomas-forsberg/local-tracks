@@ -4,15 +4,16 @@ import SwiftUI
 extension RouteSummary {
     // The user's name for it, else its length: "2,51 km loop".
     var displayName: String {
-        name ?? "\(Formatters.distance(meters: lengthMeters)) \(shape == .notALoop ? "route" : "loop")"
+        let length = Formatters.distance(meters: lengthMeters)
+        return name ?? (shape == .notALoop ? String(localized: "\(length) route") : String(localized: "\(length) loop"))
     }
 
     // Which way round an attempt went, in words; nil when the route isn't a loop.
     func directionTitle(reversed: Bool) -> String {
         switch shape {
-        case .clockwiseLoop: reversed ? "Anticlockwise" : "Clockwise"
-        case .anticlockwiseLoop: reversed ? "Clockwise" : "Anticlockwise"
-        case .notALoop: reversed ? "The other way" : "This way"
+        case .clockwiseLoop: reversed ? String(localized: "Anticlockwise") : String(localized: "Clockwise")
+        case .anticlockwiseLoop: reversed ? String(localized: "Clockwise") : String(localized: "Anticlockwise")
+        case .notALoop: reversed ? String(localized: "The other way") : String(localized: "This way")
         }
     }
 }
@@ -20,24 +21,24 @@ extension RouteSummary {
 enum RouteFormat {
     // "0:42 faster" / "1:10 slower" / "same time".
     static func difference(seconds: Double) -> String {
-        guard abs(seconds) >= 1 else { return "same time" }
-        return "\(Formatters.clock(seconds: abs(seconds))) \(seconds < 0 ? "faster" : "slower")"
+        let time = Formatters.clock(seconds: abs(seconds))
+        guard abs(seconds) >= 1 else { return String(localized: "same time") }
+        return seconds < 0 ? String(localized: "\(time) faster") : String(localized: "\(time) slower")
     }
 
-    // "1st", "2nd", "11th", "23rd".
-    static func ordinal(_ number: Int) -> String {
-        if (11...13).contains(number % 100) { return "\(number)th" }
-        switch number % 10 {
-        case 1: return "\(number)st"
-        case 2: return "\(number)nd"
-        case 3: return "\(number)rd"
-        default: return "\(number)th"
-        }
+    // "1st", "23rd" in English, "1.", "23." in Norwegian.
+    static func ordinal(_ number: Int, locale: Locale = .current) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .ordinal
+        formatter.locale = locale
+        return formatter.string(from: number as NSNumber) ?? "\(number)"
     }
 
     // How an attempt compares with the average: "0:42 faster than your average".
     static func versusAverage(seconds: Double) -> String {
-        abs(seconds) < 1 ? "your average time" : "\(difference(seconds: seconds)) than your average"
+        let time = Formatters.clock(seconds: abs(seconds))
+        if abs(seconds) < 1 { return String(localized: "your average time") }
+        return seconds < 0 ? String(localized: "\(time) faster than your average") : String(localized: "\(time) slower than your average")
     }
 }
 
@@ -109,7 +110,7 @@ struct RouteDetailView: View {
                                 if let direction = stats.byDirection[KotlinBoolean(value: reversed)] {
                                     AttemptRow(
                                         title: viewModel.route.directionTitle(reversed: reversed),
-                                        detail: "\(direction.count)× · best \(Formatters.clock(seconds: direction.best.activity.totals.movingTimeSeconds))"
+                                        detail: String(localized: "\(direction.count)× · best \(Formatters.clock(seconds: direction.best.activity.totals.movingTimeSeconds))")
                                     )
                                 }
                             }
@@ -179,7 +180,7 @@ private struct StatsGrid: View {
             RouteStat(
                 title: "Last done",
                 value: stats.lastDoneAt.date.formatted(.relative(presentation: .named)),
-                detail: stats.averageDaysBetween.map { "every \(Int($0.doubleValue.rounded())) days on average" }
+                detail: stats.averageDaysBetween.map { String(localized: "every \(Int($0.doubleValue.rounded())) days on average") }
             )
             RouteStat(title: "Total distance", value: Formatters.distance(meters: stats.totalDistanceMeters))
             RouteStat(title: "Total time", value: Formatters.shortDuration(seconds: stats.totalMovingTimeSeconds))
@@ -188,7 +189,7 @@ private struct StatsGrid: View {
 }
 
 private struct RouteStat: View {
-    let title: String
+    let title: LocalizedStringKey
     let value: String
     var detail: String?
 
@@ -208,7 +209,7 @@ private struct RouteStat: View {
 }
 
 private struct RouteSection<Content: View>: View {
-    let title: String
+    let title: LocalizedStringKey
     @ViewBuilder let content: Content
 
     var body: some View {

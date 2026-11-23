@@ -85,10 +85,10 @@ struct ActivityDetailView: View {
     // The stretch before GPS started isn't drawn (it would show where the user lives), so it's described.
     static func autoRecordNote(for activity: ActivitySummary) -> String? {
         guard activity.autoStarted else { return nil }
-        guard let leadIn = activity.leadIn, leadIn.distanceMeters > 0 else { return "Started automatically when you left home" }
+        guard let leadIn = activity.leadIn, leadIn.distanceMeters > 0 else { return String(localized: "Started automatically when you left home") }
         let meters = Measurement(value: leadIn.distanceMeters.rounded(), unit: UnitLength.meters)
             .formatted(.measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .number.precision(.fractionLength(0))))
-        return "Started automatically. Includes \(meters) walked before GPS started, shown dashed."
+        return String(localized: "Started automatically. Includes \(meters) walked before GPS started, shown dashed.")
     }
 
     @ViewBuilder private var map: some View {
@@ -111,7 +111,7 @@ private struct SpeedSection: View {
 
     var body: some View {
         let showsPace = sport.showsPace && showsPace
-        Section(title: sport.showsPace ? "Pace and speed" : "Speed") {
+        Section(title: sport.showsPace ? LocalizedStringKey("Pace and speed") : LocalizedStringKey("Speed")) {
             if sport.showsPace {
                 Picker("Show", selection: $showsPace) {
                     Text("Pace").tag(true)
@@ -125,7 +125,7 @@ private struct SpeedSection: View {
 }
 
 private struct Section<Content: View>: View {
-    let title: String
+    let title: LocalizedStringKey
     @ViewBuilder let content: Content
 
     var body: some View {
@@ -138,7 +138,7 @@ private struct Section<Content: View>: View {
 }
 
 private struct Stat: View {
-    let title: String
+    let title: LocalizedStringKey
     let value: String
 
     var body: some View {

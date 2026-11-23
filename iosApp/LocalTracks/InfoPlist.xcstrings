@@ -1,0 +1,56 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "CFBundleDisplayName": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sporløs"
+          }
+        }
+      }
+    },
+    "CFBundleName": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sporløs"
+          }
+        }
+      }
+    },
+    "NSLocationAlwaysAndWhenInUseUsageDescription": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Med automatisk opptak merker Sporløs når du drar hjemmefra og tar opp turen, løpeturen eller sykkelturen. Hjemmet og posisjonen din forlater aldri telefonen."
+          }
+        }
+      }
+    },
+    "NSLocationWhenInUseUsageDescription": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sporløs tar opp ruten din mens du tar opp en aktivitet. Posisjonen din forlater aldri telefonen."
+          }
+        }
+      }
+    },
+    "NSMotionUsageDescription": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sporløs bruker bevegelsessensorene til å måle høyde, telle skritt og merke når du står stille. Dataene forlater aldri telefonen."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

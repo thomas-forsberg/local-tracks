@@ -60,9 +60,10 @@ struct RoutesTests {
     }
 
     @Test func ordinalsAndDifferences() {
-        #expect(RouteFormat.ordinal(1) == "1st")
-        #expect(RouteFormat.ordinal(12) == "12th")
-        #expect(RouteFormat.ordinal(23) == "23rd")
+        #expect(RouteFormat.ordinal(1, locale: Locale(identifier: "en")) == "1st")
+        #expect(RouteFormat.ordinal(12, locale: Locale(identifier: "en")) == "12th")
+        #expect(RouteFormat.ordinal(5, locale: Locale(identifier: "nb")) == "5.")
+        #expect(RouteFormat.ordinal(23, locale: Locale(identifier: "en")) == "23rd")
         #expect(RouteFormat.versusAverage(seconds: 0.4) == "your average time")
         #expect(RouteFormat.versusAverage(seconds: 70) == "1:10 slower than your average")
     }

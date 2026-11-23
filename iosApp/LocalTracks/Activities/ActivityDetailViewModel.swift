@@ -35,7 +35,7 @@ final class ActivityDetailViewModel {
               let index = route.attempts.filter({ $0.activity.sport == activity.sport }).firstIndex(where: { $0.activity.id == activity.id })
         else { return nil }
         let seconds = activity.totals.movingTimeSeconds - stats.averageMovingTimeSeconds
-        return "\(RouteFormat.ordinal(index + 1)) time, \(RouteFormat.versusAverage(seconds: seconds))."
+        return String(localized: "\(RouteFormat.ordinal(index + 1)) time, \(RouteFormat.versusAverage(seconds: seconds)).")
     }
 
     // Reads on the main actor, which is fine for walks (~700 points). A 4-hour ride is ~15k points:
