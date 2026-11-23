@@ -9,8 +9,10 @@ struct RouteMapView: UIViewRepresentable {
     let segments: [[CLLocationCoordinate2D]]
     var regions: [MapRegion] = []
     var fileURL: (MapRegion) -> URL = { _ in URL(fileURLWithPath: "/") }
-    // While recording: keeps the latest point in the middle instead of fitting the whole route.
+    // While recording: keeps the latest point in the middle instead of fitting the whole route,
+    // until the user pans the map (then false until they re-centre).
     var followsLatest = false
+    var isFollowing: Binding<Bool>?
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -69,7 +71,9 @@ struct RouteMapView: UIViewRepresentable {
             let all = segments.flatMap { $0 }
             if parent.followsLatest, let latest = all.last {
                 // Street level the first time, then whatever zoom the user chose.
-                mapView.setCenter(latest, zoomLevel: hasFittedCamera ? mapView.zoomLevel : 15, animated: hasFittedCamera)
+                if parent.isFollowing?.wrappedValue ?? true {
+                    mapView.setCenter(latest, zoomLevel: hasFittedCamera ? mapView.zoomLevel : 15, animated: hasFittedCamera)
+                }
                 hasFittedCamera = true
             } else if !hasFittedCamera, !all.isEmpty {
                 fitCamera(to: all, on: mapView)
@@ -131,5 +135,11 @@ struct RouteMapView: UIViewRepresentable {
 extension RouteMapView.Coordinator: @preconcurrency MLNMapViewDelegate {
     func mapView(_ mapView: MLNMapView, didFinishLoading style: MLNStyle) {
         render(on: mapView)
+    }
+
+    // Panning means the user wants to look elsewhere; zooming keeps following.
+    func mapView(_ mapView: MLNMapView, regionWillChangeWith reason: MLNCameraChangeReason, animated: Bool) {
+        guard reason.contains(.gesturePan), let isFollowing = parent?.isFollowing, isFollowing.wrappedValue else { return }
+        Task { @MainActor in isFollowing.wrappedValue = false }
     }
 }

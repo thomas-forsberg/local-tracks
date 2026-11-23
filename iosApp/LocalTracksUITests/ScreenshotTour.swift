@@ -27,6 +27,13 @@ final class ScreenshotTour: XCTestCase {
         app.buttons["Show map"].tap()
         sleep(3) // let the map draw
         snapshot("02b-recording-map")
+        // Panning stops following the latest point and offers a re-centre button.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
+            .press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.3)))
+        XCTAssert(app.buttons["Re-centre"].waitForExistence(timeout: 5))
+        snapshot("02e-recording-map-panned")
+        app.buttons["Re-centre"].tap()
+        XCTAssert(app.buttons["Re-centre"].waitForNonExistence(timeout: 5))
         app.buttons["Show stats"].tap()
 
         // The Live Activity: compact in the Dynamic Island on the home screen, and as the card in the
