@@ -5,6 +5,8 @@ import no.thomasforsberg.localtracks.auto.AutoRecordDecision.StartRecording
 import no.thomasforsberg.localtracks.auto.AutoRecordDecision.StartWatching
 import no.thomasforsberg.localtracks.auto.AutoRecordDecision.StopRecording
 import no.thomasforsberg.localtracks.auto.AutoRecordDecision.StopWatching
+import no.thomasforsberg.localtracks.auto.AutoRecordDecision.WatchArrival
+import no.thomasforsberg.localtracks.auto.AutoRecordPhase.ARRIVING_HOME
 import no.thomasforsberg.localtracks.auto.AutoRecordPhase.AT_HOME
 import no.thomasforsberg.localtracks.auto.AutoRecordPhase.AUTO_RECORDING
 import no.thomasforsberg.localtracks.auto.AutoRecordPhase.MANUAL_RECORDING
@@ -76,7 +78,7 @@ class AutoRecordPolicyTest {
         // Out walking after parking: still nothing, until home again.
         assertEquals(None, sample(WALKING, 1800))
         assertEquals(None, policy.leftHome(at(1900)))
-        assertEquals(None, policy.arrivedHome())
+        assertEquals(None, policy.arrivedHome(at(3000)))
         assertEquals(AT_HOME, policy.state.phase)
         assertEquals(StartWatching, policy.leftHome(at(7200)))
     }
@@ -120,16 +122,62 @@ class AutoRecordPolicyTest {
         assertEquals(WAITING_FOR_HOME, policy.state.phase)
     }
 
-    @Test
-    fun arrivingHomeStopsAnAutomaticRecording() {
+    private fun recordAutomatically() {
         policy.leftHome(leftAt)
         sample(WALKING, 0)
         policy.tick(at(120))
+    }
 
-        assertEquals(StopRecording, policy.arrivedHome())
+    @Test
+    fun arrivingHomeKeepsRecordingUntilCloseToTheDoor() {
+        recordAutomatically()
+
+        assertEquals(WatchArrival, policy.arrivedHome(at(3000)))
+        assertEquals(ARRIVING_HOME, policy.state.phase)
+        assertEquals(None, policy.position(distanceFromHomeMeters = 90.0, at = at(3010)))
+        assertEquals(StopRecording, policy.position(distanceFromHomeMeters = 25.0, at = at(3080)))
         assertEquals(AT_HOME, policy.state.phase)
         policy.recordingStopped()
         assertEquals(AT_HOME, policy.state.phase)
+    }
+
+    @Test
+    fun arrivingStopsAfterAMinuteStandingStillWhenGpsNeverGetsClose() {
+        recordAutomatically()
+        policy.arrivedHome(at(3000))
+
+        sample(STATIONARY, 3030)
+        assertEquals(None, policy.tick(at(3060)))
+        assertEquals(StopRecording, policy.tick(at(3090)))
+    }
+
+    @Test
+    fun walkingAgainWhileArrivingRestartsTheStandStillClock() {
+        recordAutomatically()
+        policy.arrivedHome(at(3000))
+
+        sample(STATIONARY, 3010)
+        sample(WALKING, 3050)
+        assertEquals(None, policy.tick(at(3100)))
+    }
+
+    @Test
+    fun arrivingStopsAfterTenMinutesAtTheLatest() {
+        recordAutomatically()
+        policy.arrivedHome(at(3000))
+
+        assertEquals(None, policy.tick(at(3000 + 9 * 60)))
+        assertEquals(StopRecording, policy.tick(at(3000 + 10 * 60)))
+    }
+
+    @Test
+    fun turningBackOutWhileArrivingCarriesOnRecording() {
+        recordAutomatically()
+        policy.arrivedHome(at(3000))
+
+        assertEquals(StopWatching, policy.leftHome(at(3060)))
+        assertEquals(AUTO_RECORDING, policy.state.phase)
+        assertEquals(None, policy.position(distanceFromHomeMeters = 5.0, at = at(3100)), "positions only count while arriving")
     }
 
     @Test
@@ -148,7 +196,7 @@ class AutoRecordPolicyTest {
         policy.manualRecordingStarted()
         policy.leftHome(leftAt)
 
-        assertEquals(None, policy.arrivedHome())
+        assertEquals(None, policy.arrivedHome(at(3000)))
         assertEquals(MANUAL_RECORDING, policy.state.phase)
         policy.recordingStopped()
         assertEquals(AT_HOME, policy.state.phase)

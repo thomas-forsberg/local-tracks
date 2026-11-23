@@ -22,6 +22,8 @@ final class RecordingController {
     // For auto-record: recordings the user started by hand, and every recording that ends.
     @ObservationIgnored var onUserStarted: (() -> Void)?
     @ObservationIgnored var onStopped: (() -> Void)?
+    // Every recorded GPS point, for auto-record's arrival at home.
+    @ObservationIgnored var onPointRecorded: ((LocationFix) -> Void)?
     // Every change to the recording, e.g. for the lock-screen card.
     @ObservationIgnored var onStateChange: (() -> Void)?
 
@@ -184,6 +186,7 @@ final class RecordingController {
             if recorder.onLocation(fix: fix) {
                 refreshState()
                 appendToLiveSegments(fix)
+                onPointRecorded?(fix)
             }
         case .problem(let problem):
             locationProblem = problem

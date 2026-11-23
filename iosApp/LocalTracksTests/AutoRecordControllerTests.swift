@@ -179,6 +179,9 @@ struct AutoRecordControllerTests {
         #expect(await eventually { environment.recording.state is RecordingStateRecording })
 
         home.send(.arrived(.now))
+        #expect(await eventually { environment.autoRecord.phase == .arrivingHome })
+        #expect(environment.recording.state is RecordingStateRecording, "keeps recording to the door")
+        motion.send(.stationary, at: .now.addingTimeInterval(-61))
 
         #expect(await eventually { environment.recording.state is RecordingStateFinished })
         #expect(environment.autoRecord.phase == .atHome)

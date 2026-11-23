@@ -1,0 +1,4 @@
+-- Schema version 6 → 7: where the stretch before GPS started began, and arriving home.
+ALTER TABLE activity ADD COLUMN lead_in_latitude REAL;
+ALTER TABLE activity ADD COLUMN lead_in_longitude REAL;
+ALTER TABLE auto_record ADD COLUMN arrived_home_at INTEGER;

@@ -7,6 +7,8 @@ import SwiftUI
 struct RouteMapView: UIViewRepresentable {
     // One polyline per segment, so a pause is never drawn as a straight line.
     let segments: [[CLLocationCoordinate2D]]
+    // The stretch before GPS started (from home to the first point), drawn dashed.
+    var leadIn: [CLLocationCoordinate2D]?
     var regions: [MapRegion] = []
     var fileURL: (MapRegion) -> URL = { _ in URL(fileURLWithPath: "/") }
     // While recording: keeps the latest point in the middle instead of fitting the whole route,
@@ -46,10 +48,24 @@ struct RouteMapView: UIViewRepresentable {
 
         func render(on mapView: MLNMapView) {
             guard let parent, let style = mapView.style else { return } // called again once the style has loaded
-            OfflineMapLayers.apply(parent.regions, fileURL: parent.fileURL, to: style, below: "route-casing")
+            OfflineMapLayers.apply(parent.regions, fileURL: parent.fileURL, to: style, below: "lead-in")
             let background = style.layer(withIdentifier: "background") as? MLNBackgroundStyleLayer
             // Where no map is downloaded: a plain paper (or slate) background.
             background?.backgroundColor = NSExpression(forConstantValue: UIColor(rgb: colorScheme == .dark ? 0x12201F : 0xEFE8DA))
+
+            // Always present (empty when there's none), so downloaded maps can be layered below it.
+            var leadInCoordinates = parent.leadIn ?? []
+            let leadInShape: MLNShape = leadInCoordinates.count > 1
+                ? MLNPolylineFeature(coordinates: &leadInCoordinates, count: UInt(leadInCoordinates.count))
+                : MLNShapeCollectionFeature(shapes: [])
+            setShape(leadInShape, sourceId: "lead-in", in: style) { source in
+                let line = MLNLineStyleLayer(identifier: "lead-in", source: source)
+                line.lineColor = NSExpression(forConstantValue: UIColor(Theme.accent))
+                line.lineWidth = NSExpression(forConstantValue: 3)
+                line.lineDashPattern = NSExpression(forConstantValue: [1.5, 1.5])
+                line.lineCap = NSExpression(forConstantValue: "round")
+                return [line]
+            }
 
             let polylines = segments.filter { $0.count > 1 }.map { coordinates in
                 MLNPolylineFeature(coordinates: coordinates, count: UInt(coordinates.count))
@@ -76,7 +92,7 @@ struct RouteMapView: UIViewRepresentable {
                 }
                 hasFittedCamera = true
             } else if !hasFittedCamera, !all.isEmpty {
-                fitCamera(to: all, on: mapView)
+                fitCamera(to: (parent.leadIn ?? []) + all, on: mapView)
                 hasFittedCamera = true
             }
 
@@ -87,7 +103,8 @@ struct RouteMapView: UIViewRepresentable {
             } else {
                 false
             }
-            setMarker(at: all.first, id: "start", color: UIColor(Theme.forest), radius: overlap ? 11 : 7, in: style)
+            // The start is where the dashed stretch begins, if there is one.
+            setMarker(at: parent.leadIn?.first ?? all.first, id: "start", color: UIColor(Theme.forest), radius: overlap ? 11 : 7, in: style)
             // While recording the last point is where you are.
             setMarker(at: all.last, id: "end", color: UIColor(Theme.accent), radius: overlap ? 5 : 7, in: style)
         }

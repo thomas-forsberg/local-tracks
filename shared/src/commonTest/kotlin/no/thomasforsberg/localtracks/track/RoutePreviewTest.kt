@@ -43,6 +43,16 @@ class RoutePreviewTest {
     }
 
     @Test
+    fun theStretchBeforeGpsRunsFromItsStartToTheFirstPointAndIsFittedToo() {
+        val preview = listOf(point(60.00, 10.00), point(60.01, 10.00)).routePreview(leadInStart = 59.99 to 10.00)!!
+        val leadIn = preview.leadIn!!
+
+        assertEquals(1.0, leadIn[0].y, 0.01, "the start, furthest south, at the bottom")
+        assertEquals(preview.segments[0][0], leadIn[1])
+        assertTrue(preview.segments.flatten().all { it.y in 0.0..0.51 }, "the route now takes the upper half")
+    }
+
+    @Test
     fun nothingToDrawForASinglePointOrStandingStill() {
         assertNull(listOf(point(60.0, 10.0)).routePreview())
         assertNull(listOf(point(60.0, 10.0), point(60.0, 10.0)).routePreview())

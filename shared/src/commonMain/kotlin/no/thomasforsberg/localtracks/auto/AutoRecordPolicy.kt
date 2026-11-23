@@ -23,6 +23,9 @@ enum class AutoRecordPhase {
     // Recording started automatically; it stops when the user gets home.
     AUTO_RECORDING,
 
+    // Back inside the home circle while recording automatically: still recording, up to the door.
+    ARRIVING_HOME,
+
     // The user started recording by hand; left alone until it's stopped.
     MANUAL_RECORDING,
 
@@ -31,9 +34,14 @@ enum class AutoRecordPhase {
 }
 
 // Kept across app launches: iOS relaunches the app for each home event.
-data class AutoRecordState(val phase: AutoRecordPhase, val isHome: Boolean, val leftHomeAt: Instant?) {
+data class AutoRecordState(
+    val phase: AutoRecordPhase,
+    val isHome: Boolean,
+    val leftHomeAt: Instant?,
+    val arrivedHomeAt: Instant?,
+) {
     companion object {
-        val INITIAL = AutoRecordState(AutoRecordPhase.AT_HOME, isHome = true, leftHomeAt = null)
+        val INITIAL = AutoRecordState(AutoRecordPhase.AT_HOME, isHome = true, leftHomeAt = null, arrivedHomeAt = null)
     }
 }
 
@@ -48,6 +56,9 @@ sealed interface AutoRecordDecision {
     // departedAt is when the user set off on foot, for filling in the stretch before recording started;
     // null when there's nothing to fill in (cycling: a few hundred metres hardly matter).
     data class StartRecording(val sport: Sport, val departedAt: Instant?) : AutoRecordDecision
+
+    // Back in the home circle: keep recording, and report positions, motion and ticks until it's time to stop.
+    data object WatchArrival : AutoRecordDecision
 
     data object StopRecording : AutoRecordDecision
 }
@@ -68,29 +79,58 @@ class AutoRecordPolicy(
     // The current stretch of self-propelled movement; not persisted, the motion history is replayed instead.
     private var run: Run? = null
 
-    fun leftHome(at: Instant): AutoRecordDecision {
-        state = state.copy(isHome = false, leftHomeAt = at)
-        if (state.phase != AutoRecordPhase.AT_HOME) return AutoRecordDecision.None
-        run = null
-        state = state.copy(phase = AutoRecordPhase.WATCHING)
-        return AutoRecordDecision.StartWatching
-    }
+    // While arriving: since when the motion sensors say the user is standing still.
+    private var stillSince: Instant? = null
 
-    fun arrivedHome(): AutoRecordDecision {
+    fun leftHome(at: Instant): AutoRecordDecision {
         val previous = state.phase
-        state = state.copy(isHome = true, leftHomeAt = null)
-        if (previous == AutoRecordPhase.MANUAL_RECORDING) return AutoRecordDecision.None
-        state = state.copy(phase = AutoRecordPhase.AT_HOME)
-        run = null
+        state = state.copy(isHome = false, leftHomeAt = at, arrivedHomeAt = null)
         return when (previous) {
-            AutoRecordPhase.AUTO_RECORDING -> AutoRecordDecision.StopRecording
-            AutoRecordPhase.WATCHING -> AutoRecordDecision.StopWatching
+            AutoRecordPhase.AT_HOME -> {
+                run = null
+                state = state.copy(phase = AutoRecordPhase.WATCHING)
+                AutoRecordDecision.StartWatching
+            }
+            // Turned back out again before reaching the door: carry on as before.
+            AutoRecordPhase.ARRIVING_HOME -> {
+                state = state.copy(phase = AutoRecordPhase.AUTO_RECORDING)
+                AutoRecordDecision.StopWatching
+            }
             else -> AutoRecordDecision.None
         }
     }
 
+    // iOS reports entering the home circle at its edge, so an automatic recording carries on to the door.
+    fun arrivedHome(at: Instant): AutoRecordDecision {
+        val previous = state.phase
+        state = state.copy(isHome = true, leftHomeAt = null)
+        if (previous == AutoRecordPhase.MANUAL_RECORDING || previous == AutoRecordPhase.ARRIVING_HOME) return AutoRecordDecision.None
+        if (previous == AutoRecordPhase.AUTO_RECORDING) {
+            state = state.copy(phase = AutoRecordPhase.ARRIVING_HOME, arrivedHomeAt = at)
+            stillSince = null
+            return AutoRecordDecision.WatchArrival
+        }
+        state = state.copy(phase = AutoRecordPhase.AT_HOME)
+        run = null
+        return if (previous == AutoRecordPhase.WATCHING) AutoRecordDecision.StopWatching else AutoRecordDecision.None
+    }
+
+    // Each recorded position's distance from home, while arriving.
+    fun position(distanceFromHomeMeters: Double, at: Instant): AutoRecordDecision {
+        if (state.phase != AutoRecordPhase.ARRIVING_HOME) return AutoRecordDecision.None
+        return if (distanceFromHomeMeters <= ARRIVED_WITHIN_METERS) arrived() else tick(at)
+    }
+
     // Samples must arrive in time order; history from before leaving home may be included.
     fun motion(sample: MotionSample): AutoRecordDecision {
+        if (state.phase == AutoRecordPhase.ARRIVING_HOME) {
+            when (sample.kind) {
+                MotionKind.STATIONARY -> if (stillSince == null) stillSince = sample.at
+                MotionKind.UNKNOWN -> {}
+                else -> stillSince = null
+            }
+            return tick(sample.at)
+        }
         if (state.phase != AutoRecordPhase.WATCHING) return AutoRecordDecision.None
         val category = sample.kind.category
         when {
@@ -108,8 +148,14 @@ class AutoRecordPolicy(
         return tick(sample.at)
     }
 
-    // Called regularly while watching, since the classifier only reports changes.
+    // Called regularly while watching or arriving, since the classifier only reports changes.
     fun tick(now: Instant): AutoRecordDecision {
+        if (state.phase == AutoRecordPhase.ARRIVING_HOME) {
+            // Indoors GPS may never get within the distance: standing still, or a time limit, ends it too.
+            val still = stillSince?.let { now - it >= ARRIVAL_STILL } ?: false
+            val tooLong = state.arrivedHomeAt?.let { now - it >= ARRIVAL_LIMIT } ?: false
+            return if (still || tooLong) arrived() else AutoRecordDecision.None
+        }
         if (state.phase != AutoRecordPhase.WATCHING) return AutoRecordDecision.None
         val current = run
         if (current != null && now - current.since >= holdBack) {
@@ -130,8 +176,18 @@ class AutoRecordPolicy(
 
     // Any recording ended, by hand or automatically. Out and about, nothing new starts until home.
     fun recordingStopped() {
-        if (state.phase != AutoRecordPhase.AUTO_RECORDING && state.phase != AutoRecordPhase.MANUAL_RECORDING) return
-        state = state.copy(phase = if (state.isHome) AutoRecordPhase.AT_HOME else AutoRecordPhase.WAITING_FOR_HOME)
+        val recording = setOf(AutoRecordPhase.AUTO_RECORDING, AutoRecordPhase.ARRIVING_HOME, AutoRecordPhase.MANUAL_RECORDING)
+        if (state.phase !in recording) return
+        state = state.copy(
+            phase = if (state.isHome) AutoRecordPhase.AT_HOME else AutoRecordPhase.WAITING_FOR_HOME,
+            arrivedHomeAt = null,
+        )
+    }
+
+    private fun arrived(): AutoRecordDecision {
+        state = state.copy(phase = AutoRecordPhase.AT_HOME, arrivedHomeAt = null)
+        stillSince = null
+        return AutoRecordDecision.StopRecording
     }
 
     private fun giveUpUntilHome(): AutoRecordDecision {
@@ -176,6 +232,15 @@ class AutoRecordPolicy(
         // stops the watching, which would otherwise keep GPS running.
         @HiddenFromObjC
         val WATCH_LIMIT: Duration = 10.minutes
+
+        // Arriving: stop recording this close to home, after standing still this long, or at the latest after this.
+        const val ARRIVED_WITHIN_METERS = 30.0
+
+        @HiddenFromObjC
+        val ARRIVAL_STILL: Duration = 1.minutes
+
+        @HiddenFromObjC
+        val ARRIVAL_LIMIT: Duration = 10.minutes
 
         // iOS notices leaving the home circle a little late; this covers that and the hold-back.
         @HiddenFromObjC

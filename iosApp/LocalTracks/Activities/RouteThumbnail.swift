@@ -24,6 +24,13 @@ struct RouteThumbnail: View {
                         }
                         context.stroke(path, with: .color(sport.color), style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
                     }
+                    // The stretch walked before GPS started, dashed.
+                    if let leadIn = preview.leadIn, leadIn.count == 2 {
+                        var path = Path()
+                        path.move(to: CGPoint(x: origin.x + leadIn[0].x * side, y: origin.y + leadIn[0].y * side))
+                        path.addLine(to: CGPoint(x: origin.x + leadIn[1].x * side, y: origin.y + leadIn[1].y * side))
+                        context.stroke(path, with: .color(sport.color), style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [3, 4]))
+                    }
                 }
             } else {
                 Image(systemName: sport.systemImage).font(.title).foregroundStyle(sport.color)

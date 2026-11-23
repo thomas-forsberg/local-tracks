@@ -57,7 +57,7 @@ class ActivityRecorder(
         isAutoStarted = automatic
         leadIn = departure?.let {
             val progress = checkNotNull(state.value.progressOrNull())
-            LeadIn(progress.activeTimeBeforeResume, it.distanceMeters, progress.steps)
+            LeadIn(progress.activeTimeBeforeResume, it.distanceMeters, progress.steps, it.startLatitude, it.startLongitude)
         }
         stateStore.clear()
         write { ensureActivityId() }

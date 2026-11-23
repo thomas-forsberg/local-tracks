@@ -25,6 +25,7 @@ fun createDatabase(driver: SqlDriver): LocalTracksDatabase = LocalTracksDatabase
     auto_recordAdapter = Auto_record.Adapter(
         phaseAdapter = EnumColumnAdapter(),
         left_home_atAdapter = InstantAdapter,
+        arrived_home_atAdapter = InstantAdapter,
     ),
     map_regionAdapter = Map_region.Adapter(
         kindAdapter = EnumColumnAdapter(),
@@ -39,6 +40,8 @@ fun migrateDatabase(driver: SqlDriver, oldVersion: Long, newVersion: Long) {
     LocalTracksDatabase.Schema.migrate(driver, oldVersion, newVersion)
     // Version 2 added moving time and smoothed distance: re-measure older activities from their raw points.
     if (oldVersion < 2) remeasureAllActivities(createDatabase(driver))
+    // Version 7 stores where the stretch before GPS started began; earlier ones started at home.
+    if (oldVersion < 7) createDatabase(driver).activityQueries.fillLeadInStartFromHome()
 }
 
 fun remeasureAllActivities(database: LocalTracksDatabase) {

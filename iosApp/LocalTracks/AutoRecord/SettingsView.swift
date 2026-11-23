@@ -69,6 +69,7 @@ extension AutoRecordPhase {
         case .atHome: "At home"
         case .watching: "Left home, checking how you're moving"
         case .autoRecording: "Recording"
+        case .arrivingHome: "Recording the last bit home"
         case .manualRecording: "Recording (started by you)"
         case .waitingForHome: "Paused until you're home again"
         }
