@@ -32,7 +32,7 @@ data class Split(
     val averageSpeedMetersPerSecond: Double? get() = if (movingTimeSeconds > 0) distanceMeters / movingTimeSeconds else null
 }
 
-private data class Sample(val distance: Double, val movingSeconds: Double, val elevation: Double?, val speed: Double?)
+internal data class Sample(val distance: Double, val movingSeconds: Double, val elevation: Double?, val speed: Double?)
 
 fun analyze(points: List<RecordedPoint>, sport: Sport, maxSamples: Int): ActivityAnalysis {
     val samples = samplesAlong(points, sport)
@@ -43,7 +43,7 @@ fun analyze(points: List<RecordedPoint>, sport: Sport, maxSamples: Int): Activit
     )
 }
 
-private fun samplesAlong(points: List<RecordedPoint>, sport: Sport): List<Sample> {
+internal fun samplesAlong(points: List<RecordedPoint>, sport: Sport): List<Sample> {
     val elevations = points.groupBy { it.segmentIndex }.values.flatMap(::absoluteElevations)
     var measurement = TrackMeasurement.EMPTY
     var segment: Int? = null
@@ -102,7 +102,7 @@ private fun splits(samples: List<Sample>, splitMeters: Double): List<Split> {
     }.first.filter { it.distanceMeters > 0 }
 }
 
-private fun List<Sample>.interpolatedAt(distance: Double): Sample {
+internal fun List<Sample>.interpolatedAt(distance: Double): Sample {
     val after = indexOfFirst { it.distance >= distance }.takeIf { it >= 0 } ?: return last()
     val b = this[after]
     val a = getOrNull(after - 1)?.takeIf { it.distance < b.distance } ?: return b

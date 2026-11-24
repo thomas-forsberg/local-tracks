@@ -471,6 +471,66 @@
         }
       }
     },
+    "Calories": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalorier"
+          }
+        }
+      }
+    },
+    "Add your weight in Settings to see calories.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legg inn vekten din i Innstillinger for å se kalorier."
+          }
+        }
+      }
+    },
+    "Weight": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vekt"
+          }
+        }
+      }
+    },
+    "kg": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kg"
+          }
+        }
+      }
+    },
+    "You": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Om deg"
+          }
+        }
+      }
+    },
+    "Used to estimate the calories you burn. Stored only on this phone.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brukes til å anslå hvor mange kalorier du forbrenner. Lagres bare på denne telefonen."
+          }
+        }
+      }
+    },
     "Hiking": {
       "localizations": {
         "nb": {

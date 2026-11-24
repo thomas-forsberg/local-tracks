@@ -18,6 +18,16 @@ struct FormattingTests {
         #expect(Formatters.shortDuration(seconds: 9.4, locale: english) == "9 sec")
     }
 
+    @Test func caloriesAreWholeKilocalories() {
+        #expect(Formatters.calories(kcal: 245, locale: english) == "245 kcal")
+    }
+
+    @Test func caloriesNeedTheWeightAndTheActivitysEnergy() {
+        #expect(BodyWeight.kcal(perKg: 2.5, weightKilograms: 80) == 200)
+        #expect(BodyWeight.kcal(perKg: 2.5, weightKilograms: 0) == nil)
+        #expect(BodyWeight.kcal(perKg: nil, weightKilograms: 80) == nil)
+    }
+
     @Test func paceIsMinutesPerKilometre() {
         #expect(Formatters.pace(metersPerSecond: 1000.0 / 631) == "10:31 /km")
         #expect(Formatters.pace(metersPerSecond: 1000.0 / 300) == "5:00 /km")
