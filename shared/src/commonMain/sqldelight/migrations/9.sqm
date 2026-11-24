@@ -1,0 +1,2 @@
+-- Schema version 9 → 10: no schema change; elevation gain is counted anew from the stored barometer readings.
+UPDATE activity SET elevation_gain_meters = elevation_gain_meters WHERE 0;

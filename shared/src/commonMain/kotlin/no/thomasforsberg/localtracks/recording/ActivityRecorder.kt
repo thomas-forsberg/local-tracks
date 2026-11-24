@@ -176,7 +176,7 @@ class ActivityRecorder(
             activeTimeBeforeResume = unfinished.totals.activeTime,
             measurement = TrackMeasurement.continuing(unfinished.totals.distanceMeters, unfinished.totals.movingTime),
             pointCount = unfinished.totals.pointCount,
-            elevationGain = ElevationGain(unfinished.totals.elevationGainMeters, referenceMeters = null),
+            elevationGain = ElevationGain(unfinished.totals.elevationGainMeters, lowMeters = null),
             segmentIndex = lastPoint?.segmentIndex ?: 0,
             lastPoint = lastPoint?.point,
             currentSpeedMetersPerSecond = null,

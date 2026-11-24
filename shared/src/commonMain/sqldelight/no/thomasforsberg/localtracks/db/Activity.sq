@@ -44,6 +44,9 @@ WHERE id = :id;
 updateMeasurement:
 UPDATE activity SET distance_meters = :distanceMeters, moving_time_ms = :movingTimeMs WHERE id = :id;
 
+updateElevationGain:
+UPDATE activity SET elevation_gain_meters = :elevationGainMeters WHERE id = :id;
+
 allIds:
 SELECT id, sport, lead_in_ms, lead_in_meters FROM activity;
 
