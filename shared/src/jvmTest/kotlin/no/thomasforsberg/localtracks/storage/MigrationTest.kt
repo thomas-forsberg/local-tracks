@@ -48,4 +48,19 @@ class MigrationTest {
         assertEquals(12.5, activity.totals.elevationGainMeters, "untouched")
         assertTrue(activity.finishedAt != null)
     }
+
+    @Test
+    fun version8ChecksUnmatchedActivitiesAgainAndKeepsRoutes() {
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        LocalTracksDatabase.Schema.create(driver)
+        driver.execute(null, "INSERT INTO route (id, name, reference_activity_id, created_at) VALUES (1, 'Lake', 1, 0)", 0)
+        driver.execute(null, "INSERT INTO route_activity VALUES (1, 1, 0), (2, 1, 1), (3, NULL, 0)", 0)
+
+        migrateDatabase(driver, oldVersion = 8, newVersion = LocalTracksDatabase.Schema.version)
+
+        val queries = createDatabase(driver).routeQueries
+        assertEquals(listOf(1L, 2L), queries.members(1).executeAsList().map { it.activity_id }.sorted())
+        assertEquals(null, queries.membership(3).executeAsOneOrNull(), "unchecked again")
+        assertEquals("Lake", queries.routeById(1).executeAsOne().name)
+    }
 }

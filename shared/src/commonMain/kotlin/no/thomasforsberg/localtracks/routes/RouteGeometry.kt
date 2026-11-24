@@ -96,4 +96,18 @@ internal fun signedArea(points: List<Xy>): Double =
         a.x * b.y - b.x * a.y
     } / 2
 
+// The part of the line from where it first gets further than `trim` metres from both its ends, to
+// where it last is; empty if it never does.
+internal fun List<Xy>.middle(trimMeters: Double): List<Xy> {
+    if (size < 2) return emptyList()
+    val start = first()
+    val end = last()
+    fun away(p: Xy) = p.distanceTo(start) > trimMeters && p.distanceTo(end) > trimMeters
+    val from = indexOfFirst(::away)
+    val to = indexOfLast(::away)
+    return if (from < 0 || to <= from) emptyList() else subList(from, to + 1)
+}
+
+internal fun List<Xy>.length(): Double = zipWithNext().sumOf { (a, b) -> a.distanceTo(b) }
+
 internal fun Xy.distanceTo(other: Xy) = sqrt((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y))

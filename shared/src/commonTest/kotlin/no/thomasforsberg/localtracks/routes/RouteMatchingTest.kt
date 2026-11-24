@@ -35,6 +35,8 @@ internal fun loop(
     }
 }
 
+private fun GeoPoint.distanceFrom(other: GeoPoint) = listOf(this, other).lengthMeters()
+
 internal fun track(line: List<GeoPoint>, id: Long = 1, sport: Sport = Sport.HIKING) =
     RouteTrack(id, sport, line.lengthMeters(), line.resampled(RouteMatching.SPACING_METERS))
 
@@ -96,11 +98,32 @@ class RouteMatchingTest {
     }
 
     @Test
-    fun lengthsMayDifferByFivePercentButAtLeast100Meters() {
-        assertTrue(RouteMatching.lengthsCompatible(1_000.0, 1_095.0), "short loop: 100 m")
-        assertFalse(RouteMatching.lengthsCompatible(1_000.0, 1_120.0))
-        assertTrue(RouteMatching.lengthsCompatible(30_000.0, 31_400.0), "long ride: 5 %")
-        assertFalse(RouteMatching.lengthsCompatible(30_000.0, 32_000.0))
+    fun lengthsMayDifferByTwentyPercentButAtLeast100Meters() {
+        assertTrue(RouteMatching.lengthsCompatible(400.0, 495.0), "short middle: 100 m")
+        assertFalse(RouteMatching.lengthsCompatible(400.0, 510.0))
+        assertTrue(RouteMatching.lengthsCompatible(1_000.0, 1_240.0), "20 %")
+        assertFalse(RouteMatching.lengthsCompatible(1_000.0, 1_300.0))
+    }
+
+    @Test
+    fun theEndsNearHomeDoNotCount() {
+        val base = loop()
+        // Automatic: GPS started 250 m in (a straight line from the door instead), and the recording
+        // stopped 140 m short of the door.
+        val gpsFrom = base.indexOfFirst { it.distanceFrom(base.first()) > 250 }
+        val stoppedAt = base.indexOfLast { it.distanceFrom(base.first()) > 140 }
+        val automatic = listOf(base.first()) + base.subList(gpsFrom, stoppedAt + 1)
+
+        assertNotNull(RouteMatching.match(track(automatic), track(base)))
+    }
+
+    @Test
+    fun aSmallLoopRoundTheBlockIsComparedWhole() {
+        // 630 m round: never more than 200 m from the door, so there is no middle to compare.
+        val small = loop(radiusMeters = 100.0)
+
+        assertNotNull(RouteMatching.match(track(small), track(loop(radiusMeters = 100.0, noiseMeters = 5.0))))
+        assertNull(RouteMatching.match(track(small), track(loop(radiusMeters = 100.0, clockwise = true).map { GeoPoint(it.latitude, it.longitude + 0.0012) })))
     }
 
     @Test
