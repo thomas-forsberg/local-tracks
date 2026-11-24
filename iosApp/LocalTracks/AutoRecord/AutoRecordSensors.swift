@@ -8,7 +8,7 @@ enum HomeEvent: Equatable, Sendable {
 }
 
 // Watches the circle around home. iOS keeps watching while the app isn't running, and relaunches it
-// in the background for each crossing; that needs "Always" location access.
+// in the background for each crossing; that needs "Always" location access and a session holding it.
 @MainActor
 protocol HomeMonitoring {
     func events(home: HomeLocation, radius: Double) -> AsyncStream<HomeEvent>
@@ -19,23 +19,56 @@ protocol HomeMonitoring {
 final class CoreLocationHomeMonitor: HomeMonitoring {
     private static let monitorName = "home"
     private static let conditionId = "home"
+    private let log: AutoRecordLog
 
+    init(log: AutoRecordLog) {
+        self.log = log
+    }
+
+    // Holds an "Always" location session for as long as the stream runs: without one, iOS stops
+    // reporting home events to an app that isn't in use. Call it at launch, before returning from
+    // didFinishLaunching, so the session is retaken at once after iOS ended the app.
     func events(home: HomeLocation, radius: Double) -> AsyncStream<HomeEvent> {
         let center = CLLocationCoordinate2D(latitude: home.latitude, longitude: home.longitude)
+        let session = CLServiceSession(authorization: .always)
+        let log = log
         return AsyncStream { continuation in
-            let task = Task {
-                // Recreating the monitor by name picks up events iOS saved while the app wasn't running.
+            let task = Task { @MainActor in
+                defer { session.invalidate() }
+                let diagnostics = Task { @MainActor in
+                    var last: [String]?
+                    do {
+                        for try await diagnostic in session.diagnostics {
+                            let problems = diagnostic.problems
+                            if problems != last { log.add("Location session: \(problems.isEmpty ? "OK" : problems.joined(separator: ", "))") }
+                            last = problems
+                        }
+                    } catch {}
+                }
+                defer { diagnostics.cancel() }
+                // Opening the monitor by name picks up events iOS saved while the app wasn't running.
                 let monitor = await CLMonitor(Self.monitorName)
-                await monitor.add(CLMonitor.CircularGeographicCondition(center: center, radius: radius), identifier: Self.conditionId)
+                if let record = await monitor.record(for: Self.conditionId), Self.isSameCircle(record.condition, center: center, radius: radius) {
+                    log.add("Home circle already watched, last state \(record.lastEvent.state.name)")
+                } else {
+                    // Only when missing (first time, or not restored with a backup) or moved: adding
+                    // replaces the condition, which may drop an event not yet delivered.
+                    await monitor.add(CLMonitor.CircularGeographicCondition(center: center, radius: radius), identifier: Self.conditionId)
+                    log.add("Home circle added")
+                }
                 do {
                     for try await event in await monitor.events {
+                        let problems = event.problems
+                        log.add("Home event: \(event.state.name) at \(event.date.formatted(date: .omitted, time: .standard))" + (problems.isEmpty ? "" : " (\(problems.joined(separator: ", ")))"))
                         switch event.state {
                         case .satisfied: continuation.yield(.arrived(event.date))
                         case .unsatisfied: continuation.yield(.left(event.date))
                         default: break
                         }
                     }
-                } catch {}
+                } catch {
+                    log.add("Home events ended: \(error.localizedDescription)")
+                }
                 continuation.finish()
             }
             continuation.onTermination = { _ in task.cancel() }
@@ -45,6 +78,59 @@ final class CoreLocationHomeMonitor: HomeMonitoring {
     func stop() async {
         let monitor = await CLMonitor(Self.monitorName)
         await monitor.remove(Self.conditionId)
+        log.add("Home circle removed")
+    }
+
+    private static func isSameCircle(_ condition: Any, center: CLLocationCoordinate2D, radius: Double) -> Bool {
+        guard let circle = condition as? CLMonitor.CircularGeographicCondition else { return false }
+        return abs(circle.center.latitude - center.latitude) < 1e-6
+            && abs(circle.center.longitude - center.longitude) < 1e-6
+            && abs(circle.radius - radius) < 0.5
+    }
+}
+
+private extension CLMonitor.Event {
+    // iOS's reasons for holding events back, if any.
+    var problems: [String] {
+        [
+            (authorizationDenied, "location denied"),
+            (authorizationDeniedGlobally, "Location Services off"),
+            (authorizationRestricted, "location restricted"),
+            (insufficientlyInUse, "app not in use"),
+            (accuracyLimited, "precise location off"),
+            (conditionUnsupported, "condition unsupported"),
+            (conditionLimitExceeded, "too many conditions"),
+            (persistenceUnavailable, "persistence unavailable"),
+            (serviceSessionRequired, "session required"),
+            (authorizationRequestInProgress, "asking the user"),
+        ].filter(\.0).map(\.1)
+    }
+}
+
+private extension CLServiceSession.Diagnostic {
+    var problems: [String] {
+        [
+            (authorizationDenied, "location denied"),
+            (authorizationDeniedGlobally, "Location Services off"),
+            (authorizationRestricted, "location restricted"),
+            (insufficientlyInUse, "app not in use"),
+            (serviceSessionRequired, "session required"),
+            (fullAccuracyDenied, "precise location off"),
+            (alwaysAuthorizationDenied, "Always denied"),
+            (authorizationRequestInProgress, "asking the user"),
+        ].filter(\.0).map(\.1)
+    }
+}
+
+private extension CLMonitor.Event.State {
+    var name: String {
+        switch self {
+        case .satisfied: "inside"
+        case .unsatisfied: "outside"
+        case .unknown: "unknown"
+        case .unmonitored: "unmonitored"
+        @unknown default: "?"
+        }
     }
 }
 

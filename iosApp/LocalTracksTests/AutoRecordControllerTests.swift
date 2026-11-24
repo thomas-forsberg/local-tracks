@@ -189,6 +189,19 @@ struct AutoRecordControllerTests {
         #expect(environment.repository.activity(id: 1) == nil, "deleted: under 5 minutes")
     }
 
+    @Test func theLogTellsWhatHappened() async {
+        let environment = await enabledEnvironment()
+        motion.history = [(.walking, .now.addingTimeInterval(-170))]
+        home.send(.left(.now.addingTimeInterval(-150)))
+        #expect(await eventually { environment.recording.state is RecordingStateRecording })
+
+        let lines = environment.autoRecordLog.lines().map { $0.dropFirst(21) }
+        #expect(lines.contains("Turned on"))
+        #expect(lines.contains("AT_HOME → WATCHING"))
+        #expect(lines.contains("WATCHING → AUTO_RECORDING"))
+        #expect(lines.contains("Recording started: HIKING, 160 m walked before"))
+    }
+
     @Test func startingByHandWhileWatchingStopsWatching() async {
         let environment = await enabledEnvironment()
         home.send(.left(.now))

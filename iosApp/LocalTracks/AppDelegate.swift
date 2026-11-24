@@ -20,6 +20,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         // Also when relaunched for leaving or reaching home: the home monitor must be recreated at once
         // to receive the event that woke the app.
         if case .success(let environment) = environment {
+            if environment.autoRecord.isEnabled {
+                environment.autoRecordLog.add(relaunchedForLocation ? "App launched in the background" : "App launched")
+            }
             environment.autoRecord.resume()
         }
         return true

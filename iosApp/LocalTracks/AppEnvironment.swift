@@ -13,6 +13,7 @@ final class AppEnvironment {
     let mapRegions: MapRegionRepository
     let maps: MapLibrary
     let autoRecord: AutoRecordController
+    let autoRecordLog: AutoRecordLog
     let liveActivity: LiveActivityController
 
     init(
@@ -50,7 +51,9 @@ final class AppEnvironment {
             directory: mapsDirectory,
             downloader: regionDownloader?(mapRegions, mapsDirectory) ?? KartverketRegionDownloader(repository: mapRegions, directory: mapsDirectory)
         )
-        let sensors = autoRecordSensors ?? .live()
+        let autoRecordLog = AutoRecordLog(file: databaseDirectory.appending(path: "auto-record-log.txt"))
+        self.autoRecordLog = autoRecordLog
+        let sensors = autoRecordSensors ?? .live(log: autoRecordLog)
         autoRecord = AutoRecordController(
             store: AutoRecordStore(database: database),
             recording: recording,
@@ -59,7 +62,8 @@ final class AppEnvironment {
             pedometer: sensors.pedometer,
             keepAwake: sensors.keepAwake,
             permissions: sensors.permissions,
-            notifier: sensors.notifier
+            notifier: sensors.notifier,
+            log: autoRecordLog
         )
         let liveActivity = LiveActivityController(recording: recording)
         self.liveActivity = liveActivity
@@ -90,9 +94,9 @@ struct AutoRecordSensors {
     var permissions: AutoRecordPermissions
     var notifier: AutoRecordNotifier
 
-    static func live() -> AutoRecordSensors {
+    static func live(log: AutoRecordLog) -> AutoRecordSensors {
         AutoRecordSensors(
-            homeMonitor: CoreLocationHomeMonitor(),
+            homeMonitor: CoreLocationHomeMonitor(log: log),
             motion: CoreMotionActivityHistory(),
             pedometer: CoreMotionPedometerHistory(),
             keepAwake: LocationKeepAwake(),

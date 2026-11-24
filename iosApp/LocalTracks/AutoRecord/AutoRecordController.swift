@@ -21,6 +21,7 @@ final class AutoRecordController {
     @ObservationIgnored private let permissions: AutoRecordPermissions
     @ObservationIgnored private let notifier: AutoRecordNotifier
     @ObservationIgnored private let tickInterval: Duration
+    @ObservationIgnored let log: AutoRecordLog?
     @ObservationIgnored private var policy: AutoRecordPolicy
     @ObservationIgnored private var homeTask: Task<Void, Never>?
     @ObservationIgnored private var watchTasks: [Task<Void, Never>] = []
@@ -34,6 +35,7 @@ final class AutoRecordController {
         keepAwake: KeepAwake,
         permissions: AutoRecordPermissions,
         notifier: AutoRecordNotifier,
+        log: AutoRecordLog? = nil,
         tickInterval: Duration = .seconds(10)
     ) {
         self.store = store
@@ -45,6 +47,7 @@ final class AutoRecordController {
         self.permissions = permissions
         self.notifier = notifier
         self.tickInterval = tickInterval
+        self.log = log
         settings = store.settings()
         let state = store.state()
         policy = AutoRecordPolicy(initial: state)
@@ -66,6 +69,7 @@ final class AutoRecordController {
     func resume() {
         guard settings.enabled, let home = settings.home else { return }
         needsAlwaysLocation = !permissions.hasAlwaysLocation
+        if needsAlwaysLocation { log?.add("Location access isn't Always") }
         startWatchingHome(home)
         if policy.state.phase == .watching { startWatchingMotion() }
         if policy.state.phase == .arrivingHome { startWatchingArrival() }
@@ -81,10 +85,12 @@ final class AutoRecordController {
         await permissions.requestNotifications()
         store.setEnabled(enabled: true)
         settings = store.settings()
+        log?.add("Turned on")
         resume()
     }
 
     func disable() {
+        log?.add("Turned off")
         store.setEnabled(enabled: false)
         settings = store.settings()
         stopWatchingMotion()
@@ -99,6 +105,7 @@ final class AutoRecordController {
     func setHome(_ home: HomeLocation) {
         store.setHome(home: home)
         settings = store.settings()
+        log?.add("Home set")
         // Whatever was going on was relative to the old home.
         policy = AutoRecordPolicy(initial: AutoRecordState.companion.INITIAL)
         save()
@@ -143,7 +150,11 @@ final class AutoRecordController {
             startWatchingArrival()
         case .stopRecording:
             stopWatchingMotion()
-            recording.stopAutomatically()
+            switch recording.stopAutomatically() {
+            case .kept: log?.add("Recording stopped and kept")
+            case .discarded: log?.add("Recording stopped and deleted: too short")
+            default: break
+            }
         }
     }
 
@@ -217,8 +228,10 @@ final class AutoRecordController {
             )
         }
         if recording.startAutomatically(sport, departure: departure) {
+            log?.add("Recording started: \(sport.name), \(Int(departure?.distanceMeters ?? 0)) m walked before")
             notifier.recordingStarted(sport)
         } else {
+            log?.add("Not started: already recording")
             // Something was already being recorded by hand.
             policy.recordingStopped()
             save()
@@ -227,6 +240,7 @@ final class AutoRecordController {
 
     private func save() {
         store.saveState(state: policy.state)
+        if policy.state.phase != phase { log?.add("\(phase.name) → \(policy.state.phase.name)") }
         phase = policy.state.phase
     }
 }

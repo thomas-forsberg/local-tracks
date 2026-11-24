@@ -36,6 +36,9 @@ struct SettingsView: View {
                     if autoRecord.isEnabled {
                         LabeledContent("Now", value: autoRecord.phase.description)
                     }
+                    if let log = autoRecord.log {
+                        NavigationLink("Auto-record log") { AutoRecordLogView(log: log) }
+                    }
                     if autoRecord.needsAlwaysLocation {
                         VStack(alignment: .leading, spacing: 8) {
                             Label("Location access must be set to Always for this to work.", systemImage: "location.slash")
@@ -71,6 +74,31 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+}
+
+// Newest first. In English: it's for finding out why a walk didn't start by itself.
+struct AutoRecordLogView: View {
+    let log: AutoRecordLog
+    @State private var lines: [String] = []
+
+    var body: some View {
+        List(Array(lines.enumerated()), id: \.offset) { _, line in
+            Text(verbatim: line)
+                .font(.caption.monospaced())
+        }
+        .themedList()
+        .overlay {
+            if lines.isEmpty { ContentUnavailableView("Nothing logged yet", systemImage: "list.bullet.rectangle") }
+        }
+        .navigationTitle("Auto-record log")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if !lines.isEmpty {
+                ShareLink(item: log.file)
+            }
+        }
+        .onAppear { lines = log.lines().reversed() }
     }
 }
 
