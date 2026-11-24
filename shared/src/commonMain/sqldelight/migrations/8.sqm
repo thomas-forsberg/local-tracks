@@ -1,0 +1,3 @@
+-- Schema version 8 → 9: route matching compares only the middles of activities now. Activities that
+-- matched nothing are checked again; routes already found are kept.
+DELETE FROM route_activity WHERE route_id IS NULL;
