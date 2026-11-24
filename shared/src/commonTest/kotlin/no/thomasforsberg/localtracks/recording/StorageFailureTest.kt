@@ -67,7 +67,7 @@ class StorageFailureTest {
         (1..5).forEach(::recordAt)
         driver.failWrites = true
 
-        assertTrue(recorder.stop())
+        assertEquals(StopResult.KEPT, recorder.stop())
 
         assertTrue(recorder.isStorageFailing)
         driver.failWrites = false

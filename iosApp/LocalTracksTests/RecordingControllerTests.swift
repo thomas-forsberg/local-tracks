@@ -143,14 +143,45 @@ struct RecordingControllerTests {
         let controller = environment.recording
         controller.start(.hiking)
         let id = try #require(environment.repository.latestUnfinishedActivity()).id
-        location.send(fix(secondsFromNow: 1))
-        #expect(await eventually { pointCount(controller) == 1 })
+        location.send(fix(secondsFromNow: 1, latitude: 59.9))
+        location.send(fix(secondsFromNow: 2, latitude: 59.901))
+        #expect(await eventually { pointCount(controller) == 2 })
 
         controller.stop()
 
         #expect(await eventually { !location.isRunning })
         #expect(environment.repository.activity(id: id)?.finishedAt != nil)
-        #expect(environment.repository.trackPoints(activityId: id).count == 1)
+        #expect(environment.repository.trackPoints(activityId: id).count == 2)
+        #expect(controller.stopOutcome == .saved)
+    }
+
+    @Test func stoppingWithoutHavingMovedDeletesTheActivityAndSaysSo() async throws {
+        let environment = makeEnvironment()
+        let controller = environment.recording
+        controller.start(.running)
+        let id = try #require(environment.repository.latestUnfinishedActivity()).id
+        location.send(fix(secondsFromNow: 1))
+        #expect(await eventually { pointCount(controller) == 1 })
+
+        controller.stop()
+
+        #expect(controller.stopOutcome == .discardedNoDistance)
+        #expect(environment.repository.activity(id: id) == nil)
+    }
+
+    @Test func theFinishedActivityGivesWayToAnIdleScreen() async {
+        let controller = makeEnvironment().recording
+        controller.start(.hiking)
+        location.send(fix(secondsFromNow: 1, latitude: 59.9))
+        location.send(fix(secondsFromNow: 2, latitude: 59.901))
+        #expect(await eventually { pointCount(controller) == 2 })
+        controller.stop()
+        #expect(controller.state is RecordingStateFinished)
+
+        controller.clearFinished()
+
+        #expect(controller.state is RecordingStateIdle)
+        #expect(controller.stopOutcome == nil)
     }
 
     @Test func attachesBarometerReadingsToRecordedPoints() async throws {
@@ -162,8 +193,9 @@ struct RecordingControllerTests {
         barometer.send(BarometerReading(time: .from(.now), relativeAltitudeMeters: 3.5, pressureKilopascals: 98.7))
         // Readings and fixes arrive on separate tasks; only send the fix once the reading is in.
         #expect(await eventually { controller.latestBarometerReading != nil })
-        location.send(fix(secondsFromNow: 1))
-        #expect(await eventually { pointCount(controller) == 1 })
+        location.send(fix(secondsFromNow: 1, latitude: 59.9))
+        location.send(fix(secondsFromNow: 2, latitude: 59.901))
+        #expect(await eventually { pointCount(controller) == 2 })
         controller.stop()
 
         let point = try #require(environment.repository.trackPoints(activityId: id).first)
@@ -231,9 +263,9 @@ struct RecordingControllerTests {
         location.send(fix(secondsFromNow: 1, latitude: 59.9))
         location.send(fix(secondsFromNow: 2, latitude: 59.90005)) // ~6 m of drift
         #expect(await eventually { pointCount(controller) == 2 })
-        controller.stop()
+        controller.flush()
 
-        #expect(environment.repository.activity(id: id)?.totals.distanceMeters == 0)
+        #expect(controller.state.progressOrNull()?.distanceMeters == 0)
         #expect(environment.repository.trackPoints(activityId: id).allSatisfy { $0.point.stationaryByMotion?.boolValue == true })
     }
 
@@ -245,6 +277,9 @@ struct RecordingControllerTests {
 
         pedometer.send(42)
         #expect(await eventually { controller.state.progressOrNull()?.steps?.intValue == 42 })
+        location.send(fix(secondsFromNow: 1, latitude: 59.9))
+        location.send(fix(secondsFromNow: 2, latitude: 59.901))
+        #expect(await eventually { pointCount(controller) == 2 })
         controller.stop()
 
         #expect(environment.repository.activity(id: id)?.totals.stepCount?.intValue == 42)

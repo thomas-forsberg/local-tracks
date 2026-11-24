@@ -14,8 +14,7 @@ struct ActivitiesViewModelTests {
     }
 
     private func record(_ sport: Sport) {
-        environment.recording.start(sport)
-        environment.recording.stop()
+        environment.recordShortTrip(sport)
     }
 
     @Test func startsEmptyAndListsActivitiesNewestFirstAsTheyFinish() async {
@@ -38,11 +37,12 @@ struct ActivitiesViewModelTests {
         defer { observing.cancel() }
         #expect(await eventually { viewModel.activities != nil })
 
-        environment.recording.start(.hiking)
+        environment.recorder.start(sport: .hiking)
+        environment.moveAlong()
 
         try? await Task.sleep(for: .milliseconds(100))
         #expect(viewModel.activities?.isEmpty == true)
-        environment.recording.stop()
+        environment.recorder.stop()
         #expect(await eventually { viewModel.activities?.count == 1 })
     }
 

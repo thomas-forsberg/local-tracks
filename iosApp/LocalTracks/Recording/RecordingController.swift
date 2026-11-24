@@ -18,6 +18,8 @@ final class RecordingController {
     private(set) var liveSegments: [[CLLocationCoordinate2D]] = []
     // Left over from a crash or the app being killed; offered for resuming or saving on launch.
     private(set) var unfinishedActivity: ActivitySummary?
+    // What happened to the activity just stopped, shown until the screen goes back to idle.
+    private(set) var stopOutcome: StopOutcome?
 
     // For auto-record: recordings the user started by hand, and every recording that ends.
     @ObservationIgnored var onUserStarted: (() -> Void)?
@@ -33,14 +35,18 @@ final class RecordingController {
     @ObservationIgnored private let motionSource: MotionSource
     @ObservationIgnored private let pedometerSource: PedometerSource
     @ObservationIgnored private var sensorTasks: [Task<Void, Never>] = []
+    @ObservationIgnored private let idleAfter: Duration
+    @ObservationIgnored private var idleTask: Task<Void, Never>?
 
     init(
         recorder: ActivityRecorder,
         locationSource: LocationSource,
         barometerSource: BarometerSource,
         motionSource: MotionSource,
-        pedometerSource: PedometerSource
+        pedometerSource: PedometerSource,
+        idleAfter: Duration = .seconds(30)
     ) {
+        self.idleAfter = idleAfter
         self.recorder = recorder
         self.locationSource = locationSource
         self.barometerSource = barometerSource
@@ -67,6 +73,8 @@ final class RecordingController {
     var isAutoStarted: Bool { recorder.isAutoStarted }
 
     private func began(_ sport: Sport) {
+        idleTask?.cancel()
+        stopOutcome = nil
         liveSegments = []
         liveSegmentIndex = nil
         startSensors(for: sport)
@@ -93,25 +101,42 @@ final class RecordingController {
         }
     }
 
+    // Deletes the recording if it covered no distance.
     func stop() {
-        guard recorder.stop() else { return }
-        ended()
+        let result = recorder.stop()
+        guard result != .notRecording else { return }
+        ended(result == .kept ? .saved : .discardedNoDistance)
     }
 
     // Auto-record's stop on arriving home; deletes the recording if it's too short to be an activity.
     @discardableResult
-    func stopAutomatically() -> AutoStopResult {
+    func stopAutomatically() -> StopResult {
         let result = recorder.stopAutomatically()
-        if result != .notRecording { ended() }
+        if result != .notRecording { ended(result == .kept ? .saved : .discardedTooShort) }
         return result
     }
 
-    private func ended() {
+    private func ended(_ outcome: StopOutcome) {
         stopSensors()
         locationProblem = nil
         latestBarometerReading = nil
+        stopOutcome = outcome
         refreshState()
         onStopped?()
+        idleTask?.cancel()
+        idleTask = Task { [weak self, idleAfter] in
+            try? await Task.sleep(for: idleAfter)
+            guard !Task.isCancelled else { return }
+            self?.clearFinished()
+        }
+    }
+
+    // The finished activity's numbers give way to an empty screen, ready for the next one.
+    func clearFinished() {
+        idleTask?.cancel()
+        idleTask = nil
+        stopOutcome = nil
+        if recorder.clearFinished() { refreshState() }
     }
 
     func resumeUnfinished() {
@@ -233,4 +258,12 @@ final class RecordingController {
         isStorageFailing = recorder.isStorageFailing
         onStateChange?()
     }
+}
+
+enum StopOutcome: Equatable {
+    case saved
+    // Stopped by hand without having moved.
+    case discardedNoDistance
+    // Auto-record's trip was too short to be an activity.
+    case discardedTooShort
 }

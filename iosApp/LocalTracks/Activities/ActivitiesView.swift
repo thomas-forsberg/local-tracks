@@ -12,16 +12,6 @@ struct ActivitiesView: View {
                 .navigationDestination(for: ActivitySummary.self) { activity in
                     ActivityDetailView(viewModel: viewModel.detail(for: activity))
                 }
-                .confirmationDialog(
-                    deletionTitle,
-                    isPresented: Binding(get: { pendingDeletion != nil }, set: { if !$0 { pendingDeletion = nil } }),
-                    titleVisibility: .visible,
-                    presenting: pendingDeletion
-                ) { activity in
-                    Button("Delete", role: .destructive) { viewModel.delete(activity) }
-                } message: { _ in
-                    Text("This can't be undone. Your activities only exist on this phone.")
-                }
         }
         .task { await viewModel.observe() }
     }
@@ -44,15 +34,32 @@ struct ActivitiesView: View {
                     .swipeActions {
                         Button("Delete", systemImage: "trash", role: .destructive) { pendingDeletion = activity }
                     }
+                    // On each row, so the dialog points at the activity it deletes.
+                    .confirmationDialog(
+                        activity.sport.deletionTitle,
+                        isPresented: Binding(get: { pendingDeletion?.id == activity.id }, set: { if !$0 { pendingDeletion = nil } }),
+                        titleVisibility: .visible
+                    ) {
+                        Button("Delete", role: .destructive) { viewModel.delete(activity) }
+                    } message: {
+                        Text("This can't be undone. Your activities only exist on this phone.")
+                    }
             }
             .listStyle(.plain)
             .themedList()
         }
     }
 
-    private var deletionTitle: String {
-        guard let activity = pendingDeletion else { return "" }
-        return "Delete this \(activity.sport.title.lowercased()) activity?"
+}
+
+private extension Sport {
+    // Whole sentences per sport: languages inflect the sport differently.
+    var deletionTitle: String {
+        switch self {
+        case .cycling: String(localized: "Delete this ride?")
+        case .running: String(localized: "Delete this run?")
+        case .hiking: String(localized: "Delete this hike?")
+        }
     }
 }
 

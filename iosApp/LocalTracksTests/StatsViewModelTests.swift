@@ -31,8 +31,7 @@ struct StatsViewModelTests {
         let observing = Task { await viewModel.observe() }
         defer { observing.cancel() }
 
-        environment.recording.start(.hiking)
-        environment.recording.stop()
+        environment.recordShortTrip(.hiking)
 
         #expect(await eventually { viewModel.totals().first?.activityCount == 1 })
         #expect(viewModel.totals().first?.sport == .hiking)

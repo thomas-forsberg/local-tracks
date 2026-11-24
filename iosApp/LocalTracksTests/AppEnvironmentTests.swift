@@ -16,7 +16,8 @@ struct AppEnvironmentTests {
         let first = AppEnvironment(databaseDirectory: directory, stateStore: InMemoryRecordingStateStore())
         #expect(first.recorder.start(sport: .cycling))
         let id = try #require(first.repository.latestUnfinishedActivity()).id
-        #expect(first.recorder.stop())
+        first.moveAlong()
+        #expect(first.recorder.stop() == .kept)
 
         let reopened = AppEnvironment(databaseDirectory: directory, stateStore: InMemoryRecordingStateStore())
 

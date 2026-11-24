@@ -64,20 +64,25 @@ class ActivityRecorder(
         return true
     }
 
+    // Stops the recording. One that covered no distance at all is deleted: there's nothing to keep.
+    fun stop(): StopResult = stop(discardShort = false)
+
     // Stops an automatic recording when the user gets home, deleting it if it's too short to be an activity.
-    fun stopAutomatically(): AutoStopResult {
+    fun stopAutomatically(): StopResult = stop(discardShort = isAutoStarted)
+
+    private fun stop(discardShort: Boolean): StopResult {
         val id = activityId
-        val wasAutomatic = isAutoStarted
-        if (!stop()) return AutoStopResult.NOT_RECORDING
-        val finished = state.value as Finished
-        val tooShort = finished.progress.activeTimeBeforeResume < MIN_AUTO_RECORDING_TIME ||
-            finished.progress.distanceMeters < MIN_AUTO_RECORDING_METERS
-        if (wasAutomatic && tooShort && id != null) {
+        if (!finish()) return StopResult.NOT_RECORDING
+        val progress = (state.value as Finished).progress
+        val tooShort = progress.activeTimeBeforeResume < MIN_AUTO_RECORDING_TIME || progress.distanceMeters < MIN_AUTO_RECORDING_METERS
+        if (id != null && (progress.distanceMeters <= 0.0 || discardShort && tooShort)) {
             write { repository.delete(id) }
-            return AutoStopResult.DISCARDED
+            return StopResult.DISCARDED
         }
-        return AutoStopResult.KEPT
+        return StopResult.KEPT
     }
+
+    fun clearFinished(): Boolean = session.clearFinished()
 
     fun pause(): Boolean {
         if (!session.pause()) return false
@@ -88,7 +93,7 @@ class ActivityRecorder(
 
     fun resume(): Boolean = session.resume().also { resumed -> if (resumed) stateStore.clear() }
 
-    fun stop(): Boolean {
+    private fun finish(): Boolean {
         if (!session.stop()) return false
         val finished = state.value as Finished
         flush()
@@ -222,4 +227,4 @@ class ActivityRecorder(
     }
 }
 
-enum class AutoStopResult { NOT_RECORDING, KEPT, DISCARDED }
+enum class StopResult { NOT_RECORDING, KEPT, DISCARDED }

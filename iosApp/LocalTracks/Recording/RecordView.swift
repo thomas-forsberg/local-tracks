@@ -4,6 +4,7 @@ import SwiftUI
 struct RecordView: View {
     let controller: RecordingController
     let autoRecord: AutoRecordController
+    var onShowActivities: () -> Void = {}
     @State private var showsSettings = false
     @State private var chosenSport: Sport = .cycling
     @State private var showsMap = false
@@ -28,6 +29,10 @@ struct RecordView: View {
                         Text(problem.message).font(.callout)
                     }
                 }
+                if let outcome = controller.stopOutcome {
+                    StopOutcomeBanner(outcome: outcome, onShow: onShowActivities, onDismiss: controller.clearFinished)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
 
                 if showsMap && isInProgress {
                     TrackMap(segments: controller.liveSegments, followsLatest: true)
@@ -43,6 +48,7 @@ struct RecordView: View {
                 controls
             }
             .padding()
+            .animation(.default, value: controller.stopOutcome)
             .foregroundStyle(Theme.ink)
             .background {
                 ZStack(alignment: .top) {
@@ -271,6 +277,41 @@ private struct Banner<Content: View>: View {
         }
         .padding()
         .background(tint.opacity(0.12), in: .rect(cornerRadius: 14))
+    }
+}
+
+// Confirms that the activity just stopped is in Activities, or says why it wasn't kept.
+private struct StopOutcomeBanner: View {
+    let outcome: StopOutcome
+    let onShow: () -> Void
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: outcome == .saved ? "checkmark.circle.fill" : "xmark.circle")
+                .font(.title2)
+                .foregroundStyle(outcome == .saved ? Theme.forest : Theme.inkSecondary)
+            Text(message).font(.callout.weight(.medium))
+            Spacer(minLength: 0)
+            if outcome == .saved {
+                Button("Show", action: onShow).buttonStyle(.bordered).tint(Theme.forest)
+            }
+            Button("Dismiss", systemImage: "xmark", action: onDismiss)
+                .labelStyle(.iconOnly)
+                .foregroundStyle(Theme.inkSecondary)
+        }
+        .padding()
+        .background(Theme.surface, in: .rect(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Theme.border))
+        .accessibilityElement(children: .contain)
+    }
+
+    private var message: String {
+        switch outcome {
+        case .saved: String(localized: "Saved to Activities")
+        case .discardedNoDistance: String(localized: "Not saved: no distance was recorded.")
+        case .discardedTooShort: String(localized: "Not saved: the trip was too short.")
+        }
     }
 }
 
