@@ -41,6 +41,8 @@ final class StatsViewModel {
 
     @ObservationIgnored private let repository: ActivityRepository
     @ObservationIgnored let routeLibrary: RouteLibrary
+    // Route shapes by reference activity id; a finished activity's points never change.
+    @ObservationIgnored private var previews: [Int64: RoutePreview?] = [:]
 
     init(repository: ActivityRepository, routes: RouteLibrary) {
         self.repository = repository
@@ -62,6 +64,14 @@ final class StatsViewModel {
 
     var records: [PersonalRecord] {
         StatsKt.personalRecords(activities: activities ?? [])
+    }
+
+    // Drawn from the route's reference activity.
+    func preview(for route: RouteSummary) -> RoutePreview? {
+        if let cached = previews[route.referenceActivityId] { return cached }
+        let preview = repository.routePreview(activityId: route.referenceActivityId)
+        previews[route.referenceActivityId] = .some(preview)
+        return preview
     }
 
     func detail(for route: RouteSummary) -> RouteDetailViewModel {

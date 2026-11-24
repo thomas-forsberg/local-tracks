@@ -48,6 +48,21 @@ struct RoutesTests {
         #expect(stats.routes.first?.displayName == "3,14 km loop" || stats.routes.first?.displayName == "3.14 km loop")
     }
 
+    @Test func aRouteIsDrawnFromItsReferenceActivity() async throws {
+        let first = walkLoop(daysAgo: 3, minutes: 40)
+        walkLoop(daysAgo: 1, minutes: 36)
+        let stats = environment.stats
+        let observing = Task { await stats.observe() }
+        defer { observing.cancel() }
+        #expect(await eventually { stats.routes.count == 1 })
+
+        let route = try #require(stats.routes.first)
+        let preview = try #require(stats.preview(for: route))
+
+        #expect(preview.segments == environment.repository.routePreview(activityId: route.referenceActivityId)?.segments)
+        #expect(route.referenceActivityId == first.id)
+    }
+
     @Test func anActivityOnARouteSaysHowItCompares() async {
         walkLoop(daysAgo: 3, minutes: 40)
         let second = walkLoop(daysAgo: 1, minutes: 36)

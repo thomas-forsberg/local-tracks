@@ -32,7 +32,7 @@ struct StatsView: View {
                             NavigationLink {
                                 RouteDetailView(viewModel: viewModel.detail(for: route))
                             } label: {
-                                RouteRow(route: route)
+                                RouteRow(route: route, preview: viewModel.preview(for: route))
                             }
                             .listRowBackground(Theme.surface)
                         }
@@ -66,15 +66,14 @@ struct StatsView: View {
 
 private struct RouteRow: View {
     let route: RouteSummary
+    let preview: RoutePreview?
 
     var body: some View {
         let sport = route.sports().first ?? .hiking
         let stats = route.stats(sport: sport)
         HStack(spacing: 16) {
-            Image(systemName: sport.systemImage)
-                .font(.title2)
-                .frame(width: 36)
-                .foregroundStyle(sport.color)
+            RouteThumbnail(preview: preview, sport: sport)
+                .frame(width: 64, height: 64)
             VStack(alignment: .leading, spacing: 4) {
                 Text(route.displayName).font(.headline)
                 if let stats {
