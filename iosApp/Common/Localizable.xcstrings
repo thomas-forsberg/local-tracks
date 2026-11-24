@@ -1370,6 +1370,26 @@
           }
         }
       }
+    },
+    "Auto-record log": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logg for automatisk opptak"
+          }
+        }
+      }
+    },
+    "Nothing logged yet": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingenting logget ennå"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
