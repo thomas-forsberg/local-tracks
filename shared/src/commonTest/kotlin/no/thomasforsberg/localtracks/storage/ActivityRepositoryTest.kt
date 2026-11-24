@@ -6,10 +6,12 @@ import no.thomasforsberg.localtracks.recording.BarometerReading
 import no.thomasforsberg.localtracks.recording.RecordedPoint
 import no.thomasforsberg.localtracks.recording.Sport
 import no.thomasforsberg.localtracks.track.TrackPoint
+import no.thomasforsberg.localtracks.track.activeKcalPerKg
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
@@ -59,6 +61,23 @@ class ActivityRepositoryTest {
         assertNull(repository.latestUnfinishedActivity())
         assertEquals(start + 2.minutes, repository.activity(id)?.finishedAt)
         assertEquals(ActivityTotals(100.seconds, 150.0, 1, elevationGainMeters = 42.5), repository.activity(id)?.totals)
+    }
+
+    @Test
+    fun finishingStoresTheActiveEnergyFromThePoints() {
+        val id = repository.startActivity(Sport.HIKING, start)
+        // 1.25 m/s for 4 s, then one point straight on.
+        val walk = (0..4).map { second ->
+            RecordedPoint(0, TrackPoint(59.9 + second * 1.25 / 111_195.08, 10.7, null, start + second.seconds, 5.0, 1.25))
+        }
+        repository.appendPoints(id, 0, walk, ActivityTotals(4.seconds, 5.0, walk.size))
+        assertNull(repository.activity(id)?.activeKcalPerKg, "not while recording")
+
+        repository.finishActivity(id, start + 4.seconds, ActivityTotals(4.seconds, 5.0, walk.size))
+
+        val expected = activeKcalPerKg(walk, Sport.HIKING, leadIn = null)
+        assertTrue(expected > 0)
+        assertEquals(expected, repository.activity(id)?.activeKcalPerKg)
     }
 
     @Test

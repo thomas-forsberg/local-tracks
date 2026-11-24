@@ -10,6 +10,8 @@ data class SportTotals(
     val distanceMeters: Double,
     val movingTimeSeconds: Double,
     val elevationGainMeters: Double,
+    // Activities without it count as 0.
+    val activeKcalPerKg: Double = 0.0,
 )
 
 enum class RecordKind { LONGEST_DISTANCE, LONGEST_MOVING_TIME, BIGGEST_CLIMB, FASTEST_AVERAGE_SPEED }
@@ -32,6 +34,7 @@ fun totalsSince(activities: List<ActivitySummary>, since: Instant?): List<SportT
                 distanceMeters = ofSport.sumOf { it.totals.distanceMeters },
                 movingTimeSeconds = ofSport.sumOf { it.totals.movingTimeSeconds },
                 elevationGainMeters = ofSport.sumOf { it.totals.elevationGainMeters },
+                activeKcalPerKg = ofSport.sumOf { it.activeKcalPerKg ?: 0.0 },
             )
         }
         .sortedByDescending { it.distanceMeters }

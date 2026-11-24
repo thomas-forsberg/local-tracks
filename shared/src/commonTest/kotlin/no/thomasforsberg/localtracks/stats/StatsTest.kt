@@ -44,6 +44,17 @@ class StatsTest {
     }
 
     @Test
+    fun totalsAddUpActiveEnergyCountingMissingAsNothing() {
+        val activities = listOf(
+            activity(Sport.HIKING, daysAgo = 1, km = 5.0, minutes = 60).copy(activeKcalPerKg = 2.5),
+            activity(Sport.HIKING, daysAgo = 2, km = 3.0, minutes = 40).copy(activeKcalPerKg = 1.5),
+            activity(Sport.HIKING, daysAgo = 3, km = 2.0, minutes = 30),
+        )
+
+        assertEquals(4.0, totalsSince(activities, since = null).single().activeKcalPerKg)
+    }
+
+    @Test
     fun recordsPerSportAndKind() {
         val long = activity(Sport.CYCLING, daysAgo = 10, km = 80.0, minutes = 240, climb = 900.0)
         val fast = activity(Sport.CYCLING, daysAgo = 5, km = 30.0, minutes = 60, climb = 100.0)

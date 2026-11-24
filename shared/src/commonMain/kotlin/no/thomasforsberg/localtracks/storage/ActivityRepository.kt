@@ -12,6 +12,7 @@ import no.thomasforsberg.localtracks.recording.RecordedPoint
 import no.thomasforsberg.localtracks.recording.Sport
 import no.thomasforsberg.localtracks.track.RoutePreview
 import no.thomasforsberg.localtracks.track.TrackPoint
+import no.thomasforsberg.localtracks.track.activeKcalPerKg
 import no.thomasforsberg.localtracks.track.routePreview
 import kotlin.coroutines.CoroutineContext
 import kotlin.native.HiddenFromObjC
@@ -31,6 +32,8 @@ data class ActivitySummary(
     val autoStarted: Boolean = false,
     // The stretch before GPS recording started, already included in the totals; null if none.
     val leadIn: LeadIn? = null,
+    // Active energy per kg of body weight; null until finished.
+    val activeKcalPerKg: Double? = null,
 )
 
 data class ActivityTotals(
@@ -107,6 +110,12 @@ class ActivityRepository(
             totals.stepCount?.toLong(),
             activityId,
         )
+        updateEnergy(activityId)
+    }
+
+    fun updateEnergy(activityId: Long) {
+        val activity = activity(activityId) ?: return
+        activities.updateEnergy(activeKcalPerKg(trackPoints(activityId), activity.sport, activity.leadIn), activityId)
     }
 
     fun activity(id: Long): ActivitySummary? = activities.byId(id, ::activitySummary).executeAsOneOrNull()
@@ -157,6 +166,7 @@ private fun activitySummary(
     leadInSteps: Long?,
     leadInLatitude: Double?,
     leadInLongitude: Double?,
+    activeKcalPerKg: Double?,
 ) = ActivitySummary(
     id,
     sport,
@@ -169,6 +179,7 @@ private fun activitySummary(
     } else {
         null
     },
+    activeKcalPerKg,
 )
 
 private fun RecordedPoint.toRow(activityId: Long, seq: Int) = Track_point(

@@ -89,6 +89,7 @@ private struct RouteRow: View {
 
 private struct TotalsRow: View {
     let totals: SportTotals
+    @AppStorage(BodyWeight.key) private var weightKilograms = 0.0
 
     var body: some View {
         HStack(spacing: 16) {
@@ -103,7 +104,8 @@ private struct TotalsRow: View {
                     Formatters.distance(meters: totals.distanceMeters),
                     Formatters.shortDuration(seconds: totals.movingTimeSeconds),
                     "↑ " + Formatters.elevation(meters: totals.elevationGainMeters),
-                ].joined(separator: " · "))
+                    BodyWeight.kcal(perKg: totals.activeKcalPerKg, weightKilograms: weightKilograms).map { Formatters.calories(kcal: $0) },
+                ].compactMap { $0 }.joined(separator: " · "))
                     .font(.numbers(20, relativeTo: .body))
             }
         }

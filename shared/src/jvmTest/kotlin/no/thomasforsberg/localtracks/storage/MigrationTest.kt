@@ -2,6 +2,9 @@ package no.thomasforsberg.localtracks.storage
 
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import no.thomasforsberg.localtracks.db.LocalTracksDatabase
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -21,6 +24,14 @@ class MigrationTest {
             speed_mps REAL, baro_time INTEGER, baro_relative_altitude_meters REAL, baro_pressure_kpa REAL,
             PRIMARY KEY (activity_id, seq)) WITHOUT ROWID""",
     )
+
+    // The released schema snapshot of that version, copied so the snapshot itself isn't changed.
+    private fun databaseAtVersion(version: Int): JdbcSqliteDriver {
+        val copy = Files.createTempFile("version$version", ".db")
+        Files.copy(Path.of("src/commonMain/sqldelight/databases/$version.db"), copy, StandardCopyOption.REPLACE_EXISTING)
+        copy.toFile().deleteOnExit()
+        return JdbcSqliteDriver("jdbc:sqlite:$copy")
+    }
 
     @Test
     fun version1ActivitiesAreKeptAndReMeasured() {
@@ -51,8 +62,7 @@ class MigrationTest {
 
     @Test
     fun version8ChecksUnmatchedActivitiesAgainAndKeepsRoutes() {
-        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-        LocalTracksDatabase.Schema.create(driver)
+        val driver = databaseAtVersion(8)
         driver.execute(null, "INSERT INTO route (id, name, reference_activity_id, created_at) VALUES (1, 'Lake', 1, 0)", 0)
         driver.execute(null, "INSERT INTO route_activity VALUES (1, 1, 0), (2, 1, 1), (3, NULL, 0)", 0)
 
@@ -66,8 +76,7 @@ class MigrationTest {
 
     @Test
     fun version9CountsClimbsAgainFromTheBarometer() {
-        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-        LocalTracksDatabase.Schema.create(driver)
+        val driver = databaseAtVersion(9)
         driver.execute(null, "INSERT INTO activity (id, sport, started_at, elevation_gain_meters) VALUES (1, 'HIKING', 0, 6.0), (2, 'HIKING', 0, 12.5)", 0)
         // Activity 1 climbed 7.4 m, counted as 6 m in steps of 3; activity 2 has no barometer readings.
         listOf(0.0, 3.1, 7.4).forEachIndexed { seq, altitude ->
@@ -80,5 +89,22 @@ class MigrationTest {
         val repository = ActivityRepository(createDatabase(driver))
         assertEquals(7.4, repository.activity(1)!!.totals.elevationGainMeters, absoluteTolerance = 1e-9)
         assertEquals(12.5, repository.activity(2)!!.totals.elevationGainMeters, "untouched")
+    }
+
+    @Test
+    fun version10FillsInActiveEnergyForFinishedActivities() {
+        val driver = databaseAtVersion(10)
+        driver.execute(null, "INSERT INTO activity (id, sport, started_at, finished_at) VALUES (1, 'HIKING', 0, 60000), (2, 'HIKING', 0, NULL)", 0)
+        // 1.25 m/s north for a minute.
+        (0..60).forEach { second ->
+            driver.execute(null, "INSERT INTO track_point (activity_id, seq, segment, time, latitude, longitude, speed_mps) VALUES (1, $second, 0, ${second * 1000}, ${59.9 + second * 1.25 / 111_195.08}, 10.7, 1.25)", 0)
+        }
+
+        migrateDatabase(driver, oldVersion = 10, newVersion = LocalTracksDatabase.Schema.version)
+
+        val repository = ActivityRepository(createDatabase(driver))
+        // 75 m/min walking: 7.5 ml/kg/min for a minute.
+        assertEquals(0.0375, repository.activity(1)!!.activeKcalPerKg!!, absoluteTolerance = 0.002)
+        assertEquals(null, repository.activity(2)!!.activeKcalPerKg, "still recording")
     }
 }

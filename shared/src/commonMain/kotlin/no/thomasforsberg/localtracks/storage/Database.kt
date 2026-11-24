@@ -47,6 +47,13 @@ fun migrateDatabase(driver: SqlDriver, oldVersion: Long, newVersion: Long) {
     if (oldVersion < 7) createDatabase(driver).activityQueries.fillLeadInStartFromHome()
     // Version 10 counts each climb in full instead of in threshold-sized steps.
     if (oldVersion < 10) recountElevationGain(createDatabase(driver))
+    // Version 11 stores active energy; finished activities get it from their points.
+    if (oldVersion < 11) fillActiveEnergy(createDatabase(driver))
+}
+
+fun fillActiveEnergy(database: LocalTracksDatabase) {
+    val repository = ActivityRepository(database)
+    database.activityQueries.finishedIds().executeAsList().forEach(repository::updateEnergy)
 }
 
 // Activities without barometer readings keep their stored climb.

@@ -13,6 +13,11 @@ enum Formatters {
             .formatted(.measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .number.precision(.fractionLength(0))).locale(locale))
     }
 
+    static func calories(kcal: Int, locale: Locale = .current) -> String {
+        Measurement(value: Double(kcal), unit: UnitEnergy.kilocalories)
+            .formatted(.measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .number.precision(.fractionLength(0))).locale(locale))
+    }
+
     // Stopwatch style: "0:05", "44:00", "1:32:10".
     static func clock(seconds: Double) -> String {
         Duration.seconds(seconds.rounded(.down)).formatted(.time(pattern: seconds < 3600 ? .minuteSecond : .hourMinuteSecond))

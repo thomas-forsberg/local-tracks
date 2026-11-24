@@ -3,6 +3,7 @@ import SwiftUI
 
 struct ActivityDetailView: View {
     @State var viewModel: ActivityDetailViewModel
+    @AppStorage(BodyWeight.key) private var weightKilograms = 0.0
 
     private var activity: ActivitySummary { viewModel.activity }
 
@@ -35,6 +36,14 @@ struct ActivityDetailView: View {
                     if activity.sport.countsSteps, let steps = activity.totals.stepCount {
                         Stat(title: "Steps", value: Formatters.steps(steps.intValue))
                     }
+                    if activity.activeKcalPerKg != nil {
+                        Stat(title: "Calories", value: BodyWeight.kcal(perKg: activity.activeKcalPerKg?.doubleValue, weightKilograms: weightKilograms).map { Formatters.calories(kcal: $0) } ?? "–")
+                    }
+                }
+                if activity.activeKcalPerKg != nil && weightKilograms <= 0 {
+                    Text("Add your weight in Settings to see calories.")
+                        .font(.footnote)
+                        .foregroundStyle(Theme.inkSecondary)
                 }
 
                 if let route = viewModel.route, let line = viewModel.routeSummaryLine, let library = viewModel.routeLibrary {

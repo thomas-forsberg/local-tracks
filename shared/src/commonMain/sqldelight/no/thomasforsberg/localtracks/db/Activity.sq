@@ -23,7 +23,9 @@ CREATE TABLE activity (
     lead_in_steps INTEGER,
     -- Where that stretch started (home), so maps can draw it.
     lead_in_latitude REAL,
-    lead_in_longitude REAL
+    lead_in_longitude REAL,
+    -- Active energy per kg of body weight; NULL until finished.
+    active_kcal_per_kg REAL
 );
 
 CREATE INDEX activity_started_at ON activity (started_at);
@@ -44,8 +46,14 @@ WHERE id = :id;
 updateMeasurement:
 UPDATE activity SET distance_meters = :distanceMeters, moving_time_ms = :movingTimeMs WHERE id = :id;
 
+updateEnergy:
+UPDATE activity SET active_kcal_per_kg = :activeKcalPerKg WHERE id = :id;
+
 updateElevationGain:
 UPDATE activity SET elevation_gain_meters = :elevationGainMeters WHERE id = :id;
+
+finishedIds:
+SELECT id FROM activity WHERE finished_at IS NOT NULL;
 
 allIds:
 SELECT id, sport, lead_in_ms, lead_in_meters FROM activity;

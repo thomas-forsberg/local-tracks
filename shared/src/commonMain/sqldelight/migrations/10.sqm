@@ -1,0 +1,2 @@
+-- Schema version 10 → 11: active energy per kg, filled in for saved activities by a data fix.
+ALTER TABLE activity ADD COLUMN active_kcal_per_kg REAL;

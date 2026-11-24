@@ -6,6 +6,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @State private var isEnabling = false
+    @AppStorage(BodyWeight.key) private var weightKilograms = 0.0
 
     var body: some View {
         NavigationStack {
@@ -52,6 +53,23 @@ struct SettingsView: View {
                     Text("Auto-record")
                 } footer: {
                     Text("When you leave home on foot or by bike, recording starts by itself and stops when you're back. Leaving by car doesn't start anything until you're home again. Short trips are deleted. Your home is stored only on this phone.")
+                }
+                Section {
+                    LabeledContent("Weight") {
+                        HStack(spacing: 4) {
+                            TextField("Not set", value: Binding(
+                                get: { weightKilograms > 0 ? weightKilograms : nil },
+                                set: { weightKilograms = max(0, $0 ?? 0) }
+                            ), format: .number.precision(.fractionLength(0...1)))
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            Text("kg").foregroundStyle(Theme.inkSecondary)
+                        }
+                    }
+                } header: {
+                    Text("You")
+                } footer: {
+                    Text("Used to estimate the calories you burn. Stored only on this phone.")
                 }
                 Section {
                     // iOS keeps a language per app; the app follows the phone's language until it's changed there.
