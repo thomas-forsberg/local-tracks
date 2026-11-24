@@ -63,4 +63,22 @@ class MigrationTest {
         assertEquals(null, queries.membership(3).executeAsOneOrNull(), "unchecked again")
         assertEquals("Lake", queries.routeById(1).executeAsOne().name)
     }
+
+    @Test
+    fun version9CountsClimbsAgainFromTheBarometer() {
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        LocalTracksDatabase.Schema.create(driver)
+        driver.execute(null, "INSERT INTO activity (id, sport, started_at, elevation_gain_meters) VALUES (1, 'HIKING', 0, 6.0), (2, 'HIKING', 0, 12.5)", 0)
+        // Activity 1 climbed 7.4 m, counted as 6 m in steps of 3; activity 2 has no barometer readings.
+        listOf(0.0, 3.1, 7.4).forEachIndexed { seq, altitude ->
+            driver.execute(null, "INSERT INTO track_point (activity_id, seq, segment, time, latitude, longitude, baro_time, baro_relative_altitude_meters, baro_pressure_kpa) VALUES (1, $seq, 0, $seq, 59.9, 10.7, $seq, $altitude, 100.0)", 0)
+        }
+        driver.execute(null, "INSERT INTO track_point (activity_id, seq, segment, time, latitude, longitude) VALUES (2, 0, 0, 0, 59.9, 10.7)", 0)
+
+        migrateDatabase(driver, oldVersion = 9, newVersion = LocalTracksDatabase.Schema.version)
+
+        val repository = ActivityRepository(createDatabase(driver))
+        assertEquals(7.4, repository.activity(1)!!.totals.elevationGainMeters, absoluteTolerance = 1e-9)
+        assertEquals(12.5, repository.activity(2)!!.totals.elevationGainMeters, "untouched")
+    }
 }

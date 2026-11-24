@@ -9,6 +9,7 @@ import no.thomasforsberg.localtracks.db.LocalTracksDatabase
 import no.thomasforsberg.localtracks.db.Map_region
 import no.thomasforsberg.localtracks.db.Route
 import no.thomasforsberg.localtracks.db.Track_point
+import no.thomasforsberg.localtracks.recording.elevationGainMeters
 import no.thomasforsberg.localtracks.track.measure
 import kotlin.time.Instant
 
@@ -44,6 +45,17 @@ fun migrateDatabase(driver: SqlDriver, oldVersion: Long, newVersion: Long) {
     if (oldVersion < 2) remeasureAllActivities(createDatabase(driver))
     // Version 7 stores where the stretch before GPS started began; earlier ones started at home.
     if (oldVersion < 7) createDatabase(driver).activityQueries.fillLeadInStartFromHome()
+    // Version 10 counts each climb in full instead of in threshold-sized steps.
+    if (oldVersion < 10) recountElevationGain(createDatabase(driver))
+}
+
+// Activities without barometer readings keep their stored climb.
+fun recountElevationGain(database: LocalTracksDatabase) {
+    val repository = ActivityRepository(database)
+    database.activityQueries.allIds().executeAsList().forEach { activity ->
+        val meters = repository.trackPoints(activity.id).elevationGainMeters() ?: return@forEach
+        database.activityQueries.updateElevationGain(meters, activity.id)
+    }
 }
 
 fun remeasureAllActivities(database: LocalTracksDatabase) {
