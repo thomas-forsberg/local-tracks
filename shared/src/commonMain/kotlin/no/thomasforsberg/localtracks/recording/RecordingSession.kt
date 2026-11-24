@@ -70,6 +70,9 @@ class RecordingSession(
         }
     }
 
+    // Back to Idle after a finished activity has been on screen for a while.
+    fun clearFinished(): Boolean = transition { current -> if (current is Finished) Idle else null }
+
     // Brings back an activity interrupted by a crash or the app being killed. It starts as Paused,
     // so resume() opens a new segment and the gap is never counted as distance.
     fun restore(progress: ActivityProgress): Boolean = transition { current ->

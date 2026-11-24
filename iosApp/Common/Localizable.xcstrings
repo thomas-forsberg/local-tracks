@@ -681,6 +681,76 @@
         }
       }
     },
+    "Saved to Activities": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lagret i Aktiviteter"
+          }
+        }
+      }
+    },
+    "Not saved: no distance was recorded.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ikke lagret: ingen distanse ble registrert."
+          }
+        }
+      }
+    },
+    "Not saved: the trip was too short.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ikke lagret: turen var for kort."
+          }
+        }
+      }
+    },
+    "Dismiss": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lukk"
+          }
+        }
+      }
+    },
+    "Delete this ride?": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slette denne sykkelturen?"
+          }
+        }
+      }
+    },
+    "Delete this run?": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slette denne løpeturen?"
+          }
+        }
+      }
+    },
+    "Delete this hike?": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slette denne fotturen?"
+          }
+        }
+      }
+    },
     "Name": {
       "localizations": {
         "nb": {

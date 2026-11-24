@@ -84,7 +84,7 @@ class ActivityRecorderTest {
         (1..3).forEach { recorder.recordAt(it) }
         clock.now = start + 10.seconds
 
-        assertTrue(recorder.stop())
+        assertEquals(StopResult.KEPT, recorder.stop())
 
         val activity = assertNotNull(repository.activity(id))
         assertEquals(start + 10.seconds, activity.finishedAt)
@@ -180,7 +180,7 @@ class ActivityRecorderTest {
         recorder.startAutomatically(Sport.HIKING, departure = null)
         (1..5).forEach { recorder.recordAt(it) }
 
-        assertEquals(AutoStopResult.DISCARDED, recorder.stopAutomatically())
+        assertEquals(StopResult.DISCARDED, recorder.stopAutomatically())
         assertNull(repository.latestUnfinishedActivity())
         assertEquals(null, repository.activity(1))
     }
@@ -190,16 +190,32 @@ class ActivityRecorderTest {
         clock.now = start + 10.minutes
         recorder.startAutomatically(Sport.HIKING, Departure(at = start, distanceMeters = 800.0, steps = null, startLatitude = null, startLongitude = null))
 
-        assertEquals(AutoStopResult.KEPT, recorder.stopAutomatically())
+        assertEquals(StopResult.KEPT, recorder.stopAutomatically())
         assertNotNull(repository.activity(1)?.finishedAt)
     }
 
     @Test
     fun aManualRecordingIsNeverDeletedForBeingShort() {
         recorder.start(Sport.HIKING)
+        (1..2).forEach { recorder.recordAt(it) }
 
-        assertEquals(AutoStopResult.KEPT, recorder.stopAutomatically())
+        assertEquals(StopResult.KEPT, recorder.stopAutomatically())
         assertNotNull(repository.activity(1))
+    }
+
+    @Test
+    fun aRecordingThatWentNowhereIsDeletedEvenWhenStartedByHand() {
+        recorder.start(Sport.RUNNING)
+        clock.now = start + 5.minutes
+
+        assertEquals(StopResult.DISCARDED, recorder.stop())
+        assertNull(repository.activity(1))
+        assertNull(recorder.unfinishedActivity())
+    }
+
+    @Test
+    fun stoppingWhenNothingIsRecordingSaysSo() {
+        assertEquals(StopResult.NOT_RECORDING, recorder.stop())
     }
 
     @Test
