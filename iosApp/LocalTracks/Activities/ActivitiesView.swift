@@ -34,19 +34,24 @@ struct ActivitiesView: View {
                     .swipeActions {
                         Button("Delete", systemImage: "trash", role: .destructive) { pendingDeletion = activity }
                     }
-                    // On each row, so the dialog points at the activity it deletes.
-                    .confirmationDialog(
-                        activity.sport.deletionTitle,
-                        isPresented: Binding(get: { pendingDeletion?.id == activity.id }, set: { if !$0 { pendingDeletion = nil } }),
-                        titleVisibility: .visible
-                    ) {
-                        Button("Delete", role: .destructive) { viewModel.delete(activity) }
-                    } message: {
-                        Text("This can't be undone. Your activities only exist on this phone.")
-                    }
+                    // While deleting, only the activity being deleted stays visible behind the alert.
+                    .opacity(pendingDeletion == nil || pendingDeletion?.id == activity.id ? 1 : 0)
+                    .animation(.easeInOut(duration: 0.2), value: pendingDeletion?.id)
             }
             .listStyle(.plain)
             .themedList()
+            // An alert, not a confirmation dialog: that is a popover anchored to the row, and it closed
+            // as soon as the row slid back after the swipe.
+            .alert(
+                pendingDeletion?.sport.deletionTitle ?? "",
+                isPresented: Binding(get: { pendingDeletion != nil }, set: { if !$0 { pendingDeletion = nil } }),
+                presenting: pendingDeletion
+            ) { activity in
+                Button("Delete", role: .destructive) { viewModel.delete(activity) }
+                Button("Cancel", role: .cancel) {}
+            } message: { _ in
+                Text("This can't be undone. Your activities only exist on this phone.")
+            }
         }
     }
 
