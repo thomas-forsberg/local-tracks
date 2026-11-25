@@ -76,10 +76,11 @@ final class ScreenshotTour: XCTestCase {
 
         firstRow.swipeLeft()
         app.buttons["Delete"].firstMatch.tap()
-        // Shown as a popover with only "Delete"; tapping outside cancels.
-        XCTAssert(app.sheets.firstMatch.waitForExistence(timeout: 5))
+        XCTAssert(app.alerts.firstMatch.waitForExistence(timeout: 5))
+        sleep(1) // still there once the row has slid back
+        XCTAssert(app.alerts.firstMatch.exists)
         snapshot("07-delete-confirmation")
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85)).tap() // dismiss the dialog
+        app.alerts.buttons["Cancel"].tap()
 
         app.tabBars.buttons["Stats"].tap()
         XCTAssert(app.staticTexts["Stats"].waitForExistence(timeout: 5))
