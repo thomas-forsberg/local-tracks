@@ -4,6 +4,7 @@ import SwiftUI
 struct ActivitiesView: View {
     let viewModel: ActivitiesViewModel
     @State private var pendingDeletion: ActivitySummary?
+    @State private var toggled: Set<ActivityGroup.Period> = []
 
     var body: some View {
         NavigationStack {
@@ -24,19 +25,23 @@ struct ActivitiesView: View {
             ContentUnavailableView("No activities yet", systemImage: "figure.walk", description: Text("Recorded activities show up here."))
                 .background(Theme.background)
         case let activities?:
-            List(activities, id: \.id) { activity in
-                ActivityRow(activity: activity, preview: viewModel.routePreview(for: activity))
-                    // The link fills the card but draws nothing, so rows don't get list chevrons.
-                    .background(NavigationLink(value: activity) { EmptyView() }.opacity(0))
+            List {
+                ForEach(ActivityGroup.grouping(activities)) { group in
+                    let expanded = isExpanded(group)
+                    GroupHeader(group: group, isExpanded: expanded) {
+                        withAnimation { toggled.formSymmetricDifference([group.period]) }
+                    }
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
-                    .swipeActions {
-                        Button("Delete", systemImage: "trash", role: .destructive) { pendingDeletion = activity }
-                    }
-                    // While deleting, only the activity being deleted stays visible behind the alert.
-                    .opacity(pendingDeletion == nil || pendingDeletion?.id == activity.id ? 1 : 0)
+                    .listRowInsets(EdgeInsets(top: 14, leading: 16, bottom: 4, trailing: 16))
+                    .opacity(pendingDeletion == nil ? 1 : 0)
                     .animation(.easeInOut(duration: 0.2), value: pendingDeletion?.id)
+                    if expanded {
+                        ForEach(group.activities, id: \.id) { activity in
+                            row(activity)
+                        }
+                    }
+                }
             }
             .listStyle(.plain)
             .themedList()
@@ -55,6 +60,53 @@ struct ActivitiesView: View {
         }
     }
 
+    // Groups whose expanded state the user flipped from how they start.
+    private func isExpanded(_ group: ActivityGroup) -> Bool {
+        group.startsExpanded != toggled.contains(group.period)
+    }
+
+    private func row(_ activity: ActivitySummary) -> some View {
+        ActivityRow(activity: activity, preview: viewModel.routePreview(for: activity))
+            // The link fills the card but draws nothing, so rows don't get list chevrons.
+            .background(NavigationLink(value: activity) { EmptyView() }.opacity(0))
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+            .swipeActions {
+                Button("Delete", systemImage: "trash", role: .destructive) { pendingDeletion = activity }
+            }
+            // While deleting, only the activity being deleted stays visible behind the alert.
+            .opacity(pendingDeletion == nil || pendingDeletion?.id == activity.id ? 1 : 0)
+            .animation(.easeInOut(duration: 0.2), value: pendingDeletion?.id)
+    }
+}
+
+// Tapping it shows or hides the group's activities.
+private struct GroupHeader: View {
+    let group: ActivityGroup
+    let isExpanded: Bool
+    let toggle: () -> Void
+
+    var body: some View {
+        Button(action: toggle) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(group.title())
+                    .font(.numbers(24, weight: .bold, relativeTo: .title3))
+                Spacer()
+                Text("\(String(localized: "\(group.activities.count) activities")) · \(Formatters.distance(meters: group.distanceMeters))")
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.inkSecondary)
+                Image(systemName: "chevron.right")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.inkSecondary)
+                    .rotationEffect(.degrees(isExpanded ? 90 : 0))
+            }
+            .foregroundStyle(Theme.ink)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .accessibilityValue(isExpanded ? String(localized: "Expanded") : String(localized: "Collapsed"))
+    }
 }
 
 private extension Sport {
@@ -99,5 +151,6 @@ private struct ActivityRow: View {
         .padding(14)
         .card()
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("activity")
     }
 }

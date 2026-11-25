@@ -1001,6 +1001,46 @@
         }
       }
     },
+    "This week": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denne uken"
+          }
+        }
+      }
+    },
+    "Last week": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forrige uke"
+          }
+        }
+      }
+    },
+    "Expanded": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utvidet"
+          }
+        }
+      }
+    },
+    "Collapsed": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skjult"
+          }
+        }
+      }
+    },
     "Re-centre": {
       "localizations": {
         "nb": {
