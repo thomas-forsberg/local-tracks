@@ -56,7 +56,8 @@ final class ScreenshotTour: XCTestCase {
         XCTAssert(app.buttons["Start"].waitForExistence(timeout: 5))
 
         app.tabBars.buttons["Activities"].tap()
-        let firstRow = app.cells.firstMatch
+        // The newest activity, under the "This week" header.
+        let firstRow = app.descendants(matching: .any).matching(identifier: "activity").firstMatch
         XCTAssert(firstRow.waitForExistence(timeout: 10))
         snapshot("04-activities")
 
