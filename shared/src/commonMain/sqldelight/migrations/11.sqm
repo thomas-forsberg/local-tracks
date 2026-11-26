@@ -1,0 +1,2 @@
+-- Schema version 11 → 12: auto-recorded activities that may have been car rides.
+ALTER TABLE activity ADD COLUMN suspected_car INTEGER NOT NULL DEFAULT 0;

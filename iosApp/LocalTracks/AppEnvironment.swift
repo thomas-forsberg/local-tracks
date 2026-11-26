@@ -63,6 +63,8 @@ final class AppEnvironment {
             keepAwake: sensors.keepAwake,
             permissions: sensors.permissions,
             notifier: sensors.notifier,
+            activities: repository,
+            carAudio: sensors.carAudio,
             log: autoRecordLog
         )
         let liveActivity = LiveActivityController(recording: recording)
@@ -93,6 +95,7 @@ struct AutoRecordSensors {
     var keepAwake: KeepAwake
     var permissions: AutoRecordPermissions
     var notifier: AutoRecordNotifier
+    var carAudio: CarAudio = CarPlayAudio()
 
     static func live(log: AutoRecordLog) -> AutoRecordSensors {
         AutoRecordSensors(

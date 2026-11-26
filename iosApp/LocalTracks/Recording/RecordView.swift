@@ -311,6 +311,7 @@ private struct StopOutcomeBanner: View {
         case .saved: String(localized: "Saved to Activities")
         case .discardedNoDistance: String(localized: "Not saved: no distance was recorded.")
         case .discardedTooShort: String(localized: "Not saved: the trip was too short.")
+        case .discardedCarRide: String(localized: "Not saved: it was a car ride.")
         }
     }
 }

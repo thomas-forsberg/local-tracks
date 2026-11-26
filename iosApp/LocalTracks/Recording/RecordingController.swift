@@ -24,6 +24,8 @@ final class RecordingController {
     // For auto-record: recordings the user started by hand, and every recording that ends.
     @ObservationIgnored var onUserStarted: (() -> Void)?
     @ObservationIgnored var onStopped: (() -> Void)?
+    // An automatic recording the user stopped by hand and that was kept, by its activity id.
+    @ObservationIgnored var onUserStoppedAutomatic: ((Int64) -> Void)?
     // Every recorded GPS point, for auto-record's arrival at home.
     @ObservationIgnored var onPointRecorded: ((LocationFix) -> Void)?
     // Every change to the recording, e.g. for the lock-screen card.
@@ -103,10 +105,22 @@ final class RecordingController {
 
     // Deletes the recording if it covered no distance.
     func stop() {
+        let automaticId = recorder.isAutoStarted ? activityInProgressId : nil
         let result = recorder.stop()
         guard result != .notRecording else { return }
         ended(result == .kept ? .saved : .discardedNoDistance)
+        if result == .kept, let automaticId { onUserStoppedAutomatic?(automaticId) }
     }
+
+    // Auto-record found the recording to be a car ride: stops and deletes it.
+    func discardAutomatically() {
+        if recorder.discard() != .notRecording { ended(.discardedCarRide) }
+    }
+
+    var activityInProgressId: Int64? { recorder.activityInProgressId?.int64Value }
+
+    // Every point so far, stored or not.
+    func recordedPoints() -> [RecordedPoint] { recorder.recordedPoints() }
 
     // Auto-record's stop on arriving home; deletes the recording if it's too short to be an activity.
     @discardableResult
@@ -266,4 +280,6 @@ enum StopOutcome: Equatable {
     case discardedNoDistance
     // Auto-record's trip was too short to be an activity.
     case discardedTooShort
+    // Auto-record's trip was a car ride.
+    case discardedCarRide
 }

@@ -107,4 +107,14 @@ class MigrationTest {
         assertEquals(0.0375, repository.activity(1)!!.activeKcalPerKg!!, absoluteTolerance = 0.002)
         assertEquals(null, repository.activity(2)!!.activeKcalPerKg, "still recording")
     }
+
+    @Test
+    fun version11StartsWithNothingSuspected() {
+        val driver = databaseAtVersion(11)
+        driver.execute(null, "INSERT INTO activity (id, sport, started_at, finished_at) VALUES (1, 'HIKING', 0, 60000)", 0)
+
+        migrateDatabase(driver, oldVersion = 11, newVersion = LocalTracksDatabase.Schema.version)
+
+        assertEquals(false, ActivityRepository(createDatabase(driver)).activity(1)!!.suspectedCar)
+    }
 }

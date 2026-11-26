@@ -70,6 +70,17 @@ class ActivityRecorder(
     // Stops an automatic recording when the user gets home, deleting it if it's too short to be an activity.
     fun stopAutomatically(): StopResult = stop(discardShort = isAutoStarted)
 
+    // Stops and deletes the recording, e.g. an automatic one that turned out to be a car ride.
+    fun discard(): StopResult {
+        val id = activityId
+        if (!finish()) return StopResult.NOT_RECORDING
+        if (id != null) write { repository.delete(id) }
+        return StopResult.DISCARDED
+    }
+
+    // The database row of the recording in progress; null when not recording (or not yet written).
+    val activityInProgressId: Long? get() = if (inProgress) activityId else null
+
     private fun stop(discardShort: Boolean): StopResult {
         val id = activityId
         if (!finish()) return StopResult.NOT_RECORDING

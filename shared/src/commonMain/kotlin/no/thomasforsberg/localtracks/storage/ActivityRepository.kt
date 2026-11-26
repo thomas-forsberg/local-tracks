@@ -13,6 +13,7 @@ import no.thomasforsberg.localtracks.recording.Sport
 import no.thomasforsberg.localtracks.track.RoutePreview
 import no.thomasforsberg.localtracks.track.TrackPoint
 import no.thomasforsberg.localtracks.track.activeKcalPerKg
+import no.thomasforsberg.localtracks.track.measure
 import no.thomasforsberg.localtracks.track.routePreview
 import kotlin.coroutines.CoroutineContext
 import kotlin.native.HiddenFromObjC
@@ -34,6 +35,8 @@ data class ActivitySummary(
     val leadIn: LeadIn? = null,
     // Active energy per kg of body weight; null until finished.
     val activeKcalPerKg: Double? = null,
+    // Auto-recorded with some sign of driving; the user decides.
+    val suspectedCar: Boolean = false,
 )
 
 data class ActivityTotals(
@@ -118,6 +121,25 @@ class ActivityRepository(
         activities.updateEnergy(activeKcalPerKg(trackPoints(activityId), activity.sport, activity.leadIn), activityId)
     }
 
+    fun setSuspectedCar(activityId: Long, suspected: Boolean) {
+        activities.setSuspectedCar(suspected, activityId)
+    }
+
+    // Distance and moving time depend on the sport (what counts as moving), so they're measured again.
+    fun changeSport(activityId: Long, sport: Sport) {
+        val activity = activity(activityId) ?: return
+        database.transaction {
+            activities.setSport(sport, activityId)
+            val measurement = trackPoints(activityId).measure(sport)
+            activities.updateMeasurement(
+                measurement.distanceMeters + (activity.leadIn?.distanceMeters ?: 0.0),
+                measurement.movingTime.inWholeMilliseconds + (activity.leadIn?.duration?.inWholeMilliseconds ?: 0),
+                activityId,
+            )
+            updateEnergy(activityId)
+        }
+    }
+
     fun activity(id: Long): ActivitySummary? = activities.byId(id, ::activitySummary).executeAsOneOrNull()
 
     fun latestUnfinishedActivity(): ActivitySummary? = activities.latestUnfinished(::activitySummary).executeAsOneOrNull()
@@ -167,6 +189,7 @@ private fun activitySummary(
     leadInLatitude: Double?,
     leadInLongitude: Double?,
     activeKcalPerKg: Double?,
+    suspectedCar: Boolean,
 ) = ActivitySummary(
     id,
     sport,
@@ -180,6 +203,7 @@ private fun activitySummary(
         null
     },
     activeKcalPerKg,
+    suspectedCar,
 )
 
 private fun RecordedPoint.toRow(activityId: Long, seq: Int) = Track_point(

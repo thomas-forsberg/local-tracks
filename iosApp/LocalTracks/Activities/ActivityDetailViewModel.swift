@@ -5,7 +5,7 @@ import Shared
 @MainActor
 @Observable
 final class ActivityDetailViewModel {
-    let activity: ActivitySummary
+    private(set) var activity: ActivitySummary
     // One coordinate list per segment. Nil until loaded.
     private(set) var segments: [[CLLocationCoordinate2D]]?
     // Charts, splits and max speed, computed in Kotlin from the same points. Nil until loaded.
@@ -21,6 +21,16 @@ final class ActivityDetailViewModel {
         self.activity = activity
         self.repository = repository
         routeLibrary = routes
+    }
+
+    // The user says the possible car ride wasn't one.
+    func notACarRide() {
+        repository.setSuspectedCar(activityId: activity.id, suspected: false)
+        activity = repository.activity(id: activity.id) ?? activity
+    }
+
+    func delete() {
+        repository.delete(activityId: activity.id)
     }
 
     func loadRoute() async {

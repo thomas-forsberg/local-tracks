@@ -129,9 +129,16 @@ private struct ActivityRow: View {
             RouteThumbnail(preview: preview, sport: activity.sport)
                 .frame(width: 84, height: 84)
             VStack(alignment: .leading, spacing: 2) {
-                Text(activity.sport.title)
-                    .font(.headline)
-                    .foregroundStyle(activity.sport.color)
+                HStack(spacing: 8) {
+                    Text(activity.sport.title)
+                        .font(.headline)
+                        .foregroundStyle(activity.sport.color)
+                    if activity.suspectedCar {
+                        Label("Car ride?", systemImage: "car.fill")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.orange)
+                    }
+                }
                 Text(activity.startedAt.date.formatted(date: .abbreviated, time: .shortened))
                     .font(.subheadline)
                     .foregroundStyle(Theme.inkSecondary)

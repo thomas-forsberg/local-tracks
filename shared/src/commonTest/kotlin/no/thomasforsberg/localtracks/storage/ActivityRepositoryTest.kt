@@ -81,6 +81,35 @@ class ActivityRepositoryTest {
     }
 
     @Test
+    fun aSuspectedCarRideIsFlaggedUntilTheUserDecides() {
+        val id = repository.startActivity(Sport.HIKING, start)
+        assertEquals(false, repository.activity(id)?.suspectedCar)
+
+        repository.setSuspectedCar(id, suspected = true)
+        assertEquals(true, repository.activity(id)?.suspectedCar)
+        repository.setSuspectedCar(id, suspected = false)
+        assertEquals(false, repository.activity(id)?.suspectedCar)
+    }
+
+    @Test
+    fun changingTheSportMeasuresAgain() {
+        val id = repository.startActivity(Sport.HIKING, start)
+        // 0.8 m/s: moving on foot, standing still on a bike.
+        val slow = (0..10).map { second ->
+            RecordedPoint(0, TrackPoint(59.9 + second * 0.8 / 111_195.08, 10.7, null, start + second.seconds, 5.0, 0.8))
+        }
+        repository.appendPoints(id, 0, slow, ActivityTotals(10.seconds, 8.0, slow.size))
+        repository.finishActivity(id, start + 10.seconds, ActivityTotals(10.seconds, 8.0, slow.size))
+
+        repository.changeSport(id, Sport.CYCLING)
+
+        val activity = assertNotNull(repository.activity(id))
+        assertEquals(Sport.CYCLING, activity.sport)
+        assertEquals(0.0, activity.totals.distanceMeters)
+        assertEquals(0.seconds, activity.totals.movingTime)
+    }
+
+    @Test
     fun totalsCanBeCreatedFromSeconds() {
         assertEquals(ActivityTotals(90.seconds, 1.5, 3, 4.5, 80.seconds, 120), ActivityTotals.ofSeconds(90.0, 1.5, 3, 4.5, 80.0, 120))
     }
