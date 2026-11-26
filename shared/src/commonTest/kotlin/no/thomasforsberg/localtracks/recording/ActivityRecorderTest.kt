@@ -96,6 +96,19 @@ class ActivityRecorderTest {
     }
 
     @Test
+    fun discardDeletesTheRecordingInProgress() {
+        recorder.startAutomatically(Sport.HIKING, departure = null)
+        val id = assertNotNull(recorder.activityInProgressId)
+        (1..3).forEach { recorder.recordAt(it) }
+
+        assertEquals(StopResult.DISCARDED, recorder.discard())
+
+        assertNull(repository.activity(id))
+        assertNull(recorder.activityInProgressId)
+        assertEquals(StopResult.NOT_RECORDING, recorder.discard())
+    }
+
+    @Test
     fun recoversAfterACrashLosingOnlyUnflushedPoints() {
         recorder.start(Sport.CYCLING)
         val id = storedActivityId()

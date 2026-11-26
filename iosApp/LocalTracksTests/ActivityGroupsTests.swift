@@ -20,7 +20,7 @@ struct ActivityGroupsTests {
         let totals = ActivityTotals.companion.ofSeconds(
             activeTimeSeconds: 600, distanceMeters: km * 1000, pointCount: 0, elevationGainMeters: 0, movingTimeSeconds: 600, stepCount: nil
         )
-        return ActivitySummary(id: nextId, sport: .hiking, startedAt: .from(start), finishedAt: .from(start), totals: totals, autoStarted: false, leadIn: nil, activeKcalPerKg: nil)
+        return ActivitySummary(id: nextId, sport: .hiking, startedAt: .from(start), finishedAt: .from(start), totals: totals, autoStarted: false, leadIn: nil, activeKcalPerKg: nil, suspectedCar: false)
     }
 
     @Test mutating func thisWeekLastWeekEachMonthOfThisYearThenEachYear() {

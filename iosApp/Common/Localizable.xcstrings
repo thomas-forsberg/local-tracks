@@ -401,6 +401,46 @@
         }
       }
     },
+    "Not saved: it was a car ride.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ikke lagret: det var en biltur."
+          }
+        }
+      }
+    },
+    "This may have been a car ride.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dette kan ha vært en biltur."
+          }
+        }
+      }
+    },
+    "It wasn't": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Det var det ikke"
+          }
+        }
+      }
+    },
+    "Car ride?": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biltur?"
+          }
+        }
+      }
+    },
     "Download overview": {
       "localizations": {
         "nb": {

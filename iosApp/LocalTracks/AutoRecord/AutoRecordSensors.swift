@@ -1,3 +1,4 @@
+import AVFoundation
 import CoreLocation
 import CoreMotion
 import Shared
@@ -265,5 +266,18 @@ final class LocationKeepAwake: KeepAwake {
     func stop() {
         task?.cancel()
         task = nil
+    }
+}
+
+// Whether the phone is playing through CarPlay: a sure sign of a car ride.
+@MainActor
+protocol CarAudio {
+    var isConnected: Bool { get }
+}
+
+@MainActor
+struct CarPlayAudio: CarAudio {
+    var isConnected: Bool {
+        AVAudioSession.sharedInstance().currentRoute.outputs.contains { $0.portType == .carAudio }
     }
 }

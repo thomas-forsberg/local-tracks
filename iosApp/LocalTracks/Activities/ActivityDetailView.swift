@@ -4,6 +4,7 @@ import SwiftUI
 struct ActivityDetailView: View {
     @State var viewModel: ActivityDetailViewModel
     @AppStorage(BodyWeight.key) private var weightKilograms = 0.0
+    @Environment(\.dismiss) private var dismiss
 
     private var activity: ActivitySummary { viewModel.activity }
 
@@ -17,6 +18,24 @@ struct ActivityDetailView: View {
                     Label(note, systemImage: "figure.walk.departure")
                         .font(.footnote)
                         .foregroundStyle(Theme.inkSecondary)
+                }
+
+                if activity.suspectedCar {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Label("This may have been a car ride.", systemImage: "car.fill")
+                            .font(.subheadline.weight(.semibold))
+                        HStack {
+                            Button("Delete", role: .destructive) {
+                                viewModel.delete()
+                                dismiss()
+                            }
+                            Button("It wasn't") { viewModel.notACarRide() }
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .card()
                 }
 
                 map

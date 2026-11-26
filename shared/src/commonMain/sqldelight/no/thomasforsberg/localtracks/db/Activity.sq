@@ -25,7 +25,9 @@ CREATE TABLE activity (
     lead_in_latitude REAL,
     lead_in_longitude REAL,
     -- Active energy per kg of body weight; NULL until finished.
-    active_kcal_per_kg REAL
+    active_kcal_per_kg REAL,
+    -- Auto-recorded with some sign of driving: kept, and the user is asked.
+    suspected_car INTEGER AS Boolean NOT NULL DEFAULT 0
 );
 
 CREATE INDEX activity_started_at ON activity (started_at);
@@ -45,6 +47,12 @@ WHERE id = :id;
 
 updateMeasurement:
 UPDATE activity SET distance_meters = :distanceMeters, moving_time_ms = :movingTimeMs WHERE id = :id;
+
+setSuspectedCar:
+UPDATE activity SET suspected_car = :suspectedCar WHERE id = :id;
+
+setSport:
+UPDATE activity SET sport = :sport WHERE id = :id;
 
 updateEnergy:
 UPDATE activity SET active_kcal_per_kg = :activeKcalPerKg WHERE id = :id;

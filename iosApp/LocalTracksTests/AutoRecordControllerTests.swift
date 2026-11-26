@@ -82,6 +82,11 @@ final class FakeNotifier: AutoRecordNotifier {
 }
 
 @MainActor
+final class FakeCarAudio: CarAudio {
+    var isConnected = false
+}
+
+@MainActor
 struct AutoRecordControllerTests {
     private let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
     private let home = FakeHomeMonitor()
@@ -90,6 +95,7 @@ struct AutoRecordControllerTests {
     private let keepAwake = FakeKeepAwake()
     private let permissions = FakePermissions()
     private let notifier = FakeNotifier()
+    private let carAudio = FakeCarAudio()
     private let stateStore = InMemoryRecordingStateStore()
     private let homeLocation = HomeLocation(latitude: 59.94, longitude: 10.72)
 
@@ -111,7 +117,8 @@ struct AutoRecordControllerTests {
                 pedometer: pedometer,
                 keepAwake: keepAwake,
                 permissions: permissions,
-                notifier: notifier
+                notifier: notifier,
+                carAudio: carAudio
             )
         )
     }
@@ -200,6 +207,77 @@ struct AutoRecordControllerTests {
         #expect(lines.contains("AT_HOME → WATCHING"))
         #expect(lines.contains("WATCHING → AUTO_RECORDING"))
         #expect(lines.contains("Recording started: HIKING, 160 m walked before"))
+    }
+
+    // GPS fixes heading north at the given speed, one a second from now (the recorder ignores older ones).
+    private func travel(_ environment: AppEnvironment, metersPerSecond speed: Double, seconds: Int) {
+        let start = Date.now
+        for second in 0...seconds {
+            environment.recorder.onLocation(fix: LocationFix(
+                time: .from(start.addingTimeInterval(Double(second))),
+                latitude: 59.9 + Double(second) * speed / 111_195,
+                longitude: 10.7,
+                horizontalAccuracyMeters: 5,
+                altitudeMeters: nil,
+                speedMetersPerSecond: KotlinDouble(value: speed)
+            ))
+        }
+    }
+
+    private func autoRecordingHike(_ environment: AppEnvironment) async {
+        motion.history = [(.walking, .now.addingTimeInterval(-170))]
+        home.send(.left(.now.addingTimeInterval(-150)))
+        _ = await eventually { environment.recording.state is RecordingStateRecording }
+    }
+
+    @Test func aCarRideIsDeletedWhileRecording() async throws {
+        let environment = await enabledEnvironment()
+        await autoRecordingHike(environment)
+        let id = try #require(environment.recording.activityInProgressId)
+        travel(environment, metersPerSecond: 16.7, seconds: 240)
+
+        await environment.autoRecord.checkForCar()
+
+        #expect(environment.recording.state is RecordingStateFinished)
+        #expect(environment.recording.stopOutcome == .discardedCarRide)
+        #expect(environment.repository.activity(id: id) == nil)
+        #expect(environment.autoRecord.phase == .waitingForHome)
+        #expect(environment.autoRecordLog.lines().contains { $0.hasSuffix("Recording deleted: car ride") })
+    }
+
+    @Test func aHikeIsLeftAlone() async {
+        let environment = await enabledEnvironment()
+        await autoRecordingHike(environment)
+        travel(environment, metersPerSecond: 1.4, seconds: 240)
+
+        await environment.autoRecord.checkForCar()
+
+        #expect(environment.recording.state is RecordingStateRecording)
+    }
+
+    @Test func stoppedByHandAtBikeSpeedsBecomesABikeRide() async throws {
+        let environment = await enabledEnvironment()
+        await autoRecordingHike(environment)
+        let id = try #require(environment.recording.activityInProgressId)
+        travel(environment, metersPerSecond: 7, seconds: 240)
+
+        environment.recording.stop()
+
+        #expect(await eventually { environment.repository.activity(id: id)?.sport == .cycling })
+        #expect(environment.repository.activity(id: id)?.suspectedCar == false)
+    }
+
+    @Test func aCarRideStoppedByHandIsOnlyMarked() async throws {
+        let environment = await enabledEnvironment()
+        await autoRecordingHike(environment)
+        let id = try #require(environment.recording.activityInProgressId)
+        travel(environment, metersPerSecond: 8, seconds: 240)
+        carAudio.isConnected = true
+
+        environment.recording.stop()
+
+        #expect(await eventually { environment.repository.activity(id: id)?.suspectedCar == true })
+        #expect(environment.repository.activity(id: id)?.sport == .hiking)
     }
 
     @Test func startingByHandWhileWatchingStopsWatching() async {
